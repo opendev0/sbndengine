@@ -35,7 +35,7 @@
 bool CPhysicsIntersections::sphereSphere(iPhysicsObject &physics_object1, iPhysicsObject &physics_object2, CPhysicsCollisionData &c)
 {
 #if WORKSHEET_2
-
+	//TODO
 #else
 	return false;
 #endif
