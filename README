@@ -1,0 +1,10 @@
+The SBND engine is separated by interface classes and their implementation
+
+src/include:	interfaces
+src/sbndengine:	implementation
+src/sys_glut:	system specific implementation -> GLUT specific implementation
+
+There should be a README file in every subfolder with more information
+
+
+This engine is based on the book "Game Physics Engine Development" by Ian Millington

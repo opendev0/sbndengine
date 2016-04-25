@@ -1,0 +1,19 @@
+The SBND Engine itself
+
+file naming conventions:
+
+ * header files with prefixed i are intended to be standard interfaces.
+
+ * header files with prefixed c are intended to be specialized classes
+   which are abstracted by the generic interfaces.
+   
+   This makes it possible to use different implementations (like a camera
+   implementing a look at function and a camera acting like a first person
+   player) with the same interface. Usually we are only interested in the
+   matrix which is handed back by the camera class
+
+
+./camera:	Camera handling
+./engine:	Backbone of whole engine
+./graphics:	Contains all interfaces related to graphics
+./physics:	Contains all interfaces related to physics
