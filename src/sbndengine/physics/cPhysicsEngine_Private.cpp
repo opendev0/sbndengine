@@ -284,7 +284,7 @@ bool cPhysicsEngine_Private::simulationTimestep(double p_elapsed_time)
 
 
 #if WORKSHEET_1
-
+	updateConstantAcceleration();
 #endif
 
 #if WORKSHEET_3
@@ -292,7 +292,7 @@ bool cPhysicsEngine_Private::simulationTimestep(double p_elapsed_time)
 #endif
 
 #if WORKSHEET_1
-
+	integrator();
 #endif
 
 #if WORKSHEET_2
@@ -341,7 +341,15 @@ void cPhysicsEngine_Private::integrator()
  * WORKSHEET 1
  */
 #if WORKSHEET_1
+		//float e1 = o.velocity.getLength2() / 2 + gravitation_vector[1] * o.object->position[1];
 
+		//explicitEulerTimestep(o);
+		explicitEulerTimestep2(o);
+
+		//float e2 = o.velocity.getLength2() / 2 + gravitation_vector[1] * o.object->position[1];
+		//std::cout << "Energy difference: " << 1.0 / o.inv_mass * (e2 - e1) << std::endl;
+
+		// TODO Assertions for position, velocity and energy
 #endif
 
 
@@ -417,4 +425,14 @@ void cPhysicsEngine_Private::detectAndResolveInterpenetrations()
 {
 	emptyAndGetCollisions();
 	resolveInterpenetrations();
+}
+
+void cPhysicsEngine_Private::explicitEulerTimestep(iPhysicsObject &o) {
+	o.object->translate(o.velocity * simulation_timestep_size);
+	o.addSpeed(o.linear_acceleration_accumulator * simulation_timestep_size);
+}
+
+void cPhysicsEngine_Private::explicitEulerTimestep2(iPhysicsObject &o) {
+	o.addSpeed(o.linear_acceleration_accumulator * simulation_timestep_size);
+	o.object->translate(o.velocity * simulation_timestep_size);
 }

@@ -84,6 +84,9 @@ class cPhysicsEngine_Private
 	double angular_damping_threshold;
 	double angular_damping_factor;
 
+	void explicitEulerTimestep(iPhysicsObject &);
+	void explicitEulerTimestep2(iPhysicsObject &);
+
 public:
 	/// elapsed seconds in the last frame
 	double simulation_timestep_size;

@@ -7,7 +7,7 @@
 #ifndef WORKSHEETS_PRECOMPILER_HPP
 #define WORKSHEETS_PRECOMPILER_HPP
 
-#define WORKSHEET_1		0	// explicit euler
+#define WORKSHEET_1		1	// explicit euler
 #define WORKSHEET_2		0	// collisions (sphere-sphere, sphere-plane), interpenetration
 #define WORKSHEET_3a	0	// quaternions
 #define WORKSHEET_3		0	// springs, ropes, linear momentum
