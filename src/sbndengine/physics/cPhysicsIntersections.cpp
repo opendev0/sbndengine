@@ -72,8 +72,8 @@ bool CPhysicsIntersections::spherePlane(iPhysicsObject &physics_object_sphere, i
 
 	// Check if sphere is inside plane bounds
 	if (spherePos[1] > sphereRadius
-			|| spherePos[0] + sphereRadius < 0 || spherePos[0] - sphereRadius > planeFactory.size_x
-			|| spherePos[2] + sphereRadius < 0 || spherePos[2] - sphereRadius > planeFactory.size_z)
+			|| spherePos[0] + sphereRadius < -planeFactory.size_x / 2 || spherePos[0] - sphereRadius > planeFactory.size_x / 2
+			|| spherePos[2] + sphereRadius < -planeFactory.size_z / 2 || spherePos[2] - sphereRadius > planeFactory.size_z / 2)
 		return false;
 
 	std::cout << "Sphere-plane collision detected" << std::endl;
@@ -85,7 +85,7 @@ bool CPhysicsIntersections::spherePlane(iPhysicsObject &physics_object_sphere, i
 	c.collision_point2 = physics_object_sphere.object->position - (c.collision_normal * sphereRadius);
 	c.interpenetration_depth = (c.collision_point2 - c.collision_point1).getLength();
 
-
+	return true;
 #else
 	return false;
 #endif
