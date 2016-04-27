@@ -76,8 +76,6 @@ bool CPhysicsIntersections::spherePlane(iPhysicsObject &physics_object_sphere, i
 			|| spherePos[2] + sphereRadius < -planeFactory.size_z / 2 || spherePos[2] - sphereRadius > planeFactory.size_z / 2)
 		return false;
 
-	std::cout << "Sphere-plane collision detected" << std::endl;
-
 	c.physics_object1 = &physics_object_plane;
 	c.physics_object2 = &physics_object_sphere;
 	c.collision_normal = physics_object_plane.object->inverse_model_matrix.getTranspose() * Vector(0, 1, 0);

@@ -178,6 +178,8 @@ void resolveInterpenetration_displace(CPhysicsCollisionData &c)
 	float d1 = c.physics_object1->inv_mass / (c.physics_object1->inv_mass + c.physics_object2->inv_mass);
 	c.physics_object1->object->translate(-c.collision_normal * d1 * c.interpenetration_depth);
 	c.physics_object2->object->translate(c.collision_normal * (1 - d1) * c.interpenetration_depth);
+	c.physics_object1->object->updateModelMatrix();
+	c.physics_object2->object->updateModelMatrix();
 #endif
 }
 
@@ -298,7 +300,7 @@ bool cPhysicsEngine_Private::simulationTimestep(double p_elapsed_time)
 #endif
 
 #if WORKSHEET_2
-	emptyAndGetCollisions();
+
 #endif
 
 #if WORKSHEET_3
@@ -312,7 +314,12 @@ bool cPhysicsEngine_Private::simulationTimestep(double p_elapsed_time)
 
 	int i = 1;
 #if WORKSHEET_2
-	resolveInterpenetrations();
+	for (; i < max_global_collision_solving_iterations; ++i) {
+		emptyAndGetCollisions();
+		if (list_colliding_objects.empty())
+			break;
+		resolveInterpenetrations();
+	}
 #endif
 
 #if 1
