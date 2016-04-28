@@ -175,9 +175,9 @@ void cPhysicsEngine_Private::getHardConstraintCollisions()
 void resolveInterpenetration_displace(CPhysicsCollisionData &c)
 {
 #if WORKSHEET_2
-	float d1 = c.physics_object1->inv_mass / (c.physics_object1->inv_mass + c.physics_object2->inv_mass);
-	c.physics_object1->object->translate(-c.collision_normal * d1 * c.interpenetration_depth);
-	c.physics_object2->object->translate(c.collision_normal * (1 - d1) * c.interpenetration_depth);
+	float d2 = c.physics_object2->inv_mass / (c.physics_object2->inv_mass + c.physics_object1->inv_mass);
+	c.physics_object1->object->translate(c.collision_normal * (d2 - 1) * c.interpenetration_depth);
+	c.physics_object2->object->translate(c.collision_normal * d2 * c.interpenetration_depth);
 	c.physics_object1->object->updateModelMatrix();
 	c.physics_object2->object->updateModelMatrix();
 #endif
@@ -204,6 +204,7 @@ void cPhysicsEngine_Private::resolveInterpenetrations()
 		resolveInterpenetration_displace(c);
 
 #if WORKSHEET_2
+		// Check if collision was really solved
 		float quad_rad = c.physics_object1->object->objectFactory->bounding_sphere_radius + c.physics_object2->object->objectFactory->bounding_sphere_radius;
 		quad_rad *= quad_rad;
 		
