@@ -86,10 +86,10 @@ bool CPhysicsIntersections::spherePlane(iPhysicsObject &physics_object_sphere, i
 	c.collision_point2 = physics_object_sphere.object->position - (c.collision_normal * sphereRadius);
 	c.interpenetration_depth = (c.collision_point2 - c.collision_point1).getLength();
 	
-	float tmpDepth = c.interpenetration_depth;
+	/*float tmpDepth = c.interpenetration_depth;
 	while (spherePos[1] + c.interpenetration_depth < sphereRadius) {
-		c.interpenetration_depth *= tmpDepth;
-	}
+		c.interpenetration_depth += tmpDepth;
+	}*/
 
 	return true;
 #else
