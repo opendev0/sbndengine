@@ -204,7 +204,14 @@ void cPhysicsEngine_Private::resolveInterpenetrations()
 		resolveInterpenetration_displace(c);
 
 #if WORKSHEET_2
-
+		float quad_rad = c.physics_object1->object->objectFactory->bounding_sphere_radius + c.physics_object2->object->objectFactory->bounding_sphere_radius;
+		quad_rad *= quad_rad;
+		
+		if ((c.physics_object1->object->position - c.physics_object2->object->position).getLength2() < quad_rad) {
+			if (CPhysicsIntersections::multiplexer(*c.physics_object1, *c.physics_object2, c)) {
+				std::cout << "Not resolved: " << c.physics_object1->object->identifier_string << " - " << c.physics_object2->object->identifier_string << std::endl;
+			}
+		}
 #endif
 	}
 }
