@@ -35,11 +35,14 @@
 bool CPhysicsIntersections::sphereSphere(iPhysicsObject &physics_object1, iPhysicsObject &physics_object2, CPhysicsCollisionData &c)
 {
 #if WORKSHEET_2
+	float radius1 = static_cast<cObjectFactorySphere *>(&physics_object1.object->objectFactory.getClass())->radius;
+	float radius2 = static_cast<cObjectFactorySphere *>(&physics_object2.object->objectFactory.getClass())->radius;
+	
 	c.physics_object1 = &physics_object1;
 	c.physics_object2 = &physics_object2;
 	c.collision_normal = (physics_object2.object->position - physics_object1.object->position).getNormalized();
-	c.collision_point1 = physics_object1.object->position + c.collision_normal * physics_object1.object->objectFactory->bounding_sphere_radius;
-	c.collision_point2 = physics_object2.object->position - c.collision_normal * physics_object2.object->objectFactory->bounding_sphere_radius;
+	c.collision_point1 = physics_object1.object->position + c.collision_normal * radius1;
+	c.collision_point2 = physics_object2.object->position - c.collision_normal * radius2;
 	c.interpenetration_depth = (c.collision_point2 - c.collision_point1).getLength();
 
 	return true;
@@ -66,7 +69,7 @@ bool CPhysicsIntersections::spherePlane(iPhysicsObject &physics_object_sphere, i
 {
 #if WORKSHEET_2
 	cObjectFactoryPlane &planeFactory = *static_cast<cObjectFactoryPlane *>(&physics_object_plane.object->objectFactory.getClass());
-	float sphereRadius = physics_object_sphere.object->objectFactory->bounding_sphere_radius;
+	float sphereRadius = static_cast<cObjectFactorySphere *>(&physics_object_sphere.object->objectFactory.getClass())->radius;
 	CMatrix4<float> &planeMatrix = physics_object_plane.object->model_matrix;
 	vec4f spherePos = physics_object_plane.object->inverse_model_matrix * physics_object_sphere.object->position;
 
@@ -82,6 +85,11 @@ bool CPhysicsIntersections::spherePlane(iPhysicsObject &physics_object_sphere, i
 	c.collision_point1 = planeMatrix * Vector(spherePos[0], 0, spherePos[2]);
 	c.collision_point2 = physics_object_sphere.object->position - (c.collision_normal * sphereRadius);
 	c.interpenetration_depth = (c.collision_point2 - c.collision_point1).getLength();
+	
+	float tmpDepth = c.interpenetration_depth;
+	while (spherePos[1] + c.interpenetration_depth < sphereRadius) {
+		c.interpenetration_depth *= tmpDepth;
+	}
 
 	return true;
 #else

@@ -207,7 +207,7 @@ void CScenes::setupWorldBoxPlanes(float scale)
 	plane_factory->setInverseMass(0);
 
 	NEW_PLANE(plane0, boden_1, 0, -3*scale, 0);
-	NEW_PLANE(plane1, wand_18, 0, 0, -10*scale);
+	/*NEW_PLANE(plane1, wand_18, 0, 0, -10*scale);
 	plane1->rotate(CVector<3,float>(1, 0, 0), -CMath<float>::PI()*0.5f);
 	NEW_PLANE(plane2, wand_18, -10*scale, 0, 0);
 	plane2->rotate(CVector<3,float>(0, 1, 0), -CMath<float>::PI()*0.5f);
@@ -217,7 +217,7 @@ void CScenes::setupWorldBoxPlanes(float scale)
 	plane3->rotate(CVector<3,float>(0, 0, 1), -CMath<float>::PI()*0.5f);
 	NEW_PLANE(plane4, wand_18, 0, 0, 10*scale);
 	plane4->rotate(CVector<3,float>(0, 1, 0), -CMath<float>::PI());
-	plane4->rotate(CVector<3,float>(1, 0, 0), CMath<float>::PI()*0.5f);
+	plane4->rotate(CVector<3,float>(1, 0, 0), CMath<float>::PI()*0.5f);*/
 }
 
 /**
