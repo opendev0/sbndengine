@@ -35,7 +35,17 @@
 bool CPhysicsIntersections::sphereSphere(iPhysicsObject &physics_object1, iPhysicsObject &physics_object2, CPhysicsCollisionData &c)
 {
 #if WORKSHEET_2
-	//TODO
+	float radius1 = static_cast<cObjectFactorySphere *>(&physics_object1.object->objectFactory.getClass())->radius;
+	float radius2 = static_cast<cObjectFactorySphere *>(&physics_object2.object->objectFactory.getClass())->radius;
+	
+	c.physics_object1 = &physics_object1;
+	c.physics_object2 = &physics_object2;
+	c.collision_normal = (physics_object2.object->position - physics_object1.object->position).getNormalized();
+	c.collision_point1 = physics_object1.object->position + c.collision_normal * radius1;
+	c.collision_point2 = physics_object2.object->position - c.collision_normal * radius2;
+	c.interpenetration_depth = (c.collision_point2 - c.collision_point1).getLength();
+
+	return true;
 #else
 	return false;
 #endif
@@ -58,7 +68,25 @@ bool CPhysicsIntersections::sphereSphere(iPhysicsObject &physics_object1, iPhysi
 bool CPhysicsIntersections::spherePlane(iPhysicsObject &physics_object_sphere, iPhysicsObject &physics_object_plane, CPhysicsCollisionData &c)
 {
 #if WORKSHEET_2
+	cObjectFactoryPlane &planeFactory = *static_cast<cObjectFactoryPlane *>(&physics_object_plane.object->objectFactory.getClass());
+	float sphereRadius = static_cast<cObjectFactorySphere *>(&physics_object_sphere.object->objectFactory.getClass())->radius;
+	CMatrix4<float> &planeMatrix = physics_object_plane.object->model_matrix;
+	vec4f spherePos = physics_object_plane.object->inverse_model_matrix * physics_object_sphere.object->position;
 
+	// Check if sphere is inside plane bounds
+	if (spherePos[1] > sphereRadius
+			|| spherePos[0] + sphereRadius < -planeFactory.size_x / 2 || spherePos[0] - sphereRadius > planeFactory.size_x / 2
+			|| spherePos[2] + sphereRadius < -planeFactory.size_z / 2 || spherePos[2] - sphereRadius > planeFactory.size_z / 2)
+		return false;
+
+	c.physics_object1 = &physics_object_plane;
+	c.physics_object2 = &physics_object_sphere;
+	c.collision_normal = physics_object_plane.object->inverse_model_matrix.getTranspose() * Vector(0, 1, 0);
+	c.collision_point1 = planeMatrix * Vector(spherePos[0], 0, spherePos[2]);
+	c.collision_point2 = physics_object_sphere.object->position - (c.collision_normal * sphereRadius);
+	c.interpenetration_depth = (c.collision_point2 - c.collision_point1).getLength();
+	
+	return true;
 #else
 	return false;
 #endif
