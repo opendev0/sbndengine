@@ -71,10 +71,10 @@ cPhysicsSoftConstraintSpring::cPhysicsSoftConstraintSpring(
 void cPhysicsSoftConstraintSpring::updateAcceleration(double frame_elapsed_seconds)
 {
 #if WORKSHEET_3
-    CVector<3, float> distance = (physics_object2->object->position - physics_object1->object->position);
-    CVector<3, float> normal = distance.getNormalized();
-    float force = (equilibrium_length - distance.getLength()) * spring_constant;
-    physics_object1->linear_acceleration_accumulator -= normal * force * physics_object1->inv_mass;
-    physics_object2->linear_acceleration_accumulator += normal * force * physics_object2->inv_mass;
+	CVector<3, float> distance = (physics_object2->object->position - physics_object1->object->position);
+	CVector<3, float> normal = distance.getNormalized();
+	float force = (equilibrium_length - distance.getLength()) * spring_constant;
+	physics_object1->linear_acceleration_accumulator -= normal * force * physics_object1->inv_mass;
+	physics_object2->linear_acceleration_accumulator += normal * force * physics_object2->inv_mass;
 #endif
 }
