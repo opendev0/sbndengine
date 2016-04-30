@@ -118,7 +118,7 @@ public:
 	CQuaternion<T> &operator*=(const CQuaternion<T> &q)
 	{
 #if WORKSHEET_3a
-
+        *this = *this * q;
 #endif
 
 		return *this;
@@ -135,7 +135,10 @@ public:
 		CQuaternion<T> p;
 
 #if WORKSHEET_3a
-
+        p.w = w * q.w - (i * q.i + j * q.j + k * q.k);
+        p.i = w * q.i + i * q.w + j * q.k - k * q.j;
+        p.j = w * q.j + j * q.w + k * q.i - i * q.k;
+        p.k = w * q.k + k * q.w + i * q.j - j * q.i;
 #else
 		p = q;
 #endif
@@ -195,7 +198,13 @@ public:
 	CQuaternion<T> &setRotation(const CVector<3,float> &axis, T angle)
 	{
 #if WORKSHEET_3a
-
+        T c = CMath<T>::cos(angle * static_cast<T>(0.5));
+        T s = CMath<T>::sin(angle * static_cast<T>(0.5));
+        
+        w = c;
+        i = axis.data[0] * s;
+        j = axis.data[1] * s;
+        k = axis.data[2] * s;
 #endif
 		return *this;
 	}
@@ -245,7 +254,20 @@ public:
 	CMatrix3<T> getRotationMatrix()
 	{
 #if WORKSHEET_3a
-
+        CMatrix3<T> m;
+        m[0][0] = 1 - 2 * (j * j + k * k);
+        m[0][1] = 2 * (i * j + k * w);
+        m[0][2] = 2 * (i * k - j * w);
+        
+        m[1][0] = 2 * (i * j - k * w);
+        m[1][1] = 1 - 2 * (i * i + k * k);
+        m[1][2] = 2 * (j * k + i * w);
+        
+        m[2][0] = 2 * (i * k + j * w);
+        m[2][1] = 2 * (j * k - i * w);
+        m[2][2] = 1 - 2 * (i * i + j * j);
+        
+        return m;
 #else
 		CMatrix3<T> m;
 		m.loadIdentity();
@@ -261,7 +283,11 @@ public:
 	void normalize()
 	{
 #if WORKSHEET_3a
-
+        T length = CMath<T>::sqrt(w * w + i * i + j * j + k * k);
+        w /= length;
+        i /= length;
+        j /= length;
+        k /= length;
 #endif
 	}
 

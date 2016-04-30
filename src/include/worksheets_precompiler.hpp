@@ -9,7 +9,7 @@
 
 #define WORKSHEET_1		1	// explicit euler
 #define WORKSHEET_2		1	// collisions (sphere-sphere, sphere-plane), interpenetration
-#define WORKSHEET_3a	0	// quaternions
+#define WORKSHEET_3a	1	// quaternions
 #define WORKSHEET_3		1	// springs, ropes, linear momentum
 #define WORKSHEET_4		0	// collisions (sphere-box, plane-box), create your own scene
 #define WORKSHEET_5		0	// collision (box-box)
