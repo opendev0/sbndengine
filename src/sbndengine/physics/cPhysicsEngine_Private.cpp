@@ -304,7 +304,7 @@ bool cPhysicsEngine_Private::simulationTimestep(double p_elapsed_time)
 #endif
 
 #if WORKSHEET_3
-
+	updateSoftConstraints();
 #endif
 
 #if WORKSHEET_1
@@ -312,11 +312,11 @@ bool cPhysicsEngine_Private::simulationTimestep(double p_elapsed_time)
 #endif
 
 #if WORKSHEET_2
-
+	emptyAndGetCollisions();
 #endif
 
 #if WORKSHEET_3
-
+	applyCollisionImpulse();
 #endif
 
 #if WORKSHEET_3
@@ -326,11 +326,10 @@ bool cPhysicsEngine_Private::simulationTimestep(double p_elapsed_time)
 
 	int i = 1;
 #if WORKSHEET_2
-	for (; i < max_global_collision_solving_iterations; ++i) {
-		emptyAndGetCollisions();
-		if (list_colliding_objects.empty())
-			break;
+	while (!list_colliding_objects.empty() && i < max_global_collision_solving_iterations) {
 		resolveInterpenetrations();
+		emptyAndGetCollisions();
+		i++;
 	}
 #endif
 
