@@ -161,7 +161,6 @@ void cPhysicsEngine_Private::getHardConstraintCollisions()
 
 		CPhysicsCollisionData cData;
 
-
 		if (c.updateHardConstraintsCollisions(cData))
 			list_colliding_objects.push_back(cData);
 	}
@@ -316,11 +315,11 @@ bool cPhysicsEngine_Private::simulationTimestep(double p_elapsed_time)
 #endif
 
 #if WORKSHEET_3
-	applyCollisionImpulse();
+	getHardConstraintCollisions();
 #endif
 
 #if WORKSHEET_3
-
+	applyCollisionImpulse();
 #endif
 
 
