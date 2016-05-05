@@ -58,7 +58,20 @@ cPhysicsHardConstraintRope::cPhysicsHardConstraintRope(
 bool cPhysicsHardConstraintRope::updateHardConstraintsCollisions(class CPhysicsCollisionData &c)
 {
 #if WORKSHEET_3
+	CVector<3, float> distanceVector = physics_object2->object->position - physics_object1->object->position;
+	float distance = distanceVector.getLength();
+	
+	if (distance < equilibrium_length)
+		return false;
 
+	c.physics_object1 = &(*physics_object1);
+	c.physics_object2 = &(*physics_object2);
+	c.collision_normal = distanceVector.getNormalized();
+	c.collision_point1 = c.physics_object1->object->position;
+	c.collision_point2 = c.physics_object2->object->position;
+	c.interpenetration_depth = equilibrium_length - distance;
+
+	return true;
 #else
 	return false;
 #endif

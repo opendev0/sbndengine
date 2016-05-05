@@ -316,11 +316,11 @@ bool cPhysicsEngine_Private::simulationTimestep(double p_elapsed_time)
 #endif
 
 #if WORKSHEET_3
-	applyCollisionImpulse();
+	getHardConstraintCollisions();
 #endif
 
 #if WORKSHEET_3
-
+	applyCollisionImpulse();
 #endif
 
 
