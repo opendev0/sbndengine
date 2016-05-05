@@ -327,7 +327,8 @@ bool cPhysicsEngine_Private::simulationTimestep(double p_elapsed_time)
 	int i = 1;
 #if WORKSHEET_2
 	for (; i < max_global_collision_solving_iterations && !list_colliding_objects.empty(); ++i) {
-		detectAndResolveInterpenetrations();
+		resolveInterpenetrations();
+		emptyAndGetCollisions();
 	}
 #endif
 
