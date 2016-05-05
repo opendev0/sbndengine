@@ -33,15 +33,20 @@ public:
 
 #endif
 
-		if (	(c.physics_object1->no_rotations_and_frictions && c.physics_object2->no_rotations_and_frictions)
+		if ((c.physics_object1->no_rotations_and_frictions && c.physics_object2->no_rotations_and_frictions)
 #if !WORKSHEET_6
 || 1
 #endif
 )
 		{
 #if WORKSHEET_3
+			CVector<3, float> closingVelocity = c.collision_normal * c.collision_normal.dotProd(c.physics_object2->velocity - c.physics_object1->velocity);
+			float CrAdd = 1 + (c.physics_object1->restitution_coefficient + c.physics_object2->restitution_coefficient) / 2;
+			float d1 = c.physics_object1->inv_mass / (c.physics_object1->inv_mass + c.physics_object2->inv_mass);
 
-			#endif
+			c.physics_object1->velocity += closingVelocity * CrAdd * d1;
+			c.physics_object2->velocity -= closingVelocity * CrAdd * (1 - d1);
+#endif
 		}
 		else if ((c.physics_object1->friction_disabled && c.physics_object2->friction_disabled)
 #if !WORKSHEET_7
