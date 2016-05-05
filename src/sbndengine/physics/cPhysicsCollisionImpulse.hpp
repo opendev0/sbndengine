@@ -47,7 +47,7 @@ public:
 			float collision_velocity2 = (-c.collision_normal).dotProd(c.physics_object2->velocity);
 			float closing_velocity = (collision_velocity1 - collision_velocity2);
 
-			float coefficient_of_restitution = (c.physics_object1->restitution_coefficient * c.physics_object2->restitution_coefficient)/2.0;
+			float coefficient_of_restitution = (c.physics_object1->restitution_coefficient + c.physics_object2->restitution_coefficient)/2.0;
 
 			c.physics_object1->velocity = -c.collision_normal*closing_velocity*(c.physics_object1->inv_mass/(c.physics_object1->inv_mass + c.physics_object2->inv_mass))*(-(1+coefficient_of_restitution)) + c.physics_object1->velocity;
 			c.physics_object2->velocity = c.collision_normal*closing_velocity*(c.physics_object2->inv_mass/(c.physics_object1->inv_mass + c.physics_object2->inv_mass))*(-(1+coefficient_of_restitution)) + c.physics_object2->velocity;
