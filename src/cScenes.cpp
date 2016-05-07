@@ -944,6 +944,18 @@ void CScenes::setupScene20()
  */
 void CScenes::setupScene21()
 {
+	scene_description = "Spring Sphere";
+
+	setupWorldBoxPlanes();
+
+	iRef<cObjectFactorySphere> sphere_factory = new cObjectFactorySphere(2);
+
+	NEW_SPHERE(sphere0, pink, 0.5, 1, 0);
+
+	NEW_SPHERE(sphere1, red, 0, 9, 0);
+
+
+	engine.physics.setGravitation(CVector<3,float>(0, -9.81f, 0));
 }
 
 
