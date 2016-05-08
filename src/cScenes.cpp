@@ -1,7 +1,7 @@
 #include "cScenes.hpp"
 #include "sbndengine/iSbndEngine.hpp"
 
-#define TEXTURE_PATH "src/textures/"
+#define TEXTURE_PATH "../src/textures/"
 
 
 /**
