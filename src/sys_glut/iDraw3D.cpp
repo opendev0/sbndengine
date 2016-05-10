@@ -33,7 +33,7 @@ extern "C"{
 #include <iostream>
 #include "CGlError.hpp"
 
-#define SHADER_PATH "../src/shaders/"
+#define SHADER_PATH "src/shaders/"
 
 
 class cPrivateDataDraw3D
