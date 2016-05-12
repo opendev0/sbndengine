@@ -257,7 +257,7 @@ bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhys
         //vertex is outside of plane
         if (fabs(current[0]) > planeFactory.size_x / 2 || fabs(current[2]) > planeFactory.size_z / 2) {
             
-            vertecesOutsidePlane.push_back(*arr);                       
+            vertecesOutsidePlane.push_back(*arr);
             if (current[1] <= 0) {
                 sideOfPlane--;
             }
@@ -276,7 +276,7 @@ bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhys
                 maxPenetrationVertexBelowPlane = current;
             }
         }
-        //vertex is above or in plane
+        //vertex is above plane
         else {
             sideOfPlane++;
             //vertex is the farthest above plane
@@ -287,93 +287,98 @@ bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhys
         }
     }
 
-    if (abs(sideOfPlane) + vertecesOutsidePlane.size() == 8 || vertecesOutsidePlane.size() == 8) {
+    //no collision when all points are on one side of plane or outside of plane
+    if (abs(sideOfPlane) == 8 || vertecesOutsidePlane.size() == 8) {
         return false;
     }
 
     c.physics_object1 = &physics_object_plane;
     c.physics_object2 = &physics_object_box;
     
+    //check for edge/edge collisions
     if (!vertecesOutsidePlane.empty()) {
+        
+        //for each vertex outside we check all edges connecting it to its neighbours
         Vector calculateNeighbors[3] = {Vector(-1, 1, 1), Vector(1, -1, 1), Vector(1, 1, -1)};
+        
+        Vector largest = Vector();
+        Vector largestNeighbour = Vector();
+        
         for (std::list<Vector>::iterator it = vertecesOutsidePlane.begin(); it != vertecesOutsidePlane.end(); ++it) {
+            
             Vector current = plane->inverse_model_matrix * box->model_matrix * *it;
             
-            
-            if (sideOfPlane < 0 && current[1] >= maxPenetrationAbovePlane && current[1] >= 0) {
-                for (Vector* factor = calculateNeighbors; factor != calculateNeighbors + 3; factor++) {
-                    Vector neighbour = plane->inverse_model_matrix * box->model_matrix * (current * *factor);
-                    if (!(fabs(neighbour[0]) > planeFactory.size_x / 2 || fabs(neighbour[2]) > planeFactory.size_z / 2) && neighbour[1] < 0) {
+            if (sideOfPlane < 0) {
+                //the current vertex is above the plane
+                if (current[1] >= maxPenetrationAbovePlane && current[1] >= 0 && current[1] >= largest[1]) {
+
+                    largest = current;
+                    
+                    for (Vector* factor = calculateNeighbors; factor != calculateNeighbors + 3; factor++) {
                         
-                        LinePP boxEdge = LinePP(current, neighbour);
-                        LinePP planeEdge = LinePP(Vector(planeFactory.size_x/2, 0, -planeFactory.size_z/2), Vector(planeFactory.size_x/2, 0, planeFactory.size_z/2));
-                        Vector boxClosestVertex;
-                        Vector planeClosestVertex;
-                        
-                        IntLinePPLinePP::closestPoints(boxEdge, planeEdge, boxClosestVertex, planeClosestVertex);
-                        
-                        if (boxClosestVertex[1] > 0) {
-                            c.collision_normal = plane->inverse_model_matrix.getTranspose() * (planeClosestVertex - boxClosestVertex);
-                            c.collision_point1 = plane->model_matrix * planeClosestVertex;
-                            c.collision_point2 = plane->model_matrix * boxClosestVertex;
-                            c.interpenetration_depth = (c.collision_point1 - c.collision_point2).getLength();
-                            return true;
-                        }
-                        
-                        planeEdge = LinePP(Vector(-planeFactory.size_x/2, 0, planeFactory.size_z/2), Vector(planeFactory.size_x/2, 0, planeFactory.size_z/2));
-                        
-                        IntLinePPLinePP::closestPoints(boxEdge, planeEdge, boxClosestVertex, planeClosestVertex);
-                        
-                        if (boxClosestVertex[1] > 0) {
-                            c.collision_normal = plane->inverse_model_matrix.getTranspose() * (planeClosestVertex - boxClosestVertex);
-                            c.collision_point1 = plane->model_matrix * planeClosestVertex;
-                            c.collision_point2 = plane->model_matrix * boxClosestVertex;
-                            c.interpenetration_depth = (c.collision_point1 - c.collision_point2).getLength();
-                            return true;
+                        Vector neighbour = plane->inverse_model_matrix * box->model_matrix * (current * *factor);
+                        //the current neighbour is below the plane and inside the plane
+                        if (!(fabs(neighbour[0]) > planeFactory.size_x / 2 || fabs(neighbour[2]) > planeFactory.size_z / 2) && neighbour[1] < 0 && neighbour[1] < largestNeighbour[1]) {
+                            largestNeighbour = neighbour;
                         }
                     }
                 }
-            }
+            }            
             
-            else if (sideOfPlane >= 0 && current[1] < maxPenetrationBelowPlane && current[1] < 0) {
-                for (Vector* factor = calculateNeighbors; factor != calculateNeighbors + 3; factor++) {
-                    Vector neighbour = plane->inverse_model_matrix * box->model_matrix * (current * *factor);
-                    if (!(fabs(neighbour[0]) > planeFactory.size_x / 2 || fabs(neighbour[2]) > planeFactory.size_z / 2) && neighbour[1] >= 0) {
+            else { 
+
+                if (sideOfPlane >= 0 && current[1] < maxPenetrationBelowPlane && current[1] < 0 && current[1] < largest[1]) {
+                    //the current vertex is below the plane
+                    largest = current;
+                    
+                    for (Vector* factor = calculateNeighbors; factor != calculateNeighbors + 3; factor++) {
                         
-                        LinePP boxEdge = LinePP(current, neighbour);
-                        LinePP planeEdge = LinePP(Vector(planeFactory.size_x/2, 0, -planeFactory.size_z/2), Vector(planeFactory.size_x/2, 0, planeFactory.size_z/2));
-                        Vector boxClosestVertex;
-                        Vector planeClosestVertex;
-                        
-                        IntLinePPLinePP::closestPoints(boxEdge, planeEdge, boxClosestVertex, planeClosestVertex);
-                        
-                        if (boxClosestVertex[1] <= 0) {
-                            c.collision_normal = plane->inverse_model_matrix.getTranspose() * (planeClosestVertex - boxClosestVertex);
-                            c.collision_point1 = plane->model_matrix * planeClosestVertex;
-                            c.collision_point2 = plane->model_matrix * boxClosestVertex;
-                            c.interpenetration_depth = (c.collision_point1 - c.collision_point2).getLength();
-                            return true;
-                        }
-                        
-                        
-                        planeEdge = LinePP(Vector(-planeFactory.size_x/2, 0, planeFactory.size_z/2), Vector(planeFactory.size_x/2, 0, planeFactory.size_z/2));
-                        
-                        IntLinePPLinePP::closestPoints(boxEdge, planeEdge, boxClosestVertex, planeClosestVertex);
-                        
-                        if (boxClosestVertex[1] <= 0) {
-                            c.collision_normal = plane->inverse_model_matrix.getTranspose() * (planeClosestVertex - boxClosestVertex);
-                            c.collision_point1 = plane->model_matrix * planeClosestVertex;
-                            c.collision_point2 = plane->model_matrix * boxClosestVertex;
-                            c.interpenetration_depth = (c.collision_point1 - c.collision_point2).getLength();
-                            return true;
+                        Vector neighbour = plane->inverse_model_matrix * box->model_matrix * (current * *factor);
+                        //the current neighbour is above the plane and inside the plane
+                        if (!(fabs(neighbour[0]) > planeFactory.size_x / 2 || fabs(neighbour[2]) > planeFactory.size_z / 2) && neighbour[1] >= 0 && neighbour[1] >= largestNeighbour[1]) {
+                            largestNeighbour = neighbour;
                         }
                     }
                 }
             }
         }
+            
+
+    
+        //calculate collision with edges parallel to z axis
+        LinePP boxEdge = LinePP(largest, largestNeighbour);
+        LinePP planeEdge = LinePP(Vector(planeFactory.size_x/2, 0, -planeFactory.size_z/2), Vector(planeFactory.size_x/2, 0, planeFactory.size_z/2));
+        Vector boxClosestVertex, planeClosestVertex;
+        
+        IntLinePPLinePP::closestPoints(boxEdge, planeEdge, boxClosestVertex, planeClosestVertex);
+        
+        if ((boxClosestVertex - planeClosestVertex).getLength() <= 0.1) {
+            c.collision_normal = plane->inverse_model_matrix.getTranspose() * (boxClosestVertex - planeClosestVertex).getNormalized();
+            c.collision_point1 = plane->model_matrix * planeClosestVertex;
+            c.collision_point2 = plane->model_matrix * boxClosestVertex;
+            c.interpenetration_depth = (c.collision_point1 - c.collision_point2).getLength();
+            return true;
+        }
+        
+ 
+ 
+        //calculate collisions parallel to x axis
+        planeEdge = LinePP(Vector(-planeFactory.size_x/2, 0, planeFactory.size_z/2), Vector(planeFactory.size_x/2, 0, planeFactory.size_z/2));
+        
+        IntLinePPLinePP::closestPoints(boxEdge, planeEdge, boxClosestVertex, planeClosestVertex);
+        
+        if ((boxClosestVertex - planeClosestVertex).getLength() <= 0.1) {
+            c.collision_normal = plane->inverse_model_matrix.getTranspose() * (planeClosestVertex - boxClosestVertex).getNormalized();
+            c.collision_point1 = plane->model_matrix * planeClosestVertex;
+            c.collision_point2 = plane->model_matrix * boxClosestVertex;
+            c.interpenetration_depth = (c.collision_point1 - c.collision_point2).getLength();
+            return true;
+        }
         
         return false;
     }
+    
+    
     
     //more points below plane than above => move box downwards
     if (sideOfPlane < 0) {
