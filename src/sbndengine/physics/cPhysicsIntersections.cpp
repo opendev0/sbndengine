@@ -304,29 +304,33 @@ bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhys
                 for (Vector* factor = calculateNeighbors; factor != calculateNeighbors + 3; factor++) {
                     Vector neighbour = plane->inverse_model_matrix * box->model_matrix * (current * *factor);
                     if (!(fabs(neighbour[0]) > planeFactory.size_x / 2 || fabs(neighbour[2]) > planeFactory.size_z / 2) && neighbour[1] < 0) {
-                        Vector u = (neighbour - current).getNormalized();
-                        Vector v = Vector(0, 0, planeFactory.size_z).getNormalized();
                         
-                        float a = u.dotProd(u);
-                        float b = u.dotProd(v);
-                        float c2 = v.dotProd(v);
-                        float d = u.dotProd(current - Vector(planeFactory.size_x/2, 0, -planeFactory.size_z/2));
-                        float e = v.dotProd(current - Vector(planeFactory.size_x/2, 0, -planeFactory.size_z/2));
-                        float boxClosest = (b*e - c2*d)/(a*c2 - b*b);
-                        float planeClosest = (a*e - b*d)/(a*c2 - b*b);
+                        LinePP boxEdge = LinePP(current, neighbour);
+                        LinePP planeEdge = LinePP(Vector(planeFactory.size_x/2, 0, -planeFactory.size_z/2), Vector(planeFactory.size_x/2, 0, planeFactory.size_z/2));
+                        Vector boxClosestVertex;
+                        Vector planeClosestVertex;
                         
-                        Vector boxClosestVertex = current + u*boxClosest;
-                        Vector planeClosestVertex = Vector(planeFactory.size_x/2, 0, -planeFactory.size_z/2) + v*planeClosest;
+                        IntLinePPLinePP::closestPoints(boxEdge, planeEdge, boxClosestVertex, planeClosestVertex);
                         
                         if (boxClosestVertex[1] > 0) {
-                            std::cout << (boxClosestVertex - planeClosestVertex).getLength() << std::endl;
                             c.collision_normal = plane->inverse_model_matrix.getTranspose() * (planeClosestVertex - boxClosestVertex);
                             c.collision_point1 = plane->model_matrix * planeClosestVertex;
                             c.collision_point2 = plane->model_matrix * boxClosestVertex;
                             c.interpenetration_depth = (c.collision_point1 - c.collision_point2).getLength();
                             return true;
                         }
-
+                        
+                        planeEdge = LinePP(Vector(-planeFactory.size_x/2, 0, planeFactory.size_z/2), Vector(planeFactory.size_x/2, 0, planeFactory.size_z/2));
+                        
+                        IntLinePPLinePP::closestPoints(boxEdge, planeEdge, boxClosestVertex, planeClosestVertex);
+                        
+                        if (boxClosestVertex[1] > 0) {
+                            c.collision_normal = plane->inverse_model_matrix.getTranspose() * (planeClosestVertex - boxClosestVertex);
+                            c.collision_point1 = plane->model_matrix * planeClosestVertex;
+                            c.collision_point2 = plane->model_matrix * boxClosestVertex;
+                            c.interpenetration_depth = (c.collision_point1 - c.collision_point2).getLength();
+                            return true;
+                        }
                     }
                 }
             }
@@ -335,22 +339,28 @@ bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhys
                 for (Vector* factor = calculateNeighbors; factor != calculateNeighbors + 3; factor++) {
                     Vector neighbour = plane->inverse_model_matrix * box->model_matrix * (current * *factor);
                     if (!(fabs(neighbour[0]) > planeFactory.size_x / 2 || fabs(neighbour[2]) > planeFactory.size_z / 2) && neighbour[1] >= 0) {
-                        Vector u = (neighbour - current).getNormalized();
-                        Vector v = Vector(0, 0, planeFactory.size_z).getNormalized();
                         
-                        float a = u.dotProd(u);
-                        float b = u.dotProd(v);
-                        float c2 = v.dotProd(v);
-                        float d = u.dotProd(current - Vector(planeFactory.size_x/2, 0, -planeFactory.size_z/2));
-                        float e = v.dotProd(current - Vector(planeFactory.size_x/2, 0, -planeFactory.size_z/2));
-                        float boxClosest = (b*e - c2*d)/(a*c2 - b*b);
-                        float planeClosest = (a*e - b*d)/(a*c2 - b*b);
+                        LinePP boxEdge = LinePP(current, neighbour);
+                        LinePP planeEdge = LinePP(Vector(planeFactory.size_x/2, 0, -planeFactory.size_z/2), Vector(planeFactory.size_x/2, 0, planeFactory.size_z/2));
+                        Vector boxClosestVertex;
+                        Vector planeClosestVertex;
                         
-                        Vector boxClosestVertex = current + u*boxClosest;
-                        Vector planeClosestVertex = Vector(planeFactory.size_x/2, 0, -planeFactory.size_z/2) + v*planeClosest;
+                        IntLinePPLinePP::closestPoints(boxEdge, planeEdge, boxClosestVertex, planeClosestVertex);
                         
                         if (boxClosestVertex[1] <= 0) {
-                            std::cout << (boxClosestVertex - planeClosestVertex).getLength() << std::endl;
+                            c.collision_normal = plane->inverse_model_matrix.getTranspose() * (planeClosestVertex - boxClosestVertex);
+                            c.collision_point1 = plane->model_matrix * planeClosestVertex;
+                            c.collision_point2 = plane->model_matrix * boxClosestVertex;
+                            c.interpenetration_depth = (c.collision_point1 - c.collision_point2).getLength();
+                            return true;
+                        }
+                        
+                        
+                        planeEdge = LinePP(Vector(-planeFactory.size_x/2, 0, planeFactory.size_z/2), Vector(planeFactory.size_x/2, 0, planeFactory.size_z/2));
+                        
+                        IntLinePPLinePP::closestPoints(boxEdge, planeEdge, boxClosestVertex, planeClosestVertex);
+                        
+                        if (boxClosestVertex[1] <= 0) {
                             c.collision_normal = plane->inverse_model_matrix.getTranspose() * (planeClosestVertex - boxClosestVertex);
                             c.collision_point1 = plane->model_matrix * planeClosestVertex;
                             c.collision_point2 = plane->model_matrix * boxClosestVertex;

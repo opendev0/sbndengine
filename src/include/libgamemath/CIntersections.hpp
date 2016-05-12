@@ -268,7 +268,28 @@ template <typename T>
 class CIntersectionsLinePPLinePP
 {
 #if WORKSHEET_4
-
+public:
+    static inline void closestPoints(
+			const CLinePP<T> &line0,
+			const CLinePP<T> &line1,
+			CVector<3,T> &closest_point0,
+            CVector<3,T> &closest_point1
+			)
+        {
+        CVector<3,T> u = (line0.v1 - line0.v0);
+        CVector<3,T> v = (line1.v1 - line1.v0);
+        
+        T a = u.dotProd(u);
+        T b = u.dotProd(v);
+        T c = v.dotProd(v);
+        T d = u.dotProd(line0.v0 - line1.v0);
+        T e = v.dotProd(line0.v0 - line1.v0);
+        T line0Closest = (b*e - c*d)/(a*c - b*b);
+        T line1Closest = (a*e - b*d)/(a*c - b*b);
+        
+        closest_point0 = line0.v0 + u*line0Closest;
+        closest_point1 = line1.v0 + v*line1Closest;
+    }
 #endif
 };
 
