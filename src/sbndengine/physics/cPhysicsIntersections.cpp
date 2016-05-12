@@ -104,15 +104,14 @@ bool CPhysicsIntersections::sphereBox(iPhysicsObject &physics_object_sphere, iPh
     vec4f spherePos = physics_object_box.object->inverse_model_matrix * physics_object_sphere.object->position;
     Vector boxHalfSize = static_cast<cObjectFactoryBox *>(&physics_object_box.object->objectFactory.getClass())->half_size;
     
+    c.physics_object1 = &physics_object_box;
+    c.physics_object2 = &physics_object_sphere;
     
     //planes
     //yz-plane
     if (fabs(spherePos[0]) < sphereRadius + boxHalfSize[0] && fabs(spherePos[1]) < boxHalfSize[1] && fabs(spherePos[2]) < boxHalfSize[2]) {
                     
         int sgn = (spherePos[0] >= 0) - (spherePos[0] < 0);
-        
-        c.physics_object1 = &physics_object_box;
-        c.physics_object2 = &physics_object_sphere;
         c.collision_normal = physics_object_box.object->inverse_model_matrix.getTranspose() * Vector(sgn, 0, 0);
         c.collision_point1 = physics_object_box.object->model_matrix * Vector(sgn*boxHalfSize[0], spherePos[1], spherePos[2]);
         c.collision_point2 = physics_object_sphere.object->position - (c.collision_normal * sphereRadius);
@@ -126,8 +125,6 @@ bool CPhysicsIntersections::sphereBox(iPhysicsObject &physics_object_sphere, iPh
                    
         int sgn = (spherePos[1] >= 0) - (spherePos[1] < 0);
         
-        c.physics_object1 = &physics_object_box;
-        c.physics_object2 = &physics_object_sphere;
         c.collision_normal = physics_object_box.object->inverse_model_matrix.getTranspose() * Vector(0, sgn, 0);
         c.collision_point1 = physics_object_box.object->model_matrix * Vector(spherePos[0], sgn*boxHalfSize[1], spherePos[2]);
         c.collision_point2 = physics_object_sphere.object->position - (c.collision_normal * sphereRadius);
@@ -141,8 +138,6 @@ bool CPhysicsIntersections::sphereBox(iPhysicsObject &physics_object_sphere, iPh
                     
         int sgn = (spherePos[2] >= 0) - (spherePos[2] < 0);
         
-        c.physics_object1 = &physics_object_box;
-        c.physics_object2 = &physics_object_sphere;
         c.collision_normal = physics_object_box.object->inverse_model_matrix.getTranspose() * Vector(0, 0, sgn);
         c.collision_point1 = physics_object_box.object->model_matrix * Vector(spherePos[0], spherePos[1], sgn*boxHalfSize[2]);
         c.collision_point2 = physics_object_sphere.object->position - (c.collision_normal * sphereRadius);
@@ -159,8 +154,6 @@ bool CPhysicsIntersections::sphereBox(iPhysicsObject &physics_object_sphere, iPh
         int ySgn = (spherePos[1] >= 0) - (spherePos[1] < 0);
         int zSgn = (spherePos[2] >= 0) - (spherePos[2] < 0);
         
-        c.physics_object1 = &physics_object_box;
-        c.physics_object2 = &physics_object_sphere;
         c.collision_normal = physics_object_box.object->inverse_model_matrix.getTranspose() * Vector(0, spherePos[1] - ySgn*boxHalfSize[1], spherePos[2] - ySgn*boxHalfSize[2]).getNormalized();
         c.collision_point1 = physics_object_box.object->model_matrix * Vector(spherePos[0], ySgn*boxHalfSize[1], zSgn*boxHalfSize[2]);
         c.collision_point2 = physics_object_sphere.object->position - (c.collision_normal * sphereRadius);
@@ -175,8 +168,6 @@ bool CPhysicsIntersections::sphereBox(iPhysicsObject &physics_object_sphere, iPh
         int xSgn = (spherePos[0] >= 0) - (spherePos[0] < 0);
         int zSgn = (spherePos[2] >= 0) - (spherePos[2] < 0);
         
-        c.physics_object1 = &physics_object_box;
-        c.physics_object2 = &physics_object_sphere;
         c.collision_normal = physics_object_box.object->inverse_model_matrix.getTranspose() * Vector(spherePos[0] - xSgn*boxHalfSize[0], 0, spherePos[2] - zSgn*boxHalfSize[2]).getNormalized();
         c.collision_point1 = physics_object_box.object->model_matrix * Vector(xSgn*boxHalfSize[0], spherePos[1], zSgn*boxHalfSize[2]);
         c.collision_point2 = physics_object_sphere.object->position - (c.collision_normal * sphereRadius);
@@ -191,8 +182,6 @@ bool CPhysicsIntersections::sphereBox(iPhysicsObject &physics_object_sphere, iPh
         int xSgn = (spherePos[0] >= 0) - (spherePos[0] < 0);
         int ySgn = (spherePos[1] >= 0) - (spherePos[1] < 0);
         
-        c.physics_object1 = &physics_object_box;
-        c.physics_object2 = &physics_object_sphere;
         c.collision_normal = physics_object_box.object->inverse_model_matrix.getTranspose() * Vector(spherePos[0] - xSgn*boxHalfSize[0], spherePos[1] - ySgn*boxHalfSize[1], 0).getNormalized();
         c.collision_point1 = physics_object_box.object->model_matrix * Vector(xSgn*boxHalfSize[0], ySgn*boxHalfSize[1], spherePos[2]);
         c.collision_point2 = physics_object_sphere.object->position - (c.collision_normal *sphereRadius);
@@ -209,8 +198,6 @@ bool CPhysicsIntersections::sphereBox(iPhysicsObject &physics_object_sphere, iPh
         int ySgn = (spherePos[1] >= 0) - (spherePos[1] < 0);
         int zSgn = (spherePos[2] >= 0) - (spherePos[2] < 0);
         
-        c.physics_object1 = &physics_object_box;
-        c.physics_object2 = &physics_object_sphere;
         c.collision_normal = physics_object_box.object->inverse_model_matrix.getTranspose() * Vector(spherePos[0] - xSgn*boxHalfSize[0], spherePos[1] - ySgn*boxHalfSize[1], spherePos[2] - zSgn*boxHalfSize[2]).getNormalized();
         c.collision_point1 = physics_object_box.object->model_matrix * Vector(xSgn*boxHalfSize[0], ySgn*boxHalfSize[1], zSgn*boxHalfSize[2]);
         c.collision_point2 = physics_object_sphere.object->position - (c.collision_normal * sphereRadius);
@@ -245,7 +232,72 @@ bool CPhysicsIntersections::planePlane(iPhysicsObject &physics_object_plane1, iP
 bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhysicsObject &physics_object_box, CPhysicsCollisionData &c)
 {
 #if WORKSHEET_4
-    return false;
+    iRef<iObject> box = physics_object_box.object;
+    Vector boxHalfSize = static_cast<cObjectFactoryBox *>(&box->objectFactory.getClass())->half_size;
+    iRef<iObject> plane = physics_object_plane.object;
+    cObjectFactoryPlane &planeFactory = *static_cast<cObjectFactoryPlane *>(&physics_object_plane.object->objectFactory.getClass());
+    
+    int sideOfPlane = 0;
+    float maxPenetrationBelowPlane = 0;
+    float maxPenetrationAbovePlane = 0;
+    Vector maxPenetrationVertexBelowPlane;
+    Vector maxPenetrationVertexAbovePlane;
+    
+    for (int i = -1; i <= 1; i += 2) {
+        for (int j = -1; j <= 1; j += 2) {
+            for (int k = -1; k <= 1; k += 2) {
+                vec4f current = plane->inverse_model_matrix * box->model_matrix * vec4f(boxHalfSize[0]*i, boxHalfSize[1]*j, boxHalfSize[2]*k, 1);
+                
+                //vertex is outside of plane
+                if (fabs(current[0]) > planeFactory.size_x / 2 || fabs(current[2]) > planeFactory.size_z / 2) {
+                    continue;
+                }
+                
+                if (current[1] <= 0) {
+                    sideOfPlane--;
+                    if (current[1] < maxPenetrationBelowPlane) {
+                        maxPenetrationBelowPlane = current[1];
+                        maxPenetrationVertexBelowPlane = Vector(current[0], current[1], current[2]);
+                    }
+                }
+                else {
+                    sideOfPlane++;
+                    if (current[1] > maxPenetrationAbovePlane) {
+                        maxPenetrationAbovePlane = current[1];
+                        maxPenetrationVertexAbovePlane = Vector(current[0], current[1], current[2]);
+                    }
+                }
+            }
+        }
+    }
+    
+    if (abs(sideOfPlane) == 8) {
+        return false;
+    }
+
+    c.physics_object1 = &physics_object_plane;
+    c.physics_object2 = &physics_object_box;
+    
+    
+    //more points below plane than above => move box downwards
+    if (sideOfPlane < 0) {
+        std::cout << "move box downwards" << std::endl;
+        c.collision_normal = plane->inverse_model_matrix.getTranspose() * Vector(0, -1, 0);
+        c.collision_point1 = plane->model_matrix * Vector(maxPenetrationVertexAbovePlane[0], 0, maxPenetrationVertexAbovePlane[2]);
+        c.collision_point2 = plane->model_matrix * maxPenetrationVertexAbovePlane;
+        c.interpenetration_depth = (c.collision_point2 - c.collision_point1).getLength();
+    }
+    else {
+        std::cout << "move box upwards" << std::endl;
+        c.collision_normal = plane->inverse_model_matrix.getTranspose() * Vector(0, 1, 0);
+        c.collision_point1 = plane->model_matrix * Vector(maxPenetrationVertexBelowPlane[0], 0, maxPenetrationVertexBelowPlane[2]);
+        c.collision_point2 = plane->model_matrix * maxPenetrationVertexBelowPlane;
+        c.interpenetration_depth = (c.collision_point2 - c.collision_point1).getLength();
+    }
+    
+    std::cout << c.interpenetration_depth << ", " << c.collision_normal << std::endl;
+    return true;
+    
 #else
 	return false;
 #endif
