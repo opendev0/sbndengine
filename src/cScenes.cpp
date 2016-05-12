@@ -1054,7 +1054,7 @@ void CScenes::setupScene22()
 	plane1->rotate(CVector<3,float>(0, 0, 0), -CMath<float>::PI()*0.5f);
     
     iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(3, 3, 3);
-    NEW_BOX(box, green, 5, 10, 0);
+    NEW_BOX(box, green, 5.5, 10, 0);
     box->rotate(CVector<3, float>(1, 0, 0), CMath<float>::PI()*0.25f);
     box->rotate(CVector<3, float>(0, 0, 1), CMath<float>::PI()*0.25f);
 }

@@ -238,25 +238,32 @@ bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhys
     cObjectFactoryPlane &planeFactory = *static_cast<cObjectFactoryPlane *>(&physics_object_plane.object->objectFactory.getClass());
     
     int sideOfPlane = 0;
-    int vertecesOutsidePlane = 0;
     float maxPenetrationBelowPlane = 0;
     float maxPenetrationAbovePlane = 0;
     Vector maxPenetrationVertexBelowPlane;
     Vector maxPenetrationVertexAbovePlane;
-
+    
+    std::list<Vector> vertecesOutsidePlane;
+    
+    
     Vector vertexList[8] = {Vector(-boxHalfSize[0], -boxHalfSize[1], -boxHalfSize[2]), Vector(-boxHalfSize[0], -boxHalfSize[1], boxHalfSize[2]), 
                             Vector(-boxHalfSize[0], boxHalfSize[1], -boxHalfSize[2]), Vector(-boxHalfSize[0], boxHalfSize[1], boxHalfSize[2]),
                             Vector(boxHalfSize[0], -boxHalfSize[1], -boxHalfSize[2]), Vector(boxHalfSize[0], -boxHalfSize[1], boxHalfSize[2]), 
                             Vector(boxHalfSize[0], boxHalfSize[1], -boxHalfSize[2]), Vector(boxHalfSize[0], boxHalfSize[1], boxHalfSize[2])};
     
     for (Vector* arr = vertexList; arr != vertexList + 8; arr++) {
-        vec4f current = plane->inverse_model_matrix * box->model_matrix * *arr;
+        Vector current = plane->inverse_model_matrix * box->model_matrix * *arr;
         
         //vertex is outside of plane
         if (fabs(current[0]) > planeFactory.size_x / 2 || fabs(current[2]) > planeFactory.size_z / 2) {
-            vertecesOutsidePlane++;
             
-            
+            vertecesOutsidePlane.push_back(*arr);                       
+            if (current[1] <= 0) {
+                sideOfPlane--;
+            }
+            else {
+                sideOfPlane++;
+            }
             continue;
         }
         
@@ -266,7 +273,7 @@ bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhys
             //vertex is the farthest below plane
             if (current[1] < maxPenetrationBelowPlane) {
                 maxPenetrationBelowPlane = current[1];
-                maxPenetrationVertexBelowPlane = Vector(current[0], current[1], current[2]);
+                maxPenetrationVertexBelowPlane = current;
             }
         }
         //vertex is above or in plane
@@ -275,19 +282,88 @@ bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhys
             //vertex is the farthest above plane
             if (current[1] > maxPenetrationAbovePlane) {
                 maxPenetrationAbovePlane = current[1];
-                maxPenetrationVertexAbovePlane = Vector(current[0], current[1], current[2]);
+                maxPenetrationVertexAbovePlane = current;
             }
         }
     }
-    
-    if (abs(sideOfPlane) + vertecesOutsidePlane == 8 || vertecesOutsidePlane == 8) {
+
+    if (abs(sideOfPlane) + vertecesOutsidePlane.size() == 8 || vertecesOutsidePlane.size() == 8) {
         return false;
     }
-
 
     c.physics_object1 = &physics_object_plane;
     c.physics_object2 = &physics_object_box;
     
+    if (!vertecesOutsidePlane.empty()) {
+        Vector calculateNeighbors[3] = {Vector(-1, 1, 1), Vector(1, -1, 1), Vector(1, 1, -1)};
+        for (std::list<Vector>::iterator it = vertecesOutsidePlane.begin(); it != vertecesOutsidePlane.end(); ++it) {
+            Vector current = plane->inverse_model_matrix * box->model_matrix * *it;
+            
+            
+            if (sideOfPlane < 0 && current[1] >= maxPenetrationAbovePlane && current[1] >= 0) {
+                for (Vector* factor = calculateNeighbors; factor != calculateNeighbors + 3; factor++) {
+                    Vector neighbour = plane->inverse_model_matrix * box->model_matrix * (current * *factor);
+                    if (!(fabs(neighbour[0]) > planeFactory.size_x / 2 || fabs(neighbour[2]) > planeFactory.size_z / 2) && neighbour[1] < 0) {
+                        Vector u = (neighbour - current).getNormalized();
+                        Vector v = Vector(0, 0, planeFactory.size_z).getNormalized();
+                        
+                        float a = u.dotProd(u);
+                        float b = u.dotProd(v);
+                        float c2 = v.dotProd(v);
+                        float d = u.dotProd(current - Vector(planeFactory.size_x/2, 0, -planeFactory.size_z/2));
+                        float e = v.dotProd(current - Vector(planeFactory.size_x/2, 0, -planeFactory.size_z/2));
+                        float boxClosest = (b*e - c2*d)/(a*c2 - b*b);
+                        float planeClosest = (a*e - b*d)/(a*c2 - b*b);
+                        
+                        Vector boxClosestVertex = current + u*boxClosest;
+                        Vector planeClosestVertex = Vector(planeFactory.size_x/2, 0, -planeFactory.size_z/2) + v*planeClosest;
+                        
+                        if (boxClosestVertex[1] > 0) {
+                            std::cout << (boxClosestVertex - planeClosestVertex).getLength() << std::endl;
+                            c.collision_normal = plane->inverse_model_matrix.getTranspose() * (planeClosestVertex - boxClosestVertex);
+                            c.collision_point1 = plane->model_matrix * planeClosestVertex;
+                            c.collision_point2 = plane->model_matrix * boxClosestVertex;
+                            c.interpenetration_depth = (c.collision_point1 - c.collision_point2).getLength();
+                            return true;
+                        }
+
+                    }
+                }
+            }
+            
+            else if (sideOfPlane >= 0 && current[1] < maxPenetrationBelowPlane && current[1] < 0) {
+                for (Vector* factor = calculateNeighbors; factor != calculateNeighbors + 3; factor++) {
+                    Vector neighbour = plane->inverse_model_matrix * box->model_matrix * (current * *factor);
+                    if (!(fabs(neighbour[0]) > planeFactory.size_x / 2 || fabs(neighbour[2]) > planeFactory.size_z / 2) && neighbour[1] >= 0) {
+                        Vector u = (neighbour - current).getNormalized();
+                        Vector v = Vector(0, 0, planeFactory.size_z).getNormalized();
+                        
+                        float a = u.dotProd(u);
+                        float b = u.dotProd(v);
+                        float c2 = v.dotProd(v);
+                        float d = u.dotProd(current - Vector(planeFactory.size_x/2, 0, -planeFactory.size_z/2));
+                        float e = v.dotProd(current - Vector(planeFactory.size_x/2, 0, -planeFactory.size_z/2));
+                        float boxClosest = (b*e - c2*d)/(a*c2 - b*b);
+                        float planeClosest = (a*e - b*d)/(a*c2 - b*b);
+                        
+                        Vector boxClosestVertex = current + u*boxClosest;
+                        Vector planeClosestVertex = Vector(planeFactory.size_x/2, 0, -planeFactory.size_z/2) + v*planeClosest;
+                        
+                        if (boxClosestVertex[1] <= 0) {
+                            std::cout << (boxClosestVertex - planeClosestVertex).getLength() << std::endl;
+                            c.collision_normal = plane->inverse_model_matrix.getTranspose() * (planeClosestVertex - boxClosestVertex);
+                            c.collision_point1 = plane->model_matrix * planeClosestVertex;
+                            c.collision_point2 = plane->model_matrix * boxClosestVertex;
+                            c.interpenetration_depth = (c.collision_point1 - c.collision_point2).getLength();
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return false;
+    }
     
     //more points below plane than above => move box downwards
     if (sideOfPlane < 0) {
