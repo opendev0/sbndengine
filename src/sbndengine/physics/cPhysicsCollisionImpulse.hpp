@@ -33,7 +33,7 @@ public:
 
 #endif
 
-		if (	(c.physics_object1->no_rotations_and_frictions && c.physics_object2->no_rotations_and_frictions)
+		if ((c.physics_object1->no_rotations_and_frictions && c.physics_object2->no_rotations_and_frictions)
 #if !WORKSHEET_6
 				|| 1
 #endif
@@ -41,6 +41,16 @@ public:
 		{
 #if WORKSHEET_3
 			//no friction or rotations, apply linear impulse
+
+#ifdef DEBUG
+			float eKin1 = 0;
+			if (c.physics_object1->inv_mass > 0) {
+				eKin1 += 0.5f / c.physics_object1->inv_mass * c.physics_object1->velocity.getLength2();
+			}
+			if (c.physics_object2->inv_mass > 0) {
+				eKin1 += 0.5f / c.physics_object2->inv_mass * c.physics_object2->velocity.getLength2();
+			}
+#endif
 
 			//velocities in direction of collision normal
 			float collision_velocity1 = (-c.collision_normal).dotProd(c.physics_object1->velocity);
@@ -51,6 +61,24 @@ public:
 
 			c.physics_object1->velocity = -c.collision_normal*closing_velocity*(c.physics_object1->inv_mass/(c.physics_object1->inv_mass + c.physics_object2->inv_mass))*(-(1+coefficient_of_restitution)) + c.physics_object1->velocity;
 			c.physics_object2->velocity = c.collision_normal*closing_velocity*(c.physics_object2->inv_mass/(c.physics_object1->inv_mass + c.physics_object2->inv_mass))*(-(1+coefficient_of_restitution)) + c.physics_object2->velocity;
+
+#ifdef DEBUG
+			float energyLoss = 0.5f * (CMath<float>::pow(coefficient_of_restitution, 2) - 1) * CMath<float>::pow(collision_velocity1 - collision_velocity2, 2) / (c.physics_object1->inv_mass + c.physics_object2->inv_mass);
+			float eKin2 = 0;
+			if (c.physics_object1->inv_mass > 0) {
+				eKin2 += 0.5f / c.physics_object1->inv_mass * c.physics_object1->velocity.getLength2();
+			}
+			if (c.physics_object2->inv_mass > 0) {
+				eKin2 += 0.5f / c.physics_object2->inv_mass * c.physics_object2->velocity.getLength2();
+			}
+
+			// |(eKin2 - eKin1) / energyLoss| > 1/1000 -> Energy conservation problem
+			if (fabs(fabs(eKin2 - eKin1) - fabs(energyLoss)) > (1.0f/1000) * fabs(energyLoss)) {
+				std::cout << "ENERGY CONSERVATION ERROR" << std::endl;
+				std::cout << "Lost energy should be " << energyLoss << "J but is " << (eKin2 - eKin1) << "J!" << std::endl;
+				std::cout << "Difference: " << fabs(eKin2 - eKin1) - fabs(energyLoss) << "J" << std::endl;
+			}
+#endif
 #endif
 		}
 		else if ((c.physics_object1->friction_disabled && c.physics_object2->friction_disabled)
