@@ -63,6 +63,17 @@ public:
 			c.physics_object2->velocity = c.collision_normal*closing_velocity*(c.physics_object2->inv_mass/(c.physics_object1->inv_mass + c.physics_object2->inv_mass))*(-(1+coefficient_of_restitution)) + c.physics_object2->velocity;
 
 #ifdef DEBUG
+			// Check sum of all forces = 0
+			if (c.physics_object1->inv_mass > 0 && c.physics_object2->inv_mass > 0) {
+				float force1 = (-c.collision_normal.dotProd(c.physics_object1->velocity) - collision_velocity1) / (c.physics_object1->inv_mass * frame_elapsed_time);
+				float force2 = (-c.collision_normal.dotProd(c.physics_object2->velocity) - collision_velocity2) / (c.physics_object2->inv_mass * frame_elapsed_time);
+				
+				if (force1 + force2 > EPSILON * CMath<float>::max(1, CMath<float>::max(fabs(force1), fabs(force2)))) {
+					std::cout << "Sum of all forces is not 0 but " << force1 + force2 << "N!" << std::endl;
+				}
+			}
+			
+			// Check loss in kinetic energy = expected loss due to Cr
 			float energyLoss = 0.5f * (CMath<float>::pow(coefficient_of_restitution, 2) - 1) * CMath<float>::pow(collision_velocity1 - collision_velocity2, 2) / (c.physics_object1->inv_mass + c.physics_object2->inv_mass);
 			float eKin2 = 0;
 			if (c.physics_object1->inv_mass > 0) {
@@ -72,8 +83,8 @@ public:
 				eKin2 += 0.5f / c.physics_object2->inv_mass * c.physics_object2->velocity.getLength2();
 			}
 
-			// |(eKin2 - eKin1) / energyLoss| > 1/1000 -> Energy conservation problem
-			if (fabs(fabs(eKin2 - eKin1) - fabs(energyLoss)) > (1.0f/1000) * fabs(energyLoss)) {
+			// Combination of absolute and relative error check to compensate big and small values of energies
+			if (fabs(eKin2 - eKin1 - energyLoss) > EPSILON * CMath<float>::max(1, CMath<float>::max(fabs(energyLoss), fabs(eKin2 - eKin1)))) {
 				std::cout << "ENERGY CONSERVATION ERROR" << std::endl;
 				std::cout << "Lost energy should be " << energyLoss << "J but is " << (eKin2 - eKin1) << "J!" << std::endl;
 				std::cout << "Difference: " << fabs(eKin2 - eKin1) - fabs(energyLoss) << "J" << std::endl;

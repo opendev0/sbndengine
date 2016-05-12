@@ -22,4 +22,6 @@
 
 #define SHADERS         1   // Deactivate this if your GPU/driver does not support shaders
 
+#define EPSILON			1.0f/1000
+
 #endif
