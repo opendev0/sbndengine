@@ -234,14 +234,12 @@ bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhys
 #if WORKSHEET_4
     iRef<iObject> box = physics_object_box.object;
     Vector boxHalfSize = static_cast<cObjectFactoryBox *>(&box->objectFactory.getClass())->half_size;
+    
     iRef<iObject> plane = physics_object_plane.object;
     cObjectFactoryPlane &planeFactory = *static_cast<cObjectFactoryPlane *>(&physics_object_plane.object->objectFactory.getClass());
     
     int sideOfPlane = 0;
-    float maxPenetrationBelowPlane = 0;
-    float maxPenetrationAbovePlane = 0;
-    Vector maxPenetrationVertexBelowPlane;
-    Vector maxPenetrationVertexAbovePlane;
+    Vector maxBelowPlane, maxAbovePlane;
     
     std::list<Vector> vertecesOutsidePlane;
     
@@ -271,18 +269,16 @@ bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhys
         if (current[1] <= 0) {
             sideOfPlane--;
             //vertex is the farthest below plane
-            if (current[1] < maxPenetrationBelowPlane) {
-                maxPenetrationBelowPlane = current[1];
-                maxPenetrationVertexBelowPlane = current;
+            if (current[1] < maxBelowPlane[1]) {
+                maxBelowPlane = current;
             }
         }
         //vertex is above plane
         else {
             sideOfPlane++;
             //vertex is the farthest above plane
-            if (current[1] > maxPenetrationAbovePlane) {
-                maxPenetrationAbovePlane = current[1];
-                maxPenetrationVertexAbovePlane = current;
+            if (current[1] > maxAbovePlane[1]) {
+                maxAbovePlane = current;
             }
         }
     }
@@ -292,9 +288,11 @@ bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhys
         return false;
     }
 
+
     c.physics_object1 = &physics_object_plane;
     c.physics_object2 = &physics_object_box;
-    
+   
+ 
     //check for edge/edge collisions
     if (!vertecesOutsidePlane.empty()) {
         
@@ -310,7 +308,7 @@ bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhys
             
             if (sideOfPlane < 0) {
                 //the current vertex is above the plane
-                if (current[1] >= maxPenetrationAbovePlane && current[1] >= 0 && current[1] >= largest[1]) {
+                if (current[1] >= maxAbovePlane[1] && current[1] >= largest[1]) {
 
                     largest = current;
                     
@@ -326,9 +324,9 @@ bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhys
             }            
             
             else { 
-
-                if (sideOfPlane >= 0 && current[1] < maxPenetrationBelowPlane && current[1] < 0 && current[1] < largest[1]) {
-                    //the current vertex is below the plane
+                //the current vertex is below the plane
+                if (current[1] < maxBelowPlane[1] && current[1] < largest[1]) {
+                    
                     largest = current;
                     
                     for (Vector* factor = calculateNeighbors; factor != calculateNeighbors + 3; factor++) {
@@ -352,7 +350,9 @@ bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhys
         
         IntLinePPLinePP::closestPoints(boxEdge, planeEdge, boxClosestVertex, planeClosestVertex);
         
-        if ((boxClosestVertex - planeClosestVertex).getLength() <= 0.1) {
+        
+        //check if collision occured
+        if (IntLinePPLinePP::distance(boxEdge, planeEdge) <= 0.1) {
             c.collision_normal = plane->inverse_model_matrix.getTranspose() * (boxClosestVertex - planeClosestVertex).getNormalized();
             c.collision_point1 = plane->model_matrix * planeClosestVertex;
             c.collision_point2 = plane->model_matrix * boxClosestVertex;
@@ -367,7 +367,9 @@ bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhys
         
         IntLinePPLinePP::closestPoints(boxEdge, planeEdge, boxClosestVertex, planeClosestVertex);
         
-        if ((boxClosestVertex - planeClosestVertex).getLength() <= 0.1) {
+        
+        //check if collision occured
+        if (IntLinePPLinePP::distance(boxEdge, planeEdge) <= 0.1) {
             c.collision_normal = plane->inverse_model_matrix.getTranspose() * (planeClosestVertex - boxClosestVertex).getNormalized();
             c.collision_point1 = plane->model_matrix * planeClosestVertex;
             c.collision_point2 = plane->model_matrix * boxClosestVertex;
@@ -380,17 +382,16 @@ bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhys
     
     
     
-    //more points below plane than above => move box downwards
     if (sideOfPlane < 0) {
         c.collision_normal = plane->inverse_model_matrix.getTranspose() * Vector(0, -1, 0);
-        c.collision_point1 = plane->model_matrix * Vector(maxPenetrationVertexAbovePlane[0], 0, maxPenetrationVertexAbovePlane[2]);
-        c.collision_point2 = plane->model_matrix * maxPenetrationVertexAbovePlane;
+        c.collision_point1 = plane->model_matrix * Vector(maxAbovePlane[0], 0, maxAbovePlane[2]);
+        c.collision_point2 = plane->model_matrix * maxAbovePlane;
         c.interpenetration_depth = (c.collision_point2 - c.collision_point1).getLength();
     }
     else {
         c.collision_normal = plane->inverse_model_matrix.getTranspose() * Vector(0, 1, 0);
-        c.collision_point1 = plane->model_matrix * Vector(maxPenetrationVertexBelowPlane[0], 0, maxPenetrationVertexBelowPlane[2]);
-        c.collision_point2 = plane->model_matrix * maxPenetrationVertexBelowPlane;
+        c.collision_point1 = plane->model_matrix * Vector(maxBelowPlane[0], 0, maxBelowPlane[2]);
+        c.collision_point2 = plane->model_matrix * maxBelowPlane;
         c.interpenetration_depth = (c.collision_point2 - c.collision_point1).getLength();
     }
     

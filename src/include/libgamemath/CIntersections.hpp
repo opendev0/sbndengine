@@ -269,6 +269,11 @@ class CIntersectionsLinePPLinePP
 {
 #if WORKSHEET_4
 public:
+
+    /*
+     * calculates the two points on two different lines that are closest together
+     * source: (http://geomalgorithms.com/a07-_distance.html)
+     */
     static inline void closestPoints(
 			const CLinePP<T> &line0,
 			const CLinePP<T> &line1,
@@ -290,6 +295,28 @@ public:
         closest_point0 = line0.v0 + u*line0Closest;
         closest_point1 = line1.v0 + v*line1Closest;
     }
+    
+    
+    /*
+     * returns smallest distance between two lines
+     * source: (http://geomalgorithms.com/a07-_distance.html)
+     */
+    static inline T distance(
+            const CLinePP<T> &line0,
+			const CLinePP<T> &line1
+            )
+        {
+            CVector<3,T> u = (line0.v1 - line0.v0);
+            CVector<3,T> v = (line1.v1 - line1.v0);
+            
+            T a = u.dotProd(u);
+            T b = u.dotProd(v);
+            T c = v.dotProd(v);
+            T d = u.dotProd(line0.v0 - line1.v0);
+            T e = v.dotProd(line0.v0 - line1.v0);
+            
+            return ((line0.v0 - line1.v0) + (u*(b*e - c*d) - v*(a*e - b*d))/(a*c - b*b)).getLength();
+        }
 #endif
 };
 

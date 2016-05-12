@@ -944,7 +944,7 @@ void CScenes::setupScene20()
  */
 void CScenes::setupScene21()
 {
-	scene_description = "Fixed box with box attachted by a spring";
+	scene_description = "Boxes fixed to spheres using springs";
 
 //		setupWorldBoxPlanes();
 
@@ -1012,51 +1012,64 @@ void CScenes::setupScene21()
  */
 void CScenes::setupScene22()
 {
-    /*
-    //tests for sphere/box collisions
-    setupWorldBoxPlanes();
-    
-    iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox;
-	box_factory->resizeBox(3,3,3);
-    iRef<cObjectFactorySphere> sphere_factory = new cObjectFactorySphere(2);
-    
-    NEW_BOX(box, green, 0, 3, 0);
-    box_physics_object->setInverseMass(0);
-    box->rotate(CVector <3, float> (1, 0, 0), CMath<float>::PI()*0.25f);
-    box->rotate(CVector <3, float> (0, 0, 1), CMath<float>::PI()*0.25f);
-    
-    
-    NEW_SPHERE(sphere0, red, 0, 9, 0);
-    
-    engine.physics.setGravitation(CVector <3, float> (0, -4, 0));
-    */
-    
-    
-    /*
-    //tests for box/plane collisions
-    setupWorldBoxPlanes();
-    
-    iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox;
-    box_factory->resizeBox(3, 3, 3);
-    
-    NEW_BOX(box, red, 0, 3, 0);
-    box->rotate(CVector <3, float> (1, 0, 0), CMath<float>::PI()*0.25f);
-    box->rotate(CVector <3, float> (0, 0, 1), CMath<float>::PI()*0.25f);
-    
-    engine.physics.setGravitation(CVector <3, float> (0, -9.81, 0));
-    */
-    
-    //tests for box/plane collisions edge to edge
-    iRef<cObjectFactoryPlane> plane_factory = new cObjectFactoryPlane(9.f, 9.f);
-	plane_factory->setInverseMass(0);
+    int a = 2;
+    switch (a) {
+        
+        case 0:
+        {
+            //tests for sphere/box collisions
+            setupWorldBoxPlanes();
+        
+            iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox;
+            box_factory->resizeBox(3,3,3);
+            iRef<cObjectFactorySphere> sphere_factory = new cObjectFactorySphere(2);
+        
+            NEW_BOX(box, green, 0, 3, 0);
+            box_physics_object->setInverseMass(0);
+            box->rotate(CVector <3, float> (1, 0, 0), CMath<float>::PI()*0.25f);
+            box->rotate(CVector <3, float> (0, 0, 1), CMath<float>::PI()*0.25f);
+        
+        
+            NEW_SPHERE(sphere0, red, 0, 9, 0);
+        
+            engine.physics.setGravitation(CVector <3, float> (0, -4, 0));
+            break;
+        }
+        
+        case 1:
+        {
+            //tests for box/plane collisions
+            setupWorldBoxPlanes();
+            
+            iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox;
+            box_factory->resizeBox(3, 3, 3);
+            
+            NEW_BOX(box, red, 0, 3, 0);
+            box->rotate(CVector <3, float> (1, 0, 0), CMath<float>::PI()*0.25f);
+            box->rotate(CVector <3, float> (0, 0, 1), CMath<float>::PI()*0.25f);
+            
+            engine.physics.setGravitation(CVector <3, float> (0, -4, 0));
+            break;
+        }
+        
+        case 2:
+        {
+            //tests for box/plane collisions edge to edge
+            iRef<cObjectFactoryPlane> plane_factory = new cObjectFactoryPlane(9.f, 9.f);
+            plane_factory->setInverseMass(0);
 
-	NEW_PLANE(plane1, red, 0, 0, 0);
-	plane1->rotate(CVector<3,float>(0, 0, 0), -CMath<float>::PI()*0.5f);
-    
-    iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(3, 3, 3);
-    NEW_BOX(box, green, 5.5, 10, 0);
-    box->rotate(CVector<3, float>(1, 0, 0), CMath<float>::PI()*0.25f);
-    box->rotate(CVector<3, float>(0, 0, 1), CMath<float>::PI()*0.25f);
+            NEW_PLANE(plane1, red, 0, 0, 0);
+            plane1->rotate(CVector<3,float>(0, 0, 0), -CMath<float>::PI()*0.5f);
+            
+            iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(3, 3, 3);
+            NEW_BOX(box, green, 5.5, 10, 0);
+            box->rotate(CVector<3, float>(1, 0, 0), CMath<float>::PI()*0.25f);
+            box->rotate(CVector<3, float>(0, 0, 1), CMath<float>::PI()*0.25f);
+            break;
+        }
+        
+        default:        break;
+    }
 }
 
 
