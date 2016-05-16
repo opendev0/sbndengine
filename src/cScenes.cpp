@@ -944,18 +944,65 @@ void CScenes::setupScene20()
  */
 void CScenes::setupScene21()
 {
-	scene_description = "Spring Sphere";
+	scene_description = "Boxes fixed to spheres using springs";
 
-	setupWorldBoxPlanes();
+//		setupWorldBoxPlanes();
 
-	iRef<cObjectFactorySphere> sphere_factory = new cObjectFactorySphere(2);
+	iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox;
+	box_factory->resizeBox(3,3,3);
+    iRef<cObjectFactorySphere> sphere_factory = new cObjectFactorySphere(1.5);
+	iRef<iPhysicsSoftConstraint> spring;
+///
+	NEW_SPHERE(box_red_lu, red, -10, 10, 0);
+	box_red_lu->rotate(CVector<3,float>(0, 1, 0).getNormalized(), -CMath<float>::PI()*0.25f);
+	box_red_lu_physics_object->setInverseMass(0);
 
-	NEW_SPHERE(sphere0, pink, 0.5, 1, 0);
+	NEW_BOX(box_green_lu, green, -6, 4, 0);
+	box_green_lu->rotate(CVector<3,float>(0, 0, 1).getNormalized(), -CMath<float>::PI()*0.25f);
+	box_green_lu_physics_object->setAngularSpeed(CVector<3,float>(0.914f, 0.12f, 1));
 
-	NEW_SPHERE(sphere1, red, 0, 9, 0);
+	spring = new cPhysicsSoftConstraintSpring(box_red_lu_physics_object, box_green_lu_physics_object, 0, 100, 0);
+	engine.physics.addSoftConstraint(spring);
+///
+	NEW_SPHERE(box_red_middle, red, 0, 3, 0);
+	box_red_middle->rotate(CVector<3,float>(0, 1, 0).getNormalized(), -CMath<float>::PI()*0.25f);
+	box_red_middle_physics_object->setInverseMass(0);
 
+	NEW_BOX(box_green_middle, green, 4, -4, 0);
+	box_green_middle->rotate(CVector<3,float>(0, 0, 1).getNormalized(), -CMath<float>::PI()*2.25f);
+	box_green_middle_physics_object->setAngularSpeed(CVector<3,float>(0.914f, 0.12f, 1));
 
-	engine.physics.setGravitation(CVector<3,float>(0, -9.81f, 0));
+	spring = new cPhysicsSoftConstraintSpring(box_red_middle_physics_object, box_green_middle_physics_object, 0, 200, 0);
+	engine.physics.addSoftConstraint(spring);
+///
+
+	NEW_SPHERE(box_red_lb, red, -10, -3, 0);
+	box_red_lb->rotate(CVector<3,float>(0, 1, 0).getNormalized(), -CMath<float>::PI()*1.25f);
+	box_red_lb_physics_object->setInverseMass(0);
+
+	NEW_BOX(box_green_lb, green, -4, 0, 0);
+	box_green_lb->rotate(CVector<3,float>(0, 0, 1).getNormalized(), -CMath<float>::PI()*0.25f);
+	box_green_lb_physics_object->setAngularSpeed(CVector<3,float>(0.914f, 0.12f, 1));
+
+	spring = new cPhysicsSoftConstraintSpring(box_red_lb_physics_object, box_green_lb_physics_object, 0, 100, 0);
+	engine.physics.addSoftConstraint(spring);
+//
+	NEW_SPHERE(box_red_ru, red, 12, 12, 0);
+	box_red_ru->rotate(CVector<3,float>(0, 1, 0).getNormalized(), -CMath<float>::PI()*0.001f);
+
+	NEW_BOX(box_green_ru, green, 6, 6, 0);
+	box_green_ru->rotate(CVector<3,float>(0, 0, 1).getNormalized(), -CMath<float>::PI()*0.001f);
+
+	spring = new cPhysicsSoftConstraintSpring(box_red_ru_physics_object, box_green_ru_physics_object, 1, 100, 0);
+	engine.physics.addSoftConstraint(spring);
+//
+	NEW_SPHERE(box_red_rb, red, 12, -2, 0);
+	NEW_BOX(box_green_rb, green, 6, -6, 0);
+
+	spring = new cPhysicsSoftConstraintSpring(box_red_rb_physics_object, box_green_rb_physics_object, 1, 100, 0);
+	engine.physics.addSoftConstraint(spring);
+
+	engine.physics.setGravitation(CVector<3,float>(0, 0, 0));
 }
 
 
@@ -965,6 +1012,64 @@ void CScenes::setupScene21()
  */
 void CScenes::setupScene22()
 {
+    int a = 2;
+    switch (a) {
+        
+        case 0:
+        {
+            //tests for sphere/box collisions
+            setupWorldBoxPlanes();
+        
+            iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox;
+            box_factory->resizeBox(3,3,3);
+            iRef<cObjectFactorySphere> sphere_factory = new cObjectFactorySphere(2);
+        
+            NEW_BOX(box, green, 0, 3, 0);
+            box_physics_object->setInverseMass(0);
+            box->rotate(CVector <3, float> (1, 0, 0), CMath<float>::PI()*0.25f);
+            box->rotate(CVector <3, float> (0, 0, 1), CMath<float>::PI()*0.25f);
+        
+        
+            NEW_SPHERE(sphere0, red, 0, 9, 0);
+        
+            engine.physics.setGravitation(CVector <3, float> (0, -4, 0));
+            break;
+        }
+        
+        case 1:
+        {
+            //tests for box/plane collisions
+            setupWorldBoxPlanes();
+            
+            iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox;
+            box_factory->resizeBox(3, 3, 3);
+            
+            NEW_BOX(box, red, 0, 3, 0);
+            box->rotate(CVector <3, float> (1, 0, 0), CMath<float>::PI()*0.25f);
+            box->rotate(CVector <3, float> (0, 0, 1), CMath<float>::PI()*0.25f);
+            
+            engine.physics.setGravitation(CVector <3, float> (0, -4, 0));
+            break;
+        }
+        
+        case 2:
+        {
+            //tests for box/plane collisions edge to edge
+            iRef<cObjectFactoryPlane> plane_factory = new cObjectFactoryPlane(9.f, 9.f);
+            plane_factory->setInverseMass(0);
+
+            NEW_PLANE(plane1, red, 0, 0, 0);
+            plane1->rotate(CVector<3,float>(0, 0, 0), -CMath<float>::PI()*0.5f);
+            
+            iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(3, 3, 3);
+            NEW_BOX(box, green, 5.5, 10, 0);
+            box->rotate(CVector<3, float>(1, 0, 0), CMath<float>::PI()*0.25f);
+            box->rotate(CVector<3, float>(0, 0, 1), CMath<float>::PI()*0.25f);
+            break;
+        }
+        
+        default:        break;
+    }
 }
 
 
