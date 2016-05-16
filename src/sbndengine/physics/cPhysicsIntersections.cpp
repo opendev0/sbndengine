@@ -405,12 +405,41 @@ bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhys
 /**
  * LAB WORKSHEET 5, ASSIGNMENT 1
  *
- * compute the intersection between a plane and a box
+ * compute the intersection between a box and a box
  */
 bool CPhysicsIntersections::boxBox(iPhysicsObject &physics_object_box1, iPhysicsObject &physics_object_box2, CPhysicsCollisionData &c)
 {
 #if WORKSHEET_5
 
+    CMatrix4<float> modelMatrix1 = physics_object_box1.object->model_matrix;
+    CMatrix4<float> modelMatrix2 = physics_object_box2.object->model_matrix;
+    
+    Vector seperatingAxes[15] = {Vector(modelMatrix1[0][0], modelMatrix1[0][1], modelMatrix1[0][2]), 
+                                 Vector(modelMatrix1[1][0], modelMatrix1[1][1], modelMatrix1[1][2]), 
+                                 Vector(modelMatrix1[1][0], modelMatrix1[1][1], modelMatrix1[1][2]),
+                                 
+                                 Vector(modelMatrix2[0][0], modelMatrix2[0][1], modelMatrix2[0][2]),
+                                 Vector(modelMatrix2[1][0], modelMatrix2[1][1], modelMatrix2[1][2]),
+                                 Vector(modelMatrix2[2][0], modelMatrix2[2][1], modelMatrix2[2][2])};
+                                 
+    int x = 6;
+    for (int i = 0; i < 3; i++) {
+        for (int j = 3; j < 6; j++) {
+            seperatingAxes[x] = seperatingAxes[i] % seperatingAxes[j];
+            x++;
+        }
+    }
+    
+    
+    
+    
+    for (Vector* axis = seperatingAxes; axis != seperatingAxes + 15; axis++) {
+        *axis = (*axis).getNormalized();
+        
+        //TODO Seperating axis algorithm
+    }
+
+    return false;
 #else
 	return false;
 #endif
