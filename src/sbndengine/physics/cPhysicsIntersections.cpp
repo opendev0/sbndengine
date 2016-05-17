@@ -410,16 +410,18 @@ bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhys
 vec2d getProjection(iPhysicsObject const &boxObject, Vector const &axis)
 {
 	float* vertices = boxObject.object->objectFactory->vertices;
-	float min = CMath<float>::max();
-	float max = -CMath<float>::max();
-	for (int i = 0; i < 8; ++i) {
+	float min = axis.dotProd(boxObject.object->model_matrix * Vector(vertices[0], vertices[1], vertices[2]));
+	float max = min;
+	for (int i = 1; i < 8; ++i) {
 		// Vertices are in model space. We need to transform them to world space.
-		vec4f vertice = boxObject.object->model_matrix * vec4f(vertices[3*i+0], vertices[3*i+1], vertices[3*i+2], 1);
-		float projLength = axis.dotProd(Vector(vertice[0], vertice[1], vertice[2]));
+		Vector vertexPos = boxObject.object->model_matrix * Vector(vertices[3*i], vertices[3*i+1], vertices[3*i+2]);
+		float projLength = axis.dotProd(vertexPos);
 		if (projLength > max) max = projLength;
 		else if (projLength < min) min = projLength;
+
+		//std::cout << vertexPos << std::endl;
 	}
-	
+
 	return vec2d(min, max);
 }
 
@@ -450,7 +452,6 @@ bool CPhysicsIntersections::boxBox(iPhysicsObject &physics_object_box1, iPhysics
 	}
 
 	// Separating axis algorithm
-	Vector* smallestOverlapAxis = NULL;
 	c.interpenetration_depth = CMath<float>::max();
 	for (Vector* axis = seperatingAxes; axis != seperatingAxes + 15; axis++) {
 		*axis = (*axis).getNormalized();
@@ -466,16 +467,18 @@ bool CPhysicsIntersections::boxBox(iPhysicsObject &physics_object_box1, iPhysics
 		float overlap = CMath<float>::min(proj1[1], proj2[1]) - CMath<float>::max(proj1[0], proj2[0]);
 		if (overlap < c.interpenetration_depth) {
 			c.interpenetration_depth = overlap;
-			smallestOverlapAxis = axis;
+			c.collision_normal = *axis;
+			//c.collision_point1 = physics_object_box1.object->position - c.collision_normal * fabs(proj1[1] - proj1[0]);
+			//c.collision_point2 = physics_object_box2.object->position + c.collision_normal * fabs(proj2[1] - proj2[0]);
 		}
-    }
-	
+	}
+
 	std::cout << "Box-Box-Collision detected" << std::endl;
 	std::cout << "Interpenetration depth: " << c.interpenetration_depth << std::endl;
-	
+	std::cout << "Collision normal: " << c.collision_normal << std::endl;
+
 	c.physics_object1 = &physics_object_box1;
 	c.physics_object2 = &physics_object_box2;
-	//c.collision_normal = ;
 	//c.collision_point1 = ;
 	//c.collision_point2 = ;
 
