@@ -407,39 +407,79 @@ bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhys
  *
  * compute the intersection between a box and a box
  */
+vec2d getProjection(iPhysicsObject const &boxObject, Vector const &axis)
+{
+	float* vertices = boxObject.object->objectFactory->vertices;
+	float min = CMath<float>::max();
+	float max = -CMath<float>::max();
+	for (int i = 0; i < 8; ++i) {
+		// Vertices are in model space. We need to transform them to world space.
+		vec4f vertice = boxObject.object->model_matrix * vec4f(vertices[3*i+0], vertices[3*i+1], vertices[3*i+2], 1);
+		float projLength = axis.dotProd(Vector(vertice[0], vertice[1], vertice[2]));
+		if (projLength > max) max = projLength;
+		else if (projLength < min) min = projLength;
+	}
+	
+	return vec2d(min, max);
+}
+
 bool CPhysicsIntersections::boxBox(iPhysicsObject &physics_object_box1, iPhysicsObject &physics_object_box2, CPhysicsCollisionData &c)
 {
 #if WORKSHEET_5
+	// Determine axis that need to be checked for overlapping of object projections (separating axis theorem)
+	CMatrix4<float> modelMatrix1 = physics_object_box1.object->model_matrix;
+	CMatrix4<float> modelMatrix2 = physics_object_box2.object->model_matrix;
 
-    CMatrix4<float> modelMatrix1 = physics_object_box1.object->model_matrix;
-    CMatrix4<float> modelMatrix2 = physics_object_box2.object->model_matrix;
-    
-    Vector seperatingAxes[15] = {Vector(modelMatrix1[0][0], modelMatrix1[0][1], modelMatrix1[0][2]), 
-                                 Vector(modelMatrix1[1][0], modelMatrix1[1][1], modelMatrix1[1][2]), 
-                                 Vector(modelMatrix1[1][0], modelMatrix1[1][1], modelMatrix1[1][2]),
-                                 
-                                 Vector(modelMatrix2[0][0], modelMatrix2[0][1], modelMatrix2[0][2]),
-                                 Vector(modelMatrix2[1][0], modelMatrix2[1][1], modelMatrix2[1][2]),
-                                 Vector(modelMatrix2[2][0], modelMatrix2[2][1], modelMatrix2[2][2])};
-                                 
-    int x = 6;
-    for (int i = 0; i < 3; i++) {
-        for (int j = 3; j < 6; j++) {
-            seperatingAxes[x] = seperatingAxes[i] % seperatingAxes[j];
-            x++;
-        }
-    }
-    
-    
-    
-    
-    for (Vector* axis = seperatingAxes; axis != seperatingAxes + 15; axis++) {
-        *axis = (*axis).getNormalized();
-        
-        //TODO Seperating axis algorithm
-    }
+	Vector seperatingAxes[15] = {
+		// Normals of object1's surfaces
+		Vector(modelMatrix1[0][0], modelMatrix1[1][0], modelMatrix1[2][0]), 
+		Vector(modelMatrix1[0][1], modelMatrix1[1][1], modelMatrix1[2][1]), 
+		Vector(modelMatrix1[0][2], modelMatrix1[1][2], modelMatrix1[2][2]),
+		// Normals of object2's surfaces
+		Vector(modelMatrix2[0][0], modelMatrix2[1][0], modelMatrix2[2][0]),
+		Vector(modelMatrix2[0][1], modelMatrix2[1][1], modelMatrix2[2][1]),
+		Vector(modelMatrix2[0][2], modelMatrix2[1][2], modelMatrix2[2][2])
+	};
 
-    return false;
+	int x = 6;
+	for (int i = 0; i < 3; i++) {
+		for (int j = 3; j < 6; j++) {
+			seperatingAxes[x] = seperatingAxes[i] % seperatingAxes[j];
+			x++;
+		}
+	}
+
+	// Separating axis algorithm
+	Vector* smallestOverlapAxis = NULL;
+	c.interpenetration_depth = CMath<float>::max();
+	for (Vector* axis = seperatingAxes; axis != seperatingAxes + 15; axis++) {
+		*axis = (*axis).getNormalized();
+
+		vec2d proj1 = getProjection(physics_object_box1, *axis);
+		vec2d proj2 = getProjection(physics_object_box2, *axis);
+		
+		if (proj1[1] <= proj2[0] || proj2[1] <= proj1[0]) {
+			return false; // Separating axis found -> no collision
+		}
+		
+		// Current axis is not separating objects -> calculate overlap
+		float overlap = CMath<float>::min(proj1[1], proj2[1]) - CMath<float>::max(proj1[0], proj2[0]);
+		if (overlap < c.interpenetration_depth) {
+			c.interpenetration_depth = overlap;
+			smallestOverlapAxis = axis;
+		}
+    }
+	
+	std::cout << "Box-Box-Collision detected" << std::endl;
+	std::cout << "Interpenetration depth: " << c.interpenetration_depth << std::endl;
+	
+	c.physics_object1 = &physics_object_box1;
+	c.physics_object2 = &physics_object_box2;
+	//c.collision_normal = ;
+	//c.collision_point1 = ;
+	//c.collision_point2 = ;
+
+	return false;
 #else
 	return false;
 #endif
