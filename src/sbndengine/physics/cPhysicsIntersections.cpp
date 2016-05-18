@@ -409,17 +409,28 @@ bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhys
  */
 vec2d getProjection(iPhysicsObject const &boxObject, Vector const &axis)
 {
-	float* vertices = boxObject.object->objectFactory->vertices;
-	float min = axis.dotProd(boxObject.object->model_matrix * Vector(vertices[0], vertices[1], vertices[2]));
+	iRef<iObject> box = boxObject.object;
+	Vector boxHalfSize = static_cast<cObjectFactoryBox *>(&box->objectFactory.getClass())->half_size;
+	
+	Vector vertexList[8] = {
+		Vector(-boxHalfSize[0], -boxHalfSize[1], -boxHalfSize[2]),
+		Vector(-boxHalfSize[0], -boxHalfSize[1], boxHalfSize[2]),
+		Vector(-boxHalfSize[0], boxHalfSize[1], -boxHalfSize[2]),
+		Vector(-boxHalfSize[0], boxHalfSize[1], boxHalfSize[2]),
+		Vector(boxHalfSize[0], -boxHalfSize[1], -boxHalfSize[2]),
+		Vector(boxHalfSize[0], -boxHalfSize[1], boxHalfSize[2]),
+		Vector(boxHalfSize[0], boxHalfSize[1], -boxHalfSize[2]),
+		Vector(boxHalfSize[0], boxHalfSize[1], boxHalfSize[2])
+	};
+	
+	float min = axis.dotProd(boxObject.object->model_matrix * vertexList[0]);
 	float max = min;
 	for (int i = 1; i < 8; ++i) {
 		// Vertices are in model space. We need to transform them to world space.
-		Vector vertexPos = boxObject.object->model_matrix * Vector(vertices[3*i], vertices[3*i+1], vertices[3*i+2]);
+		Vector vertexPos = boxObject.object->model_matrix * vertexList[i];
 		float projLength = axis.dotProd(vertexPos);
 		if (projLength > max) max = projLength;
 		else if (projLength < min) min = projLength;
-
-		//std::cout << vertexPos << std::endl;
 	}
 
 	return vec2d(min, max);
@@ -482,7 +493,7 @@ bool CPhysicsIntersections::boxBox(iPhysicsObject &physics_object_box1, iPhysics
 	//c.collision_point1 = ;
 	//c.collision_point2 = ;
 
-	return false;
+	return true;
 #else
 	return false;
 #endif
