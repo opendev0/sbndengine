@@ -966,7 +966,7 @@ void CScenes::setupScene21()
  */
 void CScenes::setupScene22()
 {
-    int a = 2;
+    int a = 3;
     switch (a) {
         
         case 0:
@@ -1021,6 +1021,17 @@ void CScenes::setupScene22()
             box->rotate(CVector<3, float>(0, 0, 1), CMath<float>::PI()*0.25f);
             break;
         }
+		
+		case 3:
+		{
+			setupWorldBoxPlanes();
+			iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox;
+			box_factory->resizeBox(4,2,1);
+			NEW_BOX(box5, green, 0.01f, -2, 2);
+			NEW_BOX(box6, red, 0, -2, -2);
+			box6_physics_object->addSpeed(CVector<3, float>(0, 0, 3));
+			break;
+		}
         
         default:        break;
     }
