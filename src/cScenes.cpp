@@ -966,7 +966,7 @@ void CScenes::setupScene21()
  */
 void CScenes::setupScene22()
 {
-    int a = 3;
+    int a = 4;
     switch (a) {
         
         case 0:
@@ -1028,10 +1028,27 @@ void CScenes::setupScene22()
 			iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox;
 			box_factory->resizeBox(4,2,1);
 			NEW_BOX(box5, green, 0.01f, -2, 2);
+            box5->rotate(CVector<3, float>(1, 1, 1).getNormalized(), CMath<float>::PI()*0.35f);
 			NEW_BOX(box6, red, 0, -2, -2);
-			box6_physics_object->addSpeed(CVector<3, float>(0, 0, 3));
+            box6->rotate(CVector<3, float>(1, 1, 1).getNormalized(), CMath<float>::PI()*0.35f);
+			box5_physics_object->addSpeed(CVector<3, float>(0, 0, -3));
 			break;
 		}
+        
+        case 4:
+        {
+            setupWorldBoxPlanes();
+			iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox;
+			box_factory->resizeBox(3, 3, 3);
+			NEW_BOX(box5, green, 0, 3, 0);
+            box5->rotate(CVector<3, float>(1, 0, 0).getNormalized(), CMath<float>::PI()*-0.25f);
+            box5_physics_object->setInverseMass(0);
+            
+			NEW_BOX(box6, red, 0, 9, 0);
+            box6->rotate(CVector<3, float>(0, 0, 1).getNormalized(), CMath<float>::PI()*-0.25f);			
+            engine.physics.setGravitation(CVector<3, float> (0, -4, 0));
+			break;
+        }
         
         default:        break;
     }
