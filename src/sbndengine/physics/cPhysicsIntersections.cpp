@@ -473,7 +473,7 @@ bool CPhysicsIntersections::boxBox(iPhysicsObject &physics_object_box1, iPhysics
 		if (proj1[1] <= proj2[0] || proj2[1] <= proj1[0]) {
 			return false; // Separating axis found -> no collision
 		}
-		
+
 		// Current axis is not separating objects -> calculate overlap
 		float overlap = CMath<float>::min(proj1[1], proj2[1]) - CMath<float>::max(proj1[0], proj2[0]);
 		if (overlap < c.interpenetration_depth) {
@@ -497,6 +497,8 @@ bool CPhysicsIntersections::boxBox(iPhysicsObject &physics_object_box1, iPhysics
 
 	c.physics_object1 = &physics_object_box1;
 	c.physics_object2 = &physics_object_box2;
+	//c.collision_point1 = ;
+	//c.collision_point2 = ;
 
 	return true;
 #else
