@@ -32,7 +32,7 @@ class cObjectFactoryBox	:
 	friend class CPhysicsIntersections;
 
 	CVector<3,float> size;
-	CVector<3,float> half_size;
+	public: CVector<3,float> half_size;
 
 public:
 	/**

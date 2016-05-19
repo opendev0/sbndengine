@@ -479,19 +479,24 @@ bool CPhysicsIntersections::boxBox(iPhysicsObject &physics_object_box1, iPhysics
 		if (overlap < c.interpenetration_depth) {
 			c.interpenetration_depth = overlap;
 			c.collision_normal = *axis;
-			//c.collision_point1 = physics_object_box1.object->position - c.collision_normal * fabs(proj1[1] - proj1[0]);
-			//c.collision_point2 = physics_object_box2.object->position + c.collision_normal * fabs(proj2[1] - proj2[0]);
+			int sgn = (physics_object_box2.object->position - physics_object_box1.object->position).dotProd(c.collision_normal);
+			if (sgn < 0) c.collision_normal = -c.collision_normal;
+			//c.collision_point1 = physics_object_box1.object->position + c.collision_normal * fabs(proj1[1] - proj1[0]) * 0.5f;
+			//c.collision_point2 = physics_object_box2.object->position - c.collision_normal * fabs(proj2[1] - proj2[0]) * 0.5f;
 		}
 	}
 
+	//float projDistance = c.collision_normal.dotProd(physics_object_box2.object->position - physics_object_box1.object->position);
+
 	std::cout << "Box-Box-Collision detected" << std::endl;
-	std::cout << "Interpenetration depth: " << c.interpenetration_depth << std::endl;
+	std::cout << "Object1: " << physics_object_box1.object->identifier_string << std::endl;
+	std::cout << "Object2: " << physics_object_box2.object->identifier_string << std::endl;
 	std::cout << "Collision normal: " << c.collision_normal << std::endl;
+	std::cout << "Interpenetration depth: " << c.interpenetration_depth << std::endl;
+	//std::cout << "Collision point distance: " << (c.collision_point2 - c.collision_point1).getLength() << std::endl << std::endl;
 
 	c.physics_object1 = &physics_object_box1;
 	c.physics_object2 = &physics_object_box2;
-	//c.collision_point1 = ;
-	//c.collision_point2 = ;
 
 	return true;
 #else
