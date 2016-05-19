@@ -491,7 +491,7 @@ bool CPhysicsIntersections::boxBox(iPhysicsObject &physics_object_box1, iPhysics
 				//used principal axis of box2
 				c.collision_point2 = physics_object_box2.object->position + c.collision_normal * fabs(proj2[1] - proj2[0]) * 0.5f;
 				c.collision_point1 = c.collision_point2 + c.collision_normal * c.interpenetration_depth;
-            }
+			}
 			else {
 				//used axis created by cross-product
 
