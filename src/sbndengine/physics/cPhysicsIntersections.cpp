@@ -482,7 +482,7 @@ bool CPhysicsIntersections::boxBox(iPhysicsObject &physics_object_box1, iPhysics
 			Vector sgn = (physics_object_box2.object->position - physics_object_box1.object->position);
 			if (sgn.dotProd(c.collision_normal) < 0) c.collision_normal = -c.collision_normal;
             
-            if (axis - seperatingAxes < 4) {
+            if (axis - seperatingAxes < 3) {
                 //used principal axis of box1
                 c.collision_point1 = physics_object_box1.object->position + c.collision_normal * fabs(proj1[1] - proj1[0]) * 0.5f;
                 c.collision_point2 = c.collision_point1 + c.collision_normal * c.interpenetration_depth;
