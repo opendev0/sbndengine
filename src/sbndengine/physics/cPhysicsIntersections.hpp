@@ -53,6 +53,9 @@ public:
 	static bool planePlane(iPhysicsObject &o1, iPhysicsObject &o2, CPhysicsCollisionData &physicsCollision);
 	static bool planeBox(iPhysicsObject &o1, iPhysicsObject &o2, CPhysicsCollisionData &physicsCollision);
 	static bool boxBox(iPhysicsObject &o1, iPhysicsObject &o2, CPhysicsCollisionData &physicsCollision);
+
+private:
+	static vec2d getProjection(iPhysicsObject const &boxObject, CVector<3,float> const &axis);
 };
 
 #endif

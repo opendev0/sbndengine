@@ -405,12 +405,134 @@ bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhys
 /**
  * LAB WORKSHEET 5, ASSIGNMENT 1
  *
- * compute the intersection between a plane and a box
+ * compute the intersection between a box and a box
  */
+vec2d CPhysicsIntersections::getProjection(iPhysicsObject const &boxObject, Vector const &axis)
+{
+	iRef<iObject> box = boxObject.object;
+	Vector boxHalfSize = static_cast<cObjectFactoryBox *>(&box->objectFactory.getClass())->half_size;
+	
+	Vector vertexList[8] = {
+		Vector(-boxHalfSize[0], -boxHalfSize[1], -boxHalfSize[2]),
+		Vector(-boxHalfSize[0], -boxHalfSize[1], boxHalfSize[2]),
+		Vector(-boxHalfSize[0], boxHalfSize[1], -boxHalfSize[2]),
+		Vector(-boxHalfSize[0], boxHalfSize[1], boxHalfSize[2]),
+		Vector(boxHalfSize[0], -boxHalfSize[1], -boxHalfSize[2]),
+		Vector(boxHalfSize[0], -boxHalfSize[1], boxHalfSize[2]),
+		Vector(boxHalfSize[0], boxHalfSize[1], -boxHalfSize[2]),
+		Vector(boxHalfSize[0], boxHalfSize[1], boxHalfSize[2])
+	};
+	
+	float min = axis.dotProd(boxObject.object->model_matrix * vertexList[0]);
+	float max = min;
+	for (int i = 1; i < 8; ++i) {
+		// Vertices are in model space. We need to transform them to world space.
+		Vector vertexPos = boxObject.object->model_matrix * vertexList[i];
+		float projLength = axis.dotProd(vertexPos);
+		if (projLength > max) max = projLength;
+		else if (projLength < min) min = projLength;
+	}
+
+	return vec2d(min, max);
+}
+
 bool CPhysicsIntersections::boxBox(iPhysicsObject &physics_object_box1, iPhysicsObject &physics_object_box2, CPhysicsCollisionData &c)
 {
 #if WORKSHEET_5
+	// Determine axis that need to be checked for overlapping of object projections (separating axis theorem)
+	CMatrix4<float> modelMatrix1 = physics_object_box1.object->model_matrix;
+	CMatrix4<float> modelMatrix2 = physics_object_box2.object->model_matrix;
 
+	Vector seperatingAxes[15] = {
+		// Normals of object1's surfaces
+		Vector(modelMatrix1[0][0], modelMatrix1[1][0], modelMatrix1[2][0]), 
+		Vector(modelMatrix1[0][1], modelMatrix1[1][1], modelMatrix1[2][1]), 
+		Vector(-modelMatrix1[0][2], -modelMatrix1[1][2], -modelMatrix1[2][2]),
+		// Normals of object2's surfaces
+		Vector(modelMatrix2[0][0], modelMatrix2[1][0], modelMatrix2[2][0]),
+		Vector(modelMatrix2[0][1], modelMatrix2[1][1], modelMatrix2[2][1]),
+		Vector(-modelMatrix2[0][2], -modelMatrix2[1][2], -modelMatrix2[2][2])
+	};
+
+	int x = 6;
+	for (int i = 0; i < 3; i++) {
+		for (int j = 3; j < 6; j++) {
+			seperatingAxes[x] = seperatingAxes[i] % seperatingAxes[j];
+			x++;
+		}
+	}
+
+	// Separating axis algorithm
+	c.interpenetration_depth = CMath<float>::max();
+	for (Vector* axis = seperatingAxes; axis != seperatingAxes + 15; axis++) {
+		*axis = (*axis).getNormalized();
+
+		vec2d proj1 = getProjection(physics_object_box1, *axis);
+		vec2d proj2 = getProjection(physics_object_box2, *axis);
+		
+		if (proj1[1] <= proj2[0] || proj2[1] <= proj1[0]) {
+			return false; // Separating axis found -> no collision
+		}
+
+		// Current axis is not separating objects -> calculate overlap
+		float overlap = CMath<float>::min(proj1[1], proj2[1]) - CMath<float>::max(proj1[0], proj2[0]);
+		if (overlap < c.interpenetration_depth) {
+			c.interpenetration_depth = overlap;
+			c.collision_normal = *axis;
+			Vector sgn = (physics_object_box2.object->position - physics_object_box1.object->position);
+			if (sgn.dotProd(c.collision_normal) < 0) c.collision_normal = -c.collision_normal;
+
+			if (axis - seperatingAxes < 3) {
+				//used principal axis of box1
+				c.collision_point1 = physics_object_box1.object->position + c.collision_normal * fabs(proj1[1] - proj1[0]) * 0.5f;
+				c.collision_point2 = c.collision_point1 + c.collision_normal * c.interpenetration_depth;
+			}
+			else if (axis - seperatingAxes < 6) {
+				//used principal axis of box2
+				c.collision_point2 = physics_object_box2.object->position + c.collision_normal * fabs(proj2[1] - proj2[0]) * 0.5f;
+				c.collision_point1 = c.collision_point2 + c.collision_normal * c.interpenetration_depth;
+			}
+			else {
+				//used axis created by cross-product
+
+				sgn[0] = (sgn[0] >= 0) - (sgn[0] < 0);
+				sgn[1] = (sgn[1] >= 0) - (sgn[1] < 0);
+				sgn[2] = (sgn[2] >= 0) - (sgn[2] < 0);
+
+
+				Vector boxHalfSize1 = static_cast<cObjectFactoryBox *>(&physics_object_box1.object->objectFactory.getClass())->half_size;
+
+				//calculate which principle axis of box1 was used for creation of the cross-product, this is the direction of the edge
+				int i = (axis - seperatingAxes - 6)/3;
+
+				//calculate a point on this edge using the other two principle axis
+				Vector point1 = physics_object_box1.object->position 
+					+ seperatingAxes[(i+1)%3] * boxHalfSize1[(i+1)%3] * sgn[(i+1)%3]
+					+ seperatingAxes[(i+2)%3] * boxHalfSize1[(i+2)%3] * sgn[(i+2)%3];
+				LinePP edge1 = LinePP(point1, point1 + seperatingAxes[i]);
+
+
+				Vector boxHalfSize2 = static_cast<cObjectFactoryBox *>(&physics_object_box2.object->objectFactory.getClass())->half_size;
+
+				//calculate which principle axis of box2 was used for creation of the cross-product, this is the direction of the edge
+				int j = (axis - seperatingAxes)%3;
+				//calculate a point on this edge using the other two principle axis
+				Vector point2 = physics_object_box2.object->position 
+					+ seperatingAxes[(j+1)%3 + 3] * boxHalfSize2[(j+1)%3] * -sgn[(j+1)%3]
+					+ seperatingAxes[(j+2)%3 + 3] * boxHalfSize2[(j+2)%3] * -sgn[(j+2)%3];
+
+				LinePP edge2 = LinePP(point2, point2 + seperatingAxes[j + 3]);
+
+				//find the two closest points on the lines
+				IntLinePPLinePP::closestPoints(edge1, edge2, c.collision_point1, c.collision_point2);
+			}
+		}
+	}
+
+	c.physics_object1 = &physics_object_box1;
+	c.physics_object2 = &physics_object_box2;
+
+	return true;
 #else
 	return false;
 #endif
