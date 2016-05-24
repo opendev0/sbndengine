@@ -69,6 +69,20 @@ cPhysicsSoftConstraintSpringAngular::cPhysicsSoftConstraintSpringAngular(
 void cPhysicsSoftConstraintSpringAngular::updateAcceleration(double frame_elapsed_seconds)
 {
 #if WORKSHEET_3
-
+    CVector<3, float> world_point1 = physics_object1->object->model_matrix * object_point1;
+    CVector<3, float> world_point2 = physics_object2->object->model_matrix * object_point2;
+    CVector<3, float> dist = (world_point2 - world_point1);
+	CVector<3, float> force = (dist.getLength() - equilibrium_length) * (-spring_constant);
+    
+    CVector<3, float> lever1 = world_point1 - physics_object1->object->position;
+    CVector<3, float> lever2 = world_point2 - physics_object2->object->position;
+    
+    float factor_torque = 0.5f;
+    
+    physics_object1->linear_acceleration_accumulator += (dist.getNormalized() * force * physics_object1->inv_mass) * (1 - factor_torque);
+    physics_object2->linear_acceleration_accumulator -= (dist.getNormalized() * force * physics_object2->inv_mass) * (1 - factor_torque);
+    
+    physics_object1->torque_accumulator -= (lever1 % (dist.getNormalized() * force)) * factor_torque;
+    physics_object2->torque_accumulator += (lever2 % (dist.getNormalized() * force)) * factor_torque;
 #endif
 }

@@ -62,6 +62,12 @@
 		o1##_physics_object->setDisableCollisionRotationAndFrictionFlag(true);	o2##_physics_object->setDisableCollisionRotationAndFrictionFlag(true);	\
 		engine.physics.addSoftConstraint(o1##_##o2##_soft_constraint_rope);		\
 		engine.graphics.addObjectConnector(new cGraphicsObjectConnectorCenter(o1, o2, materials.white));
+        
+
+#define NEW_SPRING_ANGULAR(o1, a1, o2, a2, extra_distance)                  \
+        iRef<iPhysicsSoftConstraint> o1##_##o2##_soft_constraint_spring = new cPhysicsSoftConstraintSpringAngular(o1##_physics_object, (a1), o2##_physics_object, (a2), ((o1)->position+(a1)).dist((o2)->position+(a2))+extra_distance);  \
+        engine.physics.addSoftConstraint(o1##_##o2##_soft_constraint_spring); \
+        engine.graphics.addObjectConnector(new cGraphicsObjectConnectorAngular(o1, a1, o2, a2, materials.white));
 
 
 
@@ -966,7 +972,7 @@ void CScenes::setupScene21()
  */
 void CScenes::setupScene22()
 {
-    int a = 4;
+    int a = 0;
     switch (a) {
         
         case 0:
@@ -1048,6 +1054,20 @@ void CScenes::setupScene22()
             box6->rotate(CVector<3, float>(0, 0, 1).getNormalized(), CMath<float>::PI()*-0.25f);			
             engine.physics.setGravitation(CVector<3, float> (0, -4, 0));
 			break;
+        }
+        
+        case 5:
+        {
+            scene_description = "2 Boxes connected by a spring";
+
+            iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(4,4,4);
+    
+            NEW_BOX(box0, red, -4, 1, 0);
+            NEW_BOX(box1, green, 4, 1, 0);
+
+            NEW_SPRING_ANGULAR(box0, (CVector<3,float>(0,2,0)), box1, (CVector<3,float>(0,2,0)), 100.0f);
+            
+            engine.physics.setGravitation(CVector<3, float>());
         }
         
         default:        break;

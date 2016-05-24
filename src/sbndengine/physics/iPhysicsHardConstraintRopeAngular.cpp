@@ -63,7 +63,22 @@ cPhysicsHardConstraintRopeAngular::cPhysicsHardConstraintRopeAngular(
 bool cPhysicsHardConstraintRopeAngular::updateHardConstraintsCollisions(class CPhysicsCollisionData &c)
 {
 #if WORKSHEET_3
+    CVector<3, float> world_point1 = physics_object1->object->model_matrix * object_point1;
+    CVector<3, float> world_point2 = physics_object2->object->model_matrix * object_point2;
+    CVector<3, float> dist = (world_point2 - world_point1);
 
+	if (dist.getLength() < equilibrium_length) {
+		return false;
+	}
+
+	c.physics_object1 = &physics_object1.getClass();
+	c.physics_object2 = &physics_object2.getClass();
+	c.collision_normal = dist.getNormalized();
+	c.collision_point1 = world_point1;
+	c.collision_point2 = world_point2;
+	c.interpenetration_depth = equilibrium_length - dist.getLength();
+
+	return true;
 #else
 	return false;
 #endif
