@@ -355,7 +355,6 @@ void cPhysicsEngine_Private::integrator()
 
 		if (!o.isMovable())
 			continue;
-
 /**
  * WORKSHEET 1
  */
@@ -379,10 +378,12 @@ void cPhysicsEngine_Private::integrator()
         
         if (theta != 0) {
             CVector<3, float> axis = o.angular_velocity.getNormalized();
+            if(axis.getLength() < 0.9999f) std::cout << axis.getLength() << std::endl;
             CQuaternion<float> q;
             q.setRotation(axis, theta);
-            //std::cout << q.getRotationMatrix() << std::endl;
-            o.object->rotate(q);
+            CMatrix4<float> m = o.object->model_matrix;
+            std::cout << m.getDeterminant() << std::endl;
+            o.object->rotate(axis.getNormalized(), theta);
         }
 #endif
 		o.object->updateModelMatrix();

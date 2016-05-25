@@ -143,6 +143,8 @@ public:
 #else
 		p = q;
 #endif
+        if (p.getLength() != 1) p.normalize();
+        
 		return p;
 	}
 
@@ -152,13 +154,19 @@ public:
 		i += q.i;
 		j += q.j;
 		k += q.k;
+        
+        if (getLength() != 1) normalize();
 
 		return *this;
 	}
 
 	CQuaternion<T> operator+(const CQuaternion<T> &q)
 	{
-		return CQuaternion(w+q.w, i+q.i, j+q.j, k+q.k);
+        CQuaternion quart = CQuaternion(w+q.w, i+q.i, j+q.j, k+q.k);
+        
+        if (quart.getLength() != 1) quart.normalize();
+        
+		return quart;
 	}
 
 
@@ -203,6 +211,8 @@ public:
 		i = axis.data[0] * sin(angle/2);
 		j = axis.data[1] * sin(angle/2);
 		k = axis.data[2] * sin(angle/2);
+        
+        if (getLength() != 1) normalize();
 #endif
 		return *this;
 	}
@@ -270,9 +280,20 @@ public:
 	void normalize()
 	{
 #if WORKSHEET_3a
-
+        T mag = getLength();
+        
+        i = i/mag;
+        j = j/mag;
+        k = k/mag;
+        w = w/mag;
 #endif
 	}
+    
+    
+    T getLength()
+    {
+        return CVector<4, T>(i, j, k, w).length();
+    }
 
 };
 

@@ -972,7 +972,7 @@ void CScenes::setupScene21()
  */
 void CScenes::setupScene22()
 {
-    int a = 0;
+    int a = 6;
     switch (a) {
         
         case 0:
@@ -1068,6 +1068,19 @@ void CScenes::setupScene22()
             NEW_SPRING_ANGULAR(box0, (CVector<3,float>(0,2,0)), box1, (CVector<3,float>(0,2,0)), 100.0f);
             
             engine.physics.setGravitation(CVector<3, float>());
+            break;
+        }
+        
+        case 6:
+        {
+            iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(4, 4, 4);
+            
+            NEW_BOX(box, red, 0, 4, 0);
+            
+            box_physics_object->setAngularSpeed(CVector<3,float>(0,1,-1)*0.3f);
+            
+            engine.physics.setGravitation(CVector <3, float> (0, 0, 0));
+            break;
         }
         
         default:        break;
