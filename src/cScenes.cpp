@@ -966,127 +966,131 @@ void CScenes::setupScene21()
     engine.physics.setGravitation(CVector <3, float> (0, -4, 0));
 }
 
+
 /**
  * LAB WORKSHEET ?, ASSIGNMENT ?
  *
  */
 void CScenes::setupScene22()
 {
-    int a = 6;
-    switch (a) {
+    //tests for sphere/box collisions
+    setupWorldBoxPlanes();
         
-        case 0:
-        {
-            //tests for sphere/box collisions
-            setupWorldBoxPlanes();
-        
-            iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox;
-            box_factory->resizeBox(3,3,3);
-            iRef<cObjectFactorySphere> sphere_factory = new cObjectFactorySphere(2);
-        
-            NEW_BOX(box, green, 0, 3, 0);
-            box_physics_object->setInverseMass(0);
-            box->rotate(CVector <3, float> (1, 0, 0), CMath<float>::PI()*0.25f);
-            box->rotate(CVector <3, float> (0, 0, 1), CMath<float>::PI()*0.25f);
-        
-        
-            NEW_SPHERE(sphere0, red, 0, 9, 0);
-        
-            engine.physics.setGravitation(CVector <3, float> (0, -4, 0));
-            break;
-        }
-        
-        case 1:
-        {
-            //tests for box/plane collisions
-            setupWorldBoxPlanes();
-            
-            iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox;
-            box_factory->resizeBox(3, 3, 3);
-            
-            NEW_BOX(box, red, 0, 3, 0);
-            box->rotate(CVector <3, float> (1, 0, 0), CMath<float>::PI()*0.25f);
-            box->rotate(CVector <3, float> (0, 0, 1), CMath<float>::PI()*0.25f);
-            
-            engine.physics.setGravitation(CVector <3, float> (0, -4, 0));
-            break;
-        }
-        
-        case 2:
-        {
-            //tests for box/plane collisions edge to edge
-            iRef<cObjectFactoryPlane> plane_factory = new cObjectFactoryPlane(9.f, 9.f);
-            plane_factory->setInverseMass(0);
-
-            NEW_PLANE(plane1, red, 0, 0, 0);
-            plane1->rotate(CVector<3,float>(0, 0, 0), -CMath<float>::PI()*0.5f);
-            
-            iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(3, 3, 3);
-            NEW_BOX(box, green, 5.5, 10, 0);
-            box->rotate(CVector<3, float>(1, 0, 0), CMath<float>::PI()*0.25f);
-            box->rotate(CVector<3, float>(0, 0, 1), CMath<float>::PI()*0.25f);
-            break;
-        }
-		
-		case 3:
-		{
-			setupWorldBoxPlanes();
-			iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox;
-			box_factory->resizeBox(4,2,1);
-			NEW_BOX(box5, green, 0.01f, -2, 2);
-            box5->rotate(CVector<3, float>(1, 1, 1).getNormalized(), CMath<float>::PI()*0.35f);
-			NEW_BOX(box6, red, 0, -2, -2);
-            box6->rotate(CVector<3, float>(1, 1, 1).getNormalized(), CMath<float>::PI()*0.35f);
-			box5_physics_object->addSpeed(CVector<3, float>(0, 0, -3));
-			break;
-		}
-        
-        case 4:
-        {
-            setupWorldBoxPlanes();
-			iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox;
-			box_factory->resizeBox(3, 3, 3);
-			NEW_BOX(box5, green, 0, 3, 0);
-            box5->rotate(CVector<3, float>(1, 0, 0).getNormalized(), CMath<float>::PI()*-0.25f);
-            box5_physics_object->setInverseMass(0);
-            
-			NEW_BOX(box6, red, 0, 9, 0);
-            box6->rotate(CVector<3, float>(0, 0, 1).getNormalized(), CMath<float>::PI()*-0.25f);			
-            engine.physics.setGravitation(CVector<3, float> (0, -4, 0));
-			break;
-        }
-        
-        case 5:
-        {
-            scene_description = "2 Boxes connected by a spring";
-
-            iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(4,4,4);
+    iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox;
+    box_factory->resizeBox(3,3,3);
+    iRef<cObjectFactorySphere> sphere_factory = new cObjectFactorySphere(2);
     
-            NEW_BOX(box0, red, -4, 1, 0);
-            NEW_BOX(box1, green, 4, 1, 0);
-
-            NEW_SPRING_ANGULAR(box0, (CVector<3,float>(0,2,0)), box1, (CVector<3,float>(0,2,0)), 100.0f);
-            
-            engine.physics.setGravitation(CVector<3, float>());
-            break;
-        }
+    NEW_BOX(box, green, 0, 3, 0);
+    box_physics_object->setInverseMass(0);
+    box->rotate(CVector <3, float> (1, 0, 0), CMath<float>::PI()*0.25f);
+    box->rotate(CVector <3, float> (0, 0, 1), CMath<float>::PI()*0.25f);
         
-        case 6:
-        {
-            iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(4, 4, 4);
-            
-            NEW_BOX(box, red, 0, 4, 0);
-            
-            box_physics_object->setAngularSpeed(CVector<3,float>(0,1,-1)*0.3f);
-            
-            engine.physics.setGravitation(CVector <3, float> (0, 0, 0));
-            break;
-        }
         
-        default:        break;
-    }
+    NEW_SPHERE(sphere0, red, 0, 9, 0);
+        
+    engine.physics.setGravitation(CVector <3, float> (0, -4, 0));
 }
 
+
+void CScenes::setupScene23()
+{
+    //tests for box/plane collisions
+    setupWorldBoxPlanes();
+    
+    iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox;
+    box_factory->resizeBox(3, 3, 3);
+    
+    NEW_BOX(box, red, 0, 3, 0);
+    box->rotate(CVector <3, float> (1, 0, 0), CMath<float>::PI()*0.25f);
+    box->rotate(CVector <3, float> (0, 0, 1), CMath<float>::PI()*0.25f);
+    
+    engine.physics.setGravitation(CVector <3, float> (0, -4, 0));
+}
+
+   
+void CScenes::setupScene24()
+{     
+    //tests for box/plane collisions edge to edge
+    iRef<cObjectFactoryPlane> plane_factory = new cObjectFactoryPlane(9.f, 9.f);
+    plane_factory->setInverseMass(0);
+
+    NEW_PLANE(plane1, red, 0, 0, 0);
+    plane1->rotate(CVector<3,float>(0, 0, 0), -CMath<float>::PI()*0.5f);
+            
+    iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(3, 3, 3);
+    NEW_BOX(box, green, 5.5, 10, 0);
+    box->rotate(CVector<3, float>(1, 0, 0), CMath<float>::PI()*0.25f);
+    box->rotate(CVector<3, float>(0, 0, 1), CMath<float>::PI()*0.25f);
+}
+
+
+void CScenes::setupScene25()
+{
+	setupWorldBoxPlanes();
+	iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox;
+	box_factory->resizeBox(4,2,1);
+	NEW_BOX(box5, green, 0.01f, -2, 2);
+    box5->rotate(CVector<3, float>(1, 1, 1).getNormalized(), CMath<float>::PI()*0.35f);
+	NEW_BOX(box6, red, 0, -2, -2);
+    box6->rotate(CVector<3, float>(1, 1, 1).getNormalized(), CMath<float>::PI()*0.35f);
+	box5_physics_object->addSpeed(CVector<3, float>(0, 0, -3));
+}
+
+
+void CScenes::setupScene26()
+{
+    setupWorldBoxPlanes();
+	iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox;
+	box_factory->resizeBox(3, 3, 3);
+	NEW_BOX(box5, green, 0, 3, 0);
+    box5->rotate(CVector<3, float>(1, 0, 0).getNormalized(), CMath<float>::PI()*-0.25f);
+    box5_physics_object->setInverseMass(0);
+           
+	NEW_BOX(box6, red, 0, 9, 0);
+    box6->rotate(CVector<3, float>(0, 0, 1).getNormalized(), CMath<float>::PI()*-0.25f);			
+    engine.physics.setGravitation(CVector<3, float> (0, -4, 0));
+}
+
+
+void CScenes::setupScene27()
+{        
+    scene_description = "2 Boxes connected by a spring";
+
+    iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(4,4,4);
+    
+    NEW_BOX(box0, red, -4, 1, 0);
+    NEW_BOX(box1, green, 4, 1, 0);
+
+    NEW_SPRING_ANGULAR(box0, (CVector<3,float>(0,2,0)), box1, (CVector<3,float>(0,2,0)), 100.0f);
+            
+    engine.physics.setGravitation(CVector<3, float>());
+}
+
+
+void CScenes::setupScene28()
+{        
+    iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(4, 4, 4);
+            
+    NEW_BOX(box, red, 0, 4, 0);
+            
+    box_physics_object->setAngularSpeed(CVector<3,float>(0,1,-1)*0.3f);
+            
+    engine.physics.setGravitation(CVector <3, float> (0, 0, 0));
+}
+
+
+void CScenes::setupScene29() 
+{
+    setupWorldBoxPlanes();
+    
+    iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(4, 4, 4);
+    
+    NEW_BOX(box, red, 0, 4, 0);
+    
+    box->rotate(CVector<3, float> (0, 0, 1), CMath<float>::PI()*0.15f);
+    
+    engine.physics.setGravitation(CVector <3, float> (0, -9.81f, 0));
+}
 
 CScenes::CScenes(iEngine &p_engine)	:
 		engine(p_engine)
@@ -1128,6 +1132,13 @@ void CScenes::setupScene(int scene_id)
 	case 20:	setupScene20();		break;
 	case 21:	setupScene21();		break;
 	case 22:	setupScene22();		break;
+    case 23:    setupScene23();     break;
+    case 24:    setupScene24();     break;
+    case 25:    setupScene25();     break;
+    case 26:    setupScene26();     break;
+    case 27:    setupScene27();     break;
+    case 28:    setupScene28();     break;
+    case 29:    setupScene29();     break;
 
 	default:
 		setupScene1();

@@ -109,10 +109,18 @@ public:
             c.physics_object1->velocity += c.collision_normal * closing_velocity * frac * (c.physics_object1->inv_mass/(c.physics_object1->inv_mass + c.physics_object2->inv_mass));
             c.physics_object2->velocity += -c.collision_normal * closing_velocity * frac * (c.physics_object2->inv_mass/(c.physics_object1->inv_mass + c.physics_object2->inv_mass));
             
-            CMatrix4<float> inertia_to_world1 = c.physics_object1->object->inverse_model_matrix.getTranspose() * c.physics_object1->rotational_inverse_inertia * c.physics_object1->object->model_matrix.getTranspose();
+            
+            CMatrix4<float> inertia_to_world1 =   c.physics_object1->object->inverse_model_matrix.getTranspose()    //M^(-T)
+                                                * c.physics_object1->rotational_inverse_inertia                     //I^(-1)
+                                                * c.physics_object1->object->model_matrix.getTranspose();           //M^( T)
+                                                
             c.physics_object1->angular_velocity += inertia_to_world1 * ((c.collision_point1 - c.physics_object1->object->position) % (-c.collision_normal)) * frac;
             
-            CMatrix4<float> inertia_to_world2 = c.physics_object2->object->inverse_model_matrix.getTranspose() * c.physics_object2->rotational_inverse_inertia * c.physics_object2->object->model_matrix.getTranspose();
+            
+            CMatrix4<float> inertia_to_world2 =   c.physics_object2->object->inverse_model_matrix.getTranspose()    //M^(-T)
+                                                * c.physics_object2->rotational_inverse_inertia                     //I^(-1)
+                                                * c.physics_object2->object->model_matrix.getTranspose();           //M^( T)
+                                                
             c.physics_object2->angular_velocity += inertia_to_world2 * ((c.collision_point2 - c.physics_object2->object->position) % (-c.collision_normal)) * frac;
 
 #endif

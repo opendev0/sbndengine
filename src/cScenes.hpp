@@ -73,6 +73,13 @@ public:
 	void setupScene20();
 	void setupScene21();
 	void setupScene22();
+    void setupScene23();
+    void setupScene24();
+    void setupScene25();
+    void setupScene26();
+    void setupScene27();
+    void setupScene28();
+    void setupScene29();
 };
 
 #endif

@@ -77,7 +77,7 @@ void cPhysicsSoftConstraintSpringAngular::updateAcceleration(double frame_elapse
     CVector<3, float> lever1 = world_point1 - physics_object1->object->position;
     CVector<3, float> lever2 = world_point2 - physics_object2->object->position;
     
-    float factor_torque = 0.5f;
+    float factor_torque = 1;
     
     physics_object1->linear_acceleration_accumulator += (dist.getNormalized() * force * physics_object1->inv_mass) * (1 - factor_torque);
     physics_object2->linear_acceleration_accumulator -= (dist.getNormalized() * force * physics_object2->inv_mass) * (1 - factor_torque);

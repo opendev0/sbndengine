@@ -679,6 +679,14 @@ public:
 			case SBND_EVENT_KEY_F10:	scene_id = 20;	setupWorld();	break;
 			case SBND_EVENT_KEY_F11:	scene_id = 21;	setupWorld();	break;
 			case SBND_EVENT_KEY_F12:	scene_id = 22;	setupWorld();	break;
+            
+            case 'y':       scene_id = 23;    setupWorld();    break;
+            case 'x':       scene_id = 24;    setupWorld();    break;
+            case 'c':       scene_id = 25;    setupWorld();    break;
+            case 'v':       scene_id = 26;    setupWorld();    break;
+            case 'b':       scene_id = 27;    setupWorld();    break;
+            case 'n':       scene_id = 28;    setupWorld();    break;
+            case 'm':       scene_id = 29;    setupWorld();    break;
 
 			/*
 			 * physics engine debug stuff

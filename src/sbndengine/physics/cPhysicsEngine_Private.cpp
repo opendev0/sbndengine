@@ -378,12 +378,8 @@ void cPhysicsEngine_Private::integrator()
         
         if (theta != 0) {
             CVector<3, float> axis = o.angular_velocity.getNormalized();
-            if(axis.getLength() < 0.9999f) std::cout << axis.getLength() << std::endl;
-            CQuaternion<float> q;
-            q.setRotation(axis, theta);
-            CMatrix4<float> m = o.object->model_matrix;
-            std::cout << m.getDeterminant() << std::endl;
-            o.object->rotate(axis.getNormalized(), theta);
+            
+            o.object->rotate(axis, theta);
         }
 #endif
 		o.object->updateModelMatrix();
@@ -465,4 +461,6 @@ void cPhysicsEngine_Private::explicitEulerTimestep2(iPhysicsObject &o) {
     o.addAngularSpeed(angular_acceleration * simulation_timestep_size);
 	o.addSpeed(o.linear_acceleration_accumulator * simulation_timestep_size);
 	o.object->translate(o.velocity * simulation_timestep_size);
+    
+    std::cout << "Speed: " << o.velocity << ", Angular speed: " << o.angular_velocity << std::endl;
 }
