@@ -99,43 +99,46 @@ public:
 				)
 		{
 #if WORKSHEET_6
-            // Calculate closing velocity between the two collision points (linear and angular momentum)
-            CVector<3,float> collision_velocity1 = c.physics_object1->velocity + (c.physics_object1->angular_velocity % (c.collision_point1 - c.physics_object1->object->position));
-            CVector<3,float> collision_velocity2 = c.physics_object2->velocity + (c.physics_object2->angular_velocity % (c.collision_point2 - c.physics_object2->object->position));
-            float closing_velocity = c.collision_normal.dotProd(collision_velocity2 - collision_velocity1);
-
-            if (closing_velocity == 0) return;
-
             // Calculate some useful factors
             float coefficient_of_restitution = (c.physics_object1->restitution_coefficient + c.physics_object2->restitution_coefficient)/2.0f;
             float frac = (coefficient_of_restitution + 1.0f);
             float m1_frac = c.physics_object1->inv_mass/(c.physics_object1->inv_mass + c.physics_object2->inv_mass);
+            CVector<3, float> lever1 = (c.collision_point1 - c.physics_object1->object->position);
+            CVector<3, float> lever2 = (c.collision_point2 - c.physics_object2->object->position);
+
+            // Calculate closing velocity between the two collision points (linear and angular momentum)
+            CVector<3,float> collision_velocity1 = c.physics_object1->velocity + (c.physics_object1->angular_velocity % lever1);
+            CVector<3,float> collision_velocity2 = c.physics_object2->velocity + (c.physics_object2->angular_velocity % lever2);
+            float closing_velocity = c.collision_normal.dotProd(collision_velocity1 - collision_velocity2);
+
+            if (closing_velocity == 0) return;            
 
             // Calculate separating velocity between the two collision points
-            CVector<3, float> separating_velocity1 = collision_velocity1 + c.collision_normal * closing_velocity * frac * m1_frac;
-            CVector<3, float> separating_velocity2 = collision_velocity2 - c.collision_normal * closing_velocity * frac * (1 - m1_frac);
-            float separating_velocity = c.collision_normal.dotProd(separating_velocity2 - separating_velocity1);
+            //CVector<3, float> separating_velocity1 = collision_velocity1 + c.collision_normal * closing_velocity * frac * m1_frac;
+            //CVector<3, float> separating_velocity2 = collision_velocity2 - c.collision_normal * closing_velocity * frac * (1 - m1_frac);
+            //float separating_velocity = c.collision_normal.dotProd(separating_velocity2 - separating_velocity1);
+            float separating_velocity = -coefficient_of_restitution * closing_velocity;
 
             // Calculate changes in translational velocity
-            CVector<3, float> dLinearV1 = c.collision_normal * closing_velocity * frac * m1_frac;
-            CVector<3, float> dLinearV2 = -c.collision_normal * closing_velocity * frac * (1 - m1_frac);
+            CVector<3, float> dLinearV1 = c.collision_normal * m1_frac;
+            CVector<3, float> dLinearV2 = -c.collision_normal * (1 - m1_frac);
 
             // Calculate changes in rotational velocity
             CMatrix4<float> inertia_to_world1 =   c.physics_object1->object->inverse_model_matrix.getTranspose()    //M^(-T)
                                                 * c.physics_object1->rotational_inverse_inertia                     //I^(-1)
                                                 * c.physics_object1->object->model_matrix.getTranspose();           //M^( T)
-            CVector<3, float> dRotationalV1 = inertia_to_world1 * ((c.collision_point1 - c.physics_object1->object->position) % c.collision_normal);
+            CVector<3, float> dRotationalV1 = inertia_to_world1 * (lever1 % c.collision_normal);
 
             CMatrix4<float> inertia_to_world2 =   c.physics_object2->object->inverse_model_matrix.getTranspose()    //M^(-T)
                                                 * c.physics_object2->rotational_inverse_inertia                     //I^(-1)
                                                 * c.physics_object2->object->model_matrix.getTranspose();           //M^( T)
-            CVector<3, float> dRotationalV2 = inertia_to_world2 * (-(c.collision_point2 - c.physics_object2->object->position) % c.collision_normal);
+            CVector<3, float> dRotationalV2 = inertia_to_world2 * (lever2 % (-c.collision_normal));
 
             // Calculate total change in velocity between the collision points according to inertia tensor and coefficient of restitution
-            CVector<3, float> dv1 = dLinearV1 + dRotationalV1 % (c.collision_point1 - c.physics_object1->object->position);
-            CVector<3, float> dv2 = dLinearV2 + dRotationalV2 % (c.collision_point2 - c.physics_object2->object->position);
+            CVector<3, float> dv1 = dLinearV1 + dRotationalV1 % lever1;
+            CVector<3, float> dv2 = dLinearV2 + dRotationalV2 % lever2;
             float velocity_change1 = c.collision_normal.dotProd(dv1);
-            float velocity_change2 = c.collision_normal.dotProd(dv2);
+            float velocity_change2 = -c.collision_normal.dotProd(dv2);
 
             float f = (separating_velocity - closing_velocity) / (velocity_change1 + velocity_change2);
 
