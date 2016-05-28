@@ -462,5 +462,5 @@ void cPhysicsEngine_Private::explicitEulerTimestep2(iPhysicsObject &o) {
 	o.addSpeed(o.linear_acceleration_accumulator * simulation_timestep_size);
 	o.object->translate(o.velocity * simulation_timestep_size);
     
-    std::cout << "Speed: " << o.velocity << ", Angular speed: " << o.angular_velocity << std::endl;
+    //std::cout << "Speed: " << o.velocity << ", Angular speed: " << o.angular_velocity << std::endl;
 }

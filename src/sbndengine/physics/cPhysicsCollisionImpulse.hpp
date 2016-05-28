@@ -99,12 +99,60 @@ public:
 				)
 		{
 #if WORKSHEET_6
-            CVector<3,float> collision_velocity1 = c.physics_object1->velocity + (c.physics_object1->angular_velocity % (c.collision_point1 - c.physics_object1->object->position));
-            CVector<3,float> collision_velocity2 = c.physics_object2->velocity + (c.physics_object2->angular_velocity % (c.collision_point2 - c.physics_object2->object->position));
-            float closing_velocity = (-c.collision_normal).dotProd(collision_velocity1 - collision_velocity2);
+            CVector<3,float> lever1 = (c.collision_point1 - c.physics_object1->object->position);
+            CVector<3,float> lever2 = (c.collision_point2 - c.physics_object2->object->position);
             
             float coefficient_of_restitution = (c.physics_object1->restitution_coefficient + c.physics_object2->restitution_coefficient)/2.0;
-            float frac = (coefficient_of_restitution + 1.0f);
+            
+            
+            //closing velocities
+            CVector<3,float> closing_velocity1 = c.physics_object1->velocity + (c.physics_object1->angular_velocity % lever1);
+            CVector<3,float> closing_velocity2 = c.physics_object2->velocity + (c.physics_object2->angular_velocity % lever2);
+            float closing_velocity = (-c.collision_normal).dotProd(closing_velocity1 - closing_velocity2);
+            
+            
+            
+            
+            //seperating velocities
+            CMatrix4<float> inertia_to_world1 =   c.physics_object1->object->inverse_model_matrix.getTranspose()    //M^(-T)
+                                                * c.physics_object1->rotational_inverse_inertia                     //I^(-1)
+                                                * c.physics_object1->object->model_matrix.getTranspose();           //M^( T)
+            
+            CVector<3,float> seperating_linear_velocity1 = -c.collision_normal*(c.physics_object1->inv_mass/(c.physics_object1->inv_mass + c.physics_object2->inv_mass));
+            CVector<3,float> seperating_angular_velocity1 = inertia_to_world1 * (lever1 % (-c.collision_normal));
+            CVector<3,float> seperating_velocity1 = seperating_linear_velocity1 + (seperating_angular_velocity1 % (-c.collision_normal));
+            
+            
+            
+            CMatrix4<float> inertia_to_world2 =   c.physics_object2->object->inverse_model_matrix.getTranspose()    //M^(-T)
+                                                * c.physics_object2->rotational_inverse_inertia                     //I^(-1)
+                                                * c.physics_object2->object->model_matrix.getTranspose();           //M^( T)
+            
+            CVector<3,float> seperating_linear_velocity2 = -c.collision_normal*(c.physics_object2->inv_mass/(c.physics_object1->inv_mass + c.physics_object2->inv_mass));
+            CVector<3,float> seperating_angular_velocity2 = inertia_to_world2 * (lever2 % (-c.collision_normal));
+            CVector<3,float> seperating_velocity2 = seperating_linear_velocity2 + (seperating_angular_velocity2 % (-c.collision_normal));
+            
+            float seperating_velocity = (-c.collision_normal).dotProd(seperating_velocity1 - seperating_velocity2);
+            
+            
+            
+            
+            //velocities must fulfil seperating_velocity = -coefficient_of_restitution * closing_velocity
+            float frac = (-coefficient_of_restitution * closing_velocity - closing_velocity)/seperating_velocity;
+            
+            
+            /*
+            //apply calculated impulse to objects
+            c.physics_object1->velocity += seperating_linear_velocity1 * frac;
+            c.physics_object1->angular_velocity += seperating_angular_velocity1 * frac;
+            
+            c.physics_object2->velocity += seperating_linear_velocity2 * frac;
+            c.physics_object2->angular_velocity += seperating_angular_velocity2 * frac;
+            */
+            
+            std::cout << -coefficient_of_restitution*closing_velocity << " = " << seperating_velocity*frac << std::endl;
+            
+            /*float frac = (coefficient_of_restitution + 1.0f);
             
             c.physics_object1->velocity += c.collision_normal * closing_velocity * frac * (c.physics_object1->inv_mass/(c.physics_object1->inv_mass + c.physics_object2->inv_mass));
             c.physics_object2->velocity += -c.collision_normal * closing_velocity * frac * (c.physics_object2->inv_mass/(c.physics_object1->inv_mass + c.physics_object2->inv_mass));
@@ -122,7 +170,7 @@ public:
                                                 * c.physics_object2->object->model_matrix.getTranspose();           //M^( T)
                                                 
             c.physics_object2->angular_velocity += inertia_to_world2 * ((c.collision_point2 - c.physics_object2->object->position) % (-c.collision_normal)) * frac;
-
+            */
 #endif
 		}
 		else
