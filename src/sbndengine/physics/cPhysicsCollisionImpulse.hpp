@@ -52,15 +52,21 @@ public:
 			}
 #endif
 
+
+
+
 			//velocities in direction of collision normal
 			float collision_velocity1 = (-c.collision_normal).dotProd(c.physics_object1->velocity);
 			float collision_velocity2 = (-c.collision_normal).dotProd(c.physics_object2->velocity);
-			float closing_velocity = collision_velocity1 - collision_velocity2;
+			CVector<3,float> closing_velocity = c.collision_normal*(collision_velocity1 - collision_velocity2);
 
-			float coefficient_of_restitution = (c.physics_object1->restitution_coefficient + c.physics_object2->restitution_coefficient)/2.0;
+			float c_r = (c.physics_object1->restitution_coefficient + c.physics_object2->restitution_coefficient)/2.0;
 
-			c.physics_object1->velocity += -c.collision_normal*closing_velocity*(c.physics_object1->inv_mass/(c.physics_object1->inv_mass + c.physics_object2->inv_mass))*(-(1+coefficient_of_restitution));
-			c.physics_object2->velocity += c.collision_normal*closing_velocity*(c.physics_object2->inv_mass/(c.physics_object1->inv_mass + c.physics_object2->inv_mass))*(-(1+coefficient_of_restitution));
+			c.physics_object1->velocity -= closing_velocity*(c.physics_object1->inv_mass/(c.physics_object1->inv_mass + c.physics_object2->inv_mass))*(-(1+c_r));
+			c.physics_object2->velocity += closing_velocity*(c.physics_object2->inv_mass/(c.physics_object1->inv_mass + c.physics_object2->inv_mass))*(-(1+c_r));
+
+
+
 
 #ifdef DEBUG
 			// Check sum of all forces = 0
@@ -74,7 +80,7 @@ public:
 			}
 			
 			// Check loss in kinetic energy = expected loss due to Cr
-			float energyLoss = 0.5f * (CMath<float>::pow(coefficient_of_restitution, 2) - 1) * CMath<float>::pow(collision_velocity1 - collision_velocity2, 2) / (c.physics_object1->inv_mass + c.physics_object2->inv_mass);
+			float energyLoss = 0.5f * (CMath<float>::pow(c_r, 2) - 1) * CMath<float>::pow(collision_velocity1 - collision_velocity2, 2) / (c.physics_object1->inv_mass + c.physics_object2->inv_mass);
 			float eKin2 = 0;
 			if (c.physics_object1->inv_mass > 0) {
 				eKin2 += 0.5f / c.physics_object1->inv_mass * c.physics_object1->velocity.getLength2();
@@ -99,18 +105,18 @@ public:
 				)
 		{
 #if WORKSHEET_6
-            CVector<3,float> lever1 = (c.collision_point1 - c.physics_object1->object->position);
-            CVector<3,float> lever2 = (c.collision_point2 - c.physics_object2->object->position);
+            CVector<3,float> lever1 = c.collision_point1 - c.physics_object1->object->position + c.collision_normal * c.interpenetration_depth * 0.5f;
+            CVector<3,float> lever2 = c.collision_point2 - c.physics_object2->object->position - c.collision_normal * c.interpenetration_depth * 0.5f;
+            float c_r = (c.physics_object1->restitution_coefficient + c.physics_object2->restitution_coefficient)/2.0;
             
-            float coefficient_of_restitution = (c.physics_object1->restitution_coefficient + c.physics_object2->restitution_coefficient)/2.0;
             
             
             //closing velocities
             CVector<3,float> closing_velocity1 = c.physics_object1->velocity + (c.physics_object1->angular_velocity % lever1);
             CVector<3,float> closing_velocity2 = c.physics_object2->velocity + (c.physics_object2->angular_velocity % lever2);
-            float closing_velocity = (-c.collision_normal).dotProd(closing_velocity1 - closing_velocity2);
+            float closing_velocity = c.collision_normal.dotProd(closing_velocity1 - closing_velocity2);
             
-            
+    
             
             
             //seperating velocities
@@ -119,8 +125,9 @@ public:
                                                 * c.physics_object1->object->model_matrix.getTranspose();           //M^( T)
             
             CVector<3,float> seperating_linear_velocity1 = -c.collision_normal*(c.physics_object1->inv_mass/(c.physics_object1->inv_mass + c.physics_object2->inv_mass));
-            CVector<3,float> seperating_angular_velocity1 = inertia_to_world1 * (lever1 % (-c.collision_normal));
-            CVector<3,float> seperating_velocity1 = seperating_linear_velocity1 + (seperating_angular_velocity1 % (-c.collision_normal));
+            CVector<3,float> seperating_angular_velocity1 = inertia_to_world1 * (lever1 % -c.collision_normal);
+            CVector<3,float> seperating_velocity1 = seperating_linear_velocity1 + (seperating_angular_velocity1 % lever1);
+            float delta_s1 = seperating_velocity1.dotProd(c.collision_normal);
             
             
             
@@ -128,31 +135,32 @@ public:
                                                 * c.physics_object2->rotational_inverse_inertia                     //I^(-1)
                                                 * c.physics_object2->object->model_matrix.getTranspose();           //M^( T)
             
-            CVector<3,float> seperating_linear_velocity2 = -c.collision_normal*(c.physics_object2->inv_mass/(c.physics_object1->inv_mass + c.physics_object2->inv_mass));
-            CVector<3,float> seperating_angular_velocity2 = inertia_to_world2 * (lever2 % (-c.collision_normal));
-            CVector<3,float> seperating_velocity2 = seperating_linear_velocity2 + (seperating_angular_velocity2 % (-c.collision_normal));
-            
-            float seperating_velocity = (-c.collision_normal).dotProd(seperating_velocity1 - seperating_velocity2);
-            
+            CVector<3,float> seperating_linear_velocity2 = c.collision_normal*(c.physics_object2->inv_mass/(c.physics_object1->inv_mass + c.physics_object2->inv_mass));
+            CVector<3,float> seperating_angular_velocity2 = inertia_to_world2 * (-lever2 % c.collision_normal);
+            CVector<3,float> seperating_velocity2 = seperating_linear_velocity2 + (seperating_angular_velocity2 % lever2);
+            float delta_s2 = seperating_velocity2.dotProd(-c.collision_normal);
             
             
             
-            //velocities must fulfil seperating_velocity = -coefficient_of_restitution * closing_velocity
-            float frac = (-coefficient_of_restitution * closing_velocity - closing_velocity)/seperating_velocity;
+            
+            //velocities must fullfil seperating_velocity = -c_r * closing_velocity
+            float frac = (-c_r * closing_velocity - closing_velocity)/(delta_s1 + delta_s2);
             
             
-            /*
+            
+            
             //apply calculated impulse to objects
             c.physics_object1->velocity += seperating_linear_velocity1 * frac;
             c.physics_object1->angular_velocity += seperating_angular_velocity1 * frac;
             
             c.physics_object2->velocity += seperating_linear_velocity2 * frac;
             c.physics_object2->angular_velocity += seperating_angular_velocity2 * frac;
-            */
             
-            std::cout << -coefficient_of_restitution*closing_velocity << " = " << seperating_velocity*frac << std::endl;
+            //TODO
+            std::cout << c.physics_object2->velocity << std::endl;
             
-            /*float frac = (coefficient_of_restitution + 1.0f);
+            
+            /*float frac = (c_r + 1.0f);
             
             c.physics_object1->velocity += c.collision_normal * closing_velocity * frac * (c.physics_object1->inv_mass/(c.physics_object1->inv_mass + c.physics_object2->inv_mass));
             c.physics_object2->velocity += -c.collision_normal * closing_velocity * frac * (c.physics_object2->inv_mass/(c.physics_object1->inv_mass + c.physics_object2->inv_mass));

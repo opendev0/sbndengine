@@ -1073,7 +1073,7 @@ void CScenes::setupScene28()
             
     NEW_BOX(box, red, 0, 4, 0);
             
-    box_physics_object->setAngularSpeed(CVector<3,float>(0,1,-1)*0.3f);
+    box_physics_object->setAngularSpeed(CVector<3,float>(0.0339621, 0, -0.0777136));
             
     engine.physics.setGravitation(CVector <3, float> (0, 0, 0));
 }
@@ -1085,9 +1085,12 @@ void CScenes::setupScene29()
     
     iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(4, 4, 4);
     
-    NEW_BOX(box, red, 0, 4, 0);
+    iRef<cObjectFactoryPlane> plane_factory = new cObjectFactoryPlane(10, 10);
     
-    box->rotate(CVector<3, float> (0, 0, 1), CMath<float>::PI()*0.15f);
+    NEW_BOX(box, red, 0, 4, 0);
+    NEW_PLANE(plane, green, 0, 0, 0);
+    
+    box->rotate(CVector<3, float> (1, 0, 0), CMath<float>::PI()*0.15f);
     
     engine.physics.setGravitation(CVector <3, float> (0, -9.81f, 0));
 }
