@@ -105,8 +105,8 @@ public:
 				)
 		{
 #if WORKSHEET_6
-            CVector<3,float> lever1 = c.collision_point1 - c.physics_object1->object->position + c.collision_normal * c.interpenetration_depth * 0.5f;
-            CVector<3,float> lever2 = c.collision_point2 - c.physics_object2->object->position - c.collision_normal * c.interpenetration_depth * 0.5f;
+            CVector<3,float> lever1 = c.collision_point1 - c.physics_object1->object->position;
+            CVector<3,float> lever2 = c.collision_point2 - c.physics_object2->object->position;
             float c_r = (c.physics_object1->restitution_coefficient + c.physics_object2->restitution_coefficient)/2.0;
             
             
@@ -124,7 +124,7 @@ public:
                                                 * c.physics_object1->rotational_inverse_inertia                     //I^(-1)
                                                 * c.physics_object1->object->model_matrix.getTranspose();           //M^( T)
             
-            CVector<3,float> seperating_linear_velocity1 = -c.collision_normal*(c.physics_object1->inv_mass/(c.physics_object1->inv_mass + c.physics_object2->inv_mass));
+            CVector<3,float> seperating_linear_velocity1 = -c.collision_normal*c.physics_object1->inv_mass;
             CVector<3,float> seperating_angular_velocity1 = inertia_to_world1 * (lever1 % -c.collision_normal);
             CVector<3,float> seperating_velocity1 = seperating_linear_velocity1 + (seperating_angular_velocity1 % lever1);
             float delta_s1 = seperating_velocity1.dotProd(c.collision_normal);
@@ -135,8 +135,8 @@ public:
                                                 * c.physics_object2->rotational_inverse_inertia                     //I^(-1)
                                                 * c.physics_object2->object->model_matrix.getTranspose();           //M^( T)
             
-            CVector<3,float> seperating_linear_velocity2 = c.collision_normal*(c.physics_object2->inv_mass/(c.physics_object1->inv_mass + c.physics_object2->inv_mass));
-            CVector<3,float> seperating_angular_velocity2 = inertia_to_world2 * (-lever2 % c.collision_normal);
+            CVector<3,float> seperating_linear_velocity2 = c.collision_normal*c.physics_object2->inv_mass;
+            CVector<3,float> seperating_angular_velocity2 = inertia_to_world2 * (lever2 % c.collision_normal);
             CVector<3,float> seperating_velocity2 = seperating_linear_velocity2 + (seperating_angular_velocity2 % lever2);
             float delta_s2 = seperating_velocity2.dotProd(-c.collision_normal);
             
@@ -157,7 +157,7 @@ public:
             c.physics_object2->angular_velocity += seperating_angular_velocity2 * frac;
             
             //TODO
-            std::cout << c.physics_object2->velocity << std::endl;
+            std::cout << c.collision_point1 << std::endl;
             
             
             /*float frac = (c_r + 1.0f);
