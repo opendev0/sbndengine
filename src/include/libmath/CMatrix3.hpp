@@ -81,6 +81,33 @@ public:
 
 	}
 
+	inline CMatrix3(CVector<3, T> &v1, CVector<3, T> &v2, CVector<3, T> &v3, bool col = true)
+	{
+		matrix[0][0] = v1[0];
+		matrix[1][1] = v2[1];
+		matrix[2][2] = v3[2];
+
+		if (col) {
+			matrix[1][0] = v1[1];
+			matrix[2][0] = v1[2];
+
+			matrix[0][1] = v2[0];
+			matrix[2][1] = v2[2];
+
+			matrix[0][2] = v3[0];
+			matrix[1][2] = v3[1];
+		} else {
+			matrix[0][1] = v1[1];
+			matrix[0][2] = v1[2];
+
+			matrix[1][0] = v2[0];
+			matrix[1][2] = v2[2];
+
+			matrix[2][0] = v3[0];
+			matrix[2][1] = v3[1];
+		}
+	}
+
 
 	/**
 	 * constructor: initialize all matrix values to p_value
@@ -170,14 +197,14 @@ public:
 	 */
 	CMatrix3<T> getInverse() const
 	{
-	    CMatrix3<T> nm(
-	             (matrix[1][1]*matrix[2][2] - matrix[1][2]*matrix[2][1]), -(matrix[0][1]*matrix[2][2] - matrix[0][2]*matrix[2][1]),  (matrix[0][1]*matrix[1][2] - matrix[0][2]*matrix[1][1]),
-	            -(matrix[1][0]*matrix[2][2] - matrix[1][2]*matrix[2][0]),  (matrix[0][0]*matrix[2][2] - matrix[0][2]*matrix[2][0]), -(matrix[0][0]*matrix[1][2] - matrix[0][2]*matrix[1][0]),
-	             (matrix[1][0]*matrix[2][1] - matrix[1][1]*matrix[2][0]), -(matrix[0][0]*matrix[2][1] - matrix[0][1]*matrix[2][0]),  (matrix[0][0]*matrix[1][1] - matrix[0][1]*matrix[1][0])
-	            );
-	    T s = (T)1/(matrix[0][0]*nm.matrix[0][0] + matrix[0][1]*nm.matrix[1][0] + matrix[0][2]*nm.matrix[2][0]);
+		CMatrix3<T> nm(
+				 (matrix[1][1]*matrix[2][2] - matrix[1][2]*matrix[2][1]), -(matrix[0][1]*matrix[2][2] - matrix[0][2]*matrix[2][1]),  (matrix[0][1]*matrix[1][2] - matrix[0][2]*matrix[1][1]),
+				-(matrix[1][0]*matrix[2][2] - matrix[1][2]*matrix[2][0]),  (matrix[0][0]*matrix[2][2] - matrix[0][2]*matrix[2][0]), -(matrix[0][0]*matrix[1][2] - matrix[0][2]*matrix[1][0]),
+				 (matrix[1][0]*matrix[2][1] - matrix[1][1]*matrix[2][0]), -(matrix[0][0]*matrix[2][1] - matrix[0][1]*matrix[2][0]),  (matrix[0][0]*matrix[1][1] - matrix[0][1]*matrix[1][0])
+				);
+		T s = (T)1/(matrix[0][0]*nm.matrix[0][0] + matrix[0][1]*nm.matrix[1][0] + matrix[0][2]*nm.matrix[2][0]);
 
-	    return nm*s;
+		return nm*s;
 	}
 
 	/**
@@ -297,6 +324,11 @@ public:
 
 		return *this;
 	};
+
+	inline CMatrix3<T>& operator+(const CMatrix3<T> &m)
+	{
+		return (*this += m);
+	}
 
 
 
