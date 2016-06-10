@@ -14,7 +14,7 @@
 #define WORKSHEET_4		1	// collisions (sphere-box, plane-box), create your own scene
 #define WORKSHEET_5		1	// collision (box-box)
 #define WORKSHEET_6		1	// angular momentum
-#define WORKSHEET_7		1	// friction
+#define WORKSHEET_7	    1	// friction
 
 #define WORKSHEET_X		1	// other helper functions
 
