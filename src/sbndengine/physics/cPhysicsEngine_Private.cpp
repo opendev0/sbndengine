@@ -379,7 +379,7 @@ void cPhysicsEngine_Private::integrator()
         if (theta != 0) {
             CVector<3, float> axis = o.angular_velocity.getNormalized();
             
-            o.object->rotate(axis, theta);
+            o.object->rotate(axis, -theta);
         }
 #endif
 		o.object->updateModelMatrix();

@@ -158,32 +158,29 @@ public:
 		{
 #if WORKSHEET_7
 			// Calculate some useful factors
-			float cor_factor = 1 + (c.physics_object1->restitution_coefficient + c.physics_object2->restitution_coefficient) / 2.0f;
 			CVector<3, float> lever1 = c.collision_point1 - c.physics_object1->object->position;
 			CVector<3, float> lever2 = c.collision_point2 - c.physics_object2->object->position;
+
 
 			// Calculate closing velocity of the two collision points (linear and angular)
 			CVector<3, float> collision_velocity1 = c.physics_object1->velocity + (c.physics_object1->angular_velocity % lever1);
 			CVector<3, float> collision_velocity2 = c.physics_object2->velocity + (c.physics_object2->angular_velocity % lever2);
 			CVector<3, float> closing_velocity = collision_velocity1 - collision_velocity2;
+            float closing_velocity_in_normal = (collision_velocity1 - collision_velocity2).dotProd(c.collision_normal);
 
-			float v_c = c.collision_normal.dotProd(closing_velocity);
-			CVector<3, float> planar_velocity = closing_velocity - c.collision_normal * v_c;
+
+			
 
 			// Calculate orthonormal basis in collision space
 			CMatrix3<float> collision_basis;
 			CVector<3, float> null_vector = CVector<3, float>();
-			if (planar_velocity == null_vector) {
-				collision_basis = CMatrix3<float>(c.collision_normal, null_vector, null_vector);
-			} else {
-				CVector<3, float> basis_vector2 = planar_velocity.getNormalized();
-				CVector<3, float> basis_vector3 = (c.collision_normal % basis_vector2).getNormalized();
-				collision_basis = CMatrix3<float>(c.collision_normal, basis_vector2, basis_vector3);
-			}
 
+            collision_basis.loadIdentity();
+            
 			// Calculate change in linear velocity if unit impulse would be applied
 			CMatrix3<float> linear_velocity_change1 = collision_basis * c.physics_object1->inv_mass;
 			CMatrix3<float> linear_velocity_change2 = collision_basis * c.physics_object2->inv_mass;
+            
 
 			// Calculate change in rotational velocity if unit impulse would be applied
 			// We need to convert the levers into specific skew-matrices to simulate cross product between two matrices
@@ -191,14 +188,15 @@ public:
 			CMatrix3<float> lever_matrix2 = CMatrix3<float>().setupCrossProduct(lever2);
 
 			// ΔL = r x Δp (Δp: unit impulse)
-			CMatrix3<float> angular_impulse_change1 = lever_matrix1 * collision_basis;
-			CMatrix3<float> angular_impulse_change2 = lever_matrix2 * collision_basis;
+			CMatrix3<float> angular_impulse_change1 = lever_matrix1;// * collision_basis;
+			CMatrix3<float> angular_impulse_change2 = lever_matrix2;// * collision_basis;
 
 			CMatrix3<float> rot_velocity_change1 =
 				c.physics_object1->object->inverse_model_matrix.getTranspose() *
 				c.physics_object1->rotational_inverse_inertia *
 				c.physics_object1->object->model_matrix.getTranspose() *
 				angular_impulse_change1;
+                
 			CMatrix3<float> rot_velocity_change2 =
 				c.physics_object2->object->inverse_model_matrix.getTranspose() *
 				c.physics_object2->rotational_inverse_inertia *
@@ -206,36 +204,44 @@ public:
 				angular_impulse_change2;
 
 			// Velocity change in collision space
-			CMatrix3<float> velocity_change1 = linear_velocity_change1 + rot_velocity_change1 * lever_matrix1;
-			CMatrix3<float> velocity_change2 = linear_velocity_change2 + rot_velocity_change2 * lever_matrix2;
+			CMatrix3<float> velocity_change1 = linear_velocity_change1 + lever_matrix1 * rot_velocity_change1;
+			CMatrix3<float> velocity_change2 = linear_velocity_change2 + lever_matrix2 * rot_velocity_change2;
+            CMatrix3<float> delta_velocity_change = velocity_change1 + velocity_change2;
 
+            /*
 			// Transform velocity change to world space
 			CMatrix3<float> contact_velocity_change1 = collision_basis.getInverse() * velocity_change1;
 			CMatrix3<float> contact_velocity_change2 = collision_basis.getInverse() * velocity_change2;
-
+            */
+            
+            
+            float cor_factor = 1 + (c.physics_object1->restitution_coefficient + c.physics_object2->restitution_coefficient) / 2.0f;
+            float f = (closing_velocity_in_normal * cor_factor);
+            CVector<3, float> vec_linear_velocity_change = -c.collision_normal * f;
+            
+			CVector<3, float> planar_velocity = closing_velocity - c.collision_normal * closing_velocity_in_normal;
+            
+            if (planar_velocity.getLength() <= CMath<float>::abs(closing_velocity_in_normal) * (c.physics_object1->friction_static_coefficient + c.physics_object2->friction_static_coefficient)/2.0f) {
+				vec_linear_velocity_change -= planar_velocity;
+			} else {
+				vec_linear_velocity_change -= planar_velocity * (c.physics_object1->friction_dynamic_coefficient + c.physics_object2->friction_dynamic_coefficient)/2.0f;
+			}
+            
+            
+            
+            
+            
 			// I'm not really sure how we should calculate length of impulse
 			// v_s = -Cr * closing_velocity = closing_velocity + f * (contact_velocity_change1 + contact_velocity_change1)
-			CVector<3, float> p = (contact_velocity_change1 + contact_velocity_change2).getInverse() * (closing_velocity * -cor_factor);
+            
+			CVector<3, float> p = (delta_velocity_change).getInverse() * (vec_linear_velocity_change * -cor_factor);
 
-			CVector<3, float> vec_linear_velocity_change1 = linear_velocity_change1 * p;
-			CVector<3, float> vec_linear_velocity_change2 = linear_velocity_change2 * p;
-
-			if (planar_velocity.getLength() <= CMath<float>::abs(v_c) * c.physics_object1->friction_static_coefficient) {
-				vec_linear_velocity_change1 -= planar_velocity;
-			} else {
-				vec_linear_velocity_change1 -= planar_velocity * c.physics_object1->friction_dynamic_coefficient;
-			}
-
-			if (planar_velocity.getLength() <= CMath<float>::abs(v_c) * c.physics_object2->friction_static_coefficient) {
-				vec_linear_velocity_change2 -= planar_velocity;
-			} else {
-				vec_linear_velocity_change2 -= planar_velocity * c.physics_object2->friction_dynamic_coefficient;
-			}
+			
 
 			std::cout << "impulse: " << p << std::endl;
 
-			c.physics_object1->velocity -= vec_linear_velocity_change1;
-			c.physics_object2->velocity += vec_linear_velocity_change2;
+			c.physics_object1->velocity -= linear_velocity_change1 * p;
+			c.physics_object2->velocity += linear_velocity_change2 * p;
 
 			c.physics_object1->angular_velocity -= rot_velocity_change1 * p;
 			c.physics_object2->angular_velocity += rot_velocity_change2 * p;
