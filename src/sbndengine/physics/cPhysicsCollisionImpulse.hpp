@@ -107,28 +107,26 @@ public:
 #if WORKSHEET_6
             CVector<3,float> lever1 = c.collision_point1 - c.physics_object1->object->position;
             CVector<3,float> lever2 = c.collision_point2 - c.physics_object2->object->position;
-            CVector<3,float> normal_lever1 = lever1.getNormalized();
-            CVector<3,float> normal_lever2 = lever2.getNormalized();
+            
             
             CMatrix4<float> inertia_to_world1 =   c.physics_object1->object->inverse_model_matrix.getTranspose3x3()    //M^(-T)
-                                                * c.physics_object1->rotational_inverse_inertia                     //I^(-1)
+                                                * c.physics_object1->rotational_inverse_inertia                         //I^(-1)
                                                 * c.physics_object1->object->model_matrix.getTranspose3x3();           //M^( T)
                                                 
             CMatrix4<float> inertia_to_world2 =   c.physics_object2->object->inverse_model_matrix.getTranspose3x3()    //M^(-T)
-                                                * c.physics_object2->rotational_inverse_inertia                     //I^(-1)
+                                                * c.physics_object2->rotational_inverse_inertia                         //I^(-1)
                                                 * c.physics_object2->object->model_matrix.getTranspose3x3();           //M^( T)
                                                 
             float c_r = (c.physics_object1->restitution_coefficient + c.physics_object2->restitution_coefficient)/2.0;
             
             
             
+            
             //closing velocities
             CVector<3,float> closing_velocity1 = c.physics_object1->velocity + (c.physics_object1->angular_velocity % lever1);
             CVector<3,float> closing_velocity2 = c.physics_object2->velocity + (c.physics_object2->angular_velocity % lever2);
-            float closing_velocity1float = closing_velocity1.dotProd(c.collision_normal);
-            float closing_velocity2float = closing_velocity2.dotProd(c.collision_normal);
             
-            float closing_velocity = closing_velocity1float - closing_velocity2float;
+            float closing_velocity = c.collision_normal.dotProd(closing_velocity1 - closing_velocity2);
             
     
             
@@ -148,7 +146,6 @@ public:
             
             
             //velocities must fullfil seperating_velocity = -c_r * closing_velocity = frac * seperating_velocity + closing_velocity
-            //float frac = (-c_r * closing_velocity - closing_velocity)/delta_seperating_velocity;
             float frac = ((1+c_r)*closing_velocity)/delta_seperating_velocity;
             
             
@@ -160,48 +157,11 @@ public:
             
             c.physics_object2->velocity += seperating_linear_velocity2 * frac;
             c.physics_object2->angular_velocity += seperating_angular_velocity2 * frac;
-            
-            //TODO
-            std::cout << "Point 1: " << c.collision_point1 << std::endl;
-            std::cout << "Point 2: " << c.collision_point2 << std::endl;
-            std::cout << "Normale: " << c.collision_normal << std::endl;
 #endif
 		}
 		else
 		{
-#if WORKSHEET_7
-
-            //levers in object space
-            CVector<3,float> lever1 = c.collision_point1 - c.physics_object1->object->position;
-            CVector<3,float> lever2 = c.collision_point2 - c.physics_object2->object->position;
-            
-            CVector<3,float> object_lever1 = c.physics_object1->object->model_matrix.getTranspose() * lever1;
-            CVector<3,float> object_lever2 = c.physics_object2->object->model_matrix.getTranspose() * lever1;
-            
-            CMatrix3<float> skew_lever1, skew_lever2;
-            
-            skew_lever1.setupCrossProduct(object_lever1);
-            skew_lever2.setupCrossProduct(object_lever2);
-            
-            
-            
-            //closing velocities
-            CVector<3,float> closing_velocity1 = c.physics_object1->velocity + (c.physics_object1->angular_velocity % lever1);
-            CVector<3,float> closing_velocity2 = c.physics_object2->velocity + (c.physics_object2->angular_velocity % lever2);
-            
-            CVector<3,float> closing_velocity = closing_velocity1 - closing_velocity2;
-            
-            CVector<3,float> planar_velocity = closing_velocity;
-            closing_velocity = closing_velocity.dotProd(c.collision_normal);
-            planar_velocity -= c.collision_normal * closing_velocity;
-            
-            CVector<3,float> y = planar_velocity.getNormalized();
-            CVector<3,float> z = c.collision_normal % y;
-            
-            std::cout << z.getLength() << std::endl;
-            
-
-            
+#if WORKSHEET_7            
             
 #endif
 		}
