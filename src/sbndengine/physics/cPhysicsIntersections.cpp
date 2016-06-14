@@ -441,9 +441,10 @@ bool CPhysicsIntersections::boxBox(iPhysicsObject &physics_object_box1, iPhysics
 	// Determine axis that need to be checked for overlapping of object projections (separating axis theorem)
 	CMatrix4<float> modelMatrix1 = physics_object_box1.object->model_matrix;
 	CMatrix4<float> modelMatrix2 = physics_object_box2.object->model_matrix;
+    
+    Vector boxHalfSize1 = static_cast<cObjectFactoryBox *>(&physics_object_box1.object->objectFactory.getClass())->half_size;
+    Vector boxHalfSize2 = static_cast<cObjectFactoryBox *>(&physics_object_box2.object->objectFactory.getClass())->half_size;
 
-	Vector boxHalfSize1 = static_cast<cObjectFactoryBox *>(&physics_object_box1.object->objectFactory.getClass())->half_size;
-	Vector boxHalfSize2 = static_cast<cObjectFactoryBox *>(&physics_object_box2.object->objectFactory.getClass())->half_size;
 
 	Vector seperatingAxes[15] = {
 		// Normals of object1's surfaces
@@ -487,20 +488,29 @@ bool CPhysicsIntersections::boxBox(iPhysicsObject &physics_object_box1, iPhysics
 			sgn[1] = (sgn[1] >= 0) - (sgn[1] < 0);
 			sgn[2] = (sgn[2] >= 0) - (sgn[2] < 0);
 
+            sgn[0] = (sgn[0] >= 0) - (sgn[0] < 0);
+            sgn[1] = (sgn[1] >= 0) - (sgn[1] < 0);
+            sgn[2] = (sgn[2] >= 0) - (sgn[2] < 0);
+            
+            
+                
 			if (axis - seperatingAxes < 3) {
 				//used principal axis of box1
-				boxHalfSize2 = boxHalfSize2 * sgn;
+                boxHalfSize2 = boxHalfSize2 * sgn;
+
 				c.collision_point2 = physics_object_box2.object->position - (seperatingAxes[3]*boxHalfSize2[0] + seperatingAxes[4]*boxHalfSize2[1] + seperatingAxes[5]*boxHalfSize2[2]);
 				c.collision_point1 = c.collision_point2 - c.collision_normal * c.interpenetration_depth;
 			}
 			else if (axis - seperatingAxes < 6) {
 				//used principal axis of box2
 				boxHalfSize1 = boxHalfSize1 * sgn;
+                
 				c.collision_point1 = physics_object_box1.object->position + (seperatingAxes[0]*boxHalfSize1[0] + seperatingAxes[1]*boxHalfSize1[1] + seperatingAxes[2]*boxHalfSize1[2]);
 				c.collision_point2 = c.collision_point1 + c.collision_normal * c.interpenetration_depth;
 			}
 			else {
 				//used axis created by cross-product
+
 				Vector boxHalfSize1 = static_cast<cObjectFactoryBox *>(&physics_object_box1.object->objectFactory.getClass())->half_size;
 
 				//calculate which principle axis of box1 was used for creation of the cross-product, this is the direction of the edge

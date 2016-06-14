@@ -1069,14 +1069,23 @@ void CScenes::setupScene27()
 
 void CScenes::setupScene28()
 {        
-    iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(4, 4, 4);
-            
-    NEW_BOX(box, red, 0, 4, 0);
 
-    box->setRotation(CVector<3, float>(1, 0, 1));
-    box_physics_object->setAngularSpeed(CVector<3,float>(0, 1, 0) * 1.0f);
+    setupWorldBoxPlanes();
+    
+    iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(2, 2, 2);
+    iRef<cObjectFactorySphere> sphere_factory = new cObjectFactorySphere(1);
             
-    engine.physics.setGravitation(CVector <3, float> (0, 0, 0));
+    NEW_BOX(box, red, 0, 10, 0);
+    
+    NEW_SPHERE(sphere1, pink, -1, 6, 0);
+    NEW_SPHERE(sphere2, pink, 1, 4, 0);
+    NEW_SPHERE(sphere3, pink, 0, 0, 0);
+    
+    sphere1_physics_object->setInverseMass(0);
+    sphere2_physics_object->setInverseMass(0);
+    sphere3_physics_object->setInverseMass(0);
+            
+    engine.physics.setGravitation(CVector <3, float> (0, -9.81f, 0));
 }
 
 
@@ -1086,9 +1095,22 @@ void CScenes::setupScene29()
     
     iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(4, 4, 4);
     
+    iRef<cObjectFactoryPlane> plane_factory = new cObjectFactoryPlane(10, 10);
+    iRef<cObjectFactorySphere> sphere_factory = new cObjectFactorySphere(0.1);
+    
     NEW_BOX(box, red, 0, 4, 0);
+    box_factory = new cObjectFactoryBox(10, 1, 10);
+    NEW_BOX(floor, green, 0, -1, 0);
+    floor_physics_object->setInverseMass(0);
+    
+    
+    NEW_SPHERE(test, pink, 1.07201, -1.07802, -1.23486);
+    test_physics_object->setInverseMass(0);
+    
+    
+    box->rotate(CVector<3, float> (1, 0, 0), CMath<float>::PI()*0.1f);
+    box->rotate(CVector<3, float> (0, 0, 1), CMath<float>::PI()*0.1f);
 
-    box->rotate(CVector<3, float>(1, 1, -1), CMath<float>::PI() * 0.05f);
     
     engine.physics.setGravitation(CVector <3, float> (0, -9.81f, 0));
 }

@@ -74,7 +74,7 @@ public:
 			}
 
 			// Check loss in kinetic energy = expected loss due to Cr
-			float energyLoss = 0.5f * (CMath<float>::pow(coefficient_of_restitution, 2) - 1) * CMath<float>::pow(collision_velocity1 - collision_velocity2, 2) / (c.physics_object1->inv_mass + c.physics_object2->inv_mass);
+			float energyLoss = 0.5f * (CMath<float>::pow(c_r, 2) - 1) * CMath<float>::pow(collision_velocity1 - collision_velocity2, 2) / (c.physics_object1->inv_mass + c.physics_object2->inv_mass);
 			float eKin2 = 0;
 			if (c.physics_object1->inv_mass > 0) {
 				eKin2 += 0.5f / c.physics_object1->inv_mass * c.physics_object1->velocity.getLength2();
@@ -99,139 +99,66 @@ public:
 				)
 		{
 #if WORKSHEET_6
-			// Calculate some useful factors
-			float cor_factor = 1 + (c.physics_object1->restitution_coefficient + c.physics_object2->restitution_coefficient) / 2.0f;
-			CVector<3, float> lever1 = c.collision_point1 - c.physics_object1->object->position;
-			CVector<3, float> lever2 = c.collision_point2 - c.physics_object2->object->position;
 
-			// Calculate closing velocity of the two collision points (linear and angular)
-			CVector<3, float> collision_velocity1 = c.physics_object1->velocity + (c.physics_object1->angular_velocity % lever1);
-			CVector<3, float> collision_velocity2 = c.physics_object2->velocity + (c.physics_object2->angular_velocity % lever2);
-			float closing_velocity = c.collision_normal.dotProd(collision_velocity2 - collision_velocity1);
-
-			// Calculate change in translational velocity if unit impulse would be applied
-			CVector<3, float> linear_velocity_change1 = c.collision_normal * c.physics_object1->inv_mass;
-			CVector<3, float> linear_velocity_change2 = c.collision_normal * c.physics_object2->inv_mass;
-
-			// Calculate changes in rotational velocity if unit impulse would be applied
-			CMatrix4<float> inertia_to_world1 =
-				c.physics_object1->object->inverse_model_matrix.getTranspose3x3() *
-				c.physics_object1->rotational_inverse_inertia *
-				c.physics_object1->object->model_matrix.getTranspose3x3();
-			CVector<3, float> rot_velocity_change1 = inertia_to_world1 * (lever1 % c.collision_normal);
-
-			CMatrix4<float> inertia_to_world2 =
-				c.physics_object2->object->inverse_model_matrix.getTranspose3x3() *
-				c.physics_object2->rotational_inverse_inertia *
-				c.physics_object2->object->model_matrix.getTranspose3x3();
-			CVector<3, float> rot_velocity_change2 = inertia_to_world2 * (lever2 % c.collision_normal);
-
-			// Calculate total changes in velocities if unit impulse would be applied
-			CVector<3, float> velocity_change1 = linear_velocity_change1 + rot_velocity_change1 % lever1;
-			CVector<3, float> velocity_change2 = linear_velocity_change2 + rot_velocity_change2 % lever2;
-
-			if (CMath<float>::abs(c.collision_normal.dotProd(velocity_change1 + velocity_change2)) < 0.01) return;
-
-			// No minus sign, because the signs at the application of velocity change are also inverted
-			float f = (closing_velocity * cor_factor) / c.collision_normal.dotProd(velocity_change1 + velocity_change2);
-
-			std::cout << "Object 1: " << c.physics_object1->object->identifier_string << std::endl;
-			std::cout << "Object 2: " << c.physics_object2->object->identifier_string << std::endl;
-			std::cout << "closing velocity: " << closing_velocity << std::endl;
-			std::cout << "ω1: " << c.physics_object1->angular_velocity << std::endl;
-			std::cout << "ω2: " << c.physics_object2->angular_velocity << std::endl;
-			std::cout << "lever1: " << lever1 << std::endl;
-			std::cout << "lever2: " << lever2 << std::endl;
-			std::cout << "ω1 x lever1: " << (c.physics_object1->angular_velocity % lever1) << std::endl;
-			std::cout << "ω2 x lever2: " << (c.physics_object2->angular_velocity % lever2) << std::endl;
-			std::cout << "collision normal: " << c.collision_normal << std::endl;
-			std::cout << "Δv1: " << velocity_change1 << std::endl;
-			std::cout << "Δv2: " << velocity_change2 << std::endl;
-			std::cout << "Δω1: " << rot_velocity_change1 << std::endl;
-			std::cout << "Δω2: " << rot_velocity_change2 << std::endl;
-			std::cout << "f: " << f << std::endl << std::endl;
-
-			c.physics_object1->velocity += linear_velocity_change1 * f;
-			c.physics_object2->velocity -= linear_velocity_change2 * f;
-			c.physics_object1->angular_velocity += rot_velocity_change1 * f;
-			c.physics_object2->angular_velocity -= rot_velocity_change2 * f;
+            CVector<3,float> lever1 = c.collision_point1 - c.physics_object1->object->position;
+            CVector<3,float> lever2 = c.collision_point2 - c.physics_object2->object->position;
+            
+            
+            CMatrix4<float> inertia_to_world1 =   c.physics_object1->object->inverse_model_matrix.getTranspose3x3()    //M^(-T)
+                                                * c.physics_object1->rotational_inverse_inertia                         //I^(-1)
+                                                * c.physics_object1->object->model_matrix.getTranspose3x3();           //M^( T)
+                                                
+            CMatrix4<float> inertia_to_world2 =   c.physics_object2->object->inverse_model_matrix.getTranspose3x3()    //M^(-T)
+                                                * c.physics_object2->rotational_inverse_inertia                         //I^(-1)
+                                                * c.physics_object2->object->model_matrix.getTranspose3x3();           //M^( T)
+                                                
+            float c_r = (c.physics_object1->restitution_coefficient + c.physics_object2->restitution_coefficient)/2.0;
+            
+            
+            
+            
+            //closing velocities
+            CVector<3,float> closing_velocity1 = c.physics_object1->velocity + (c.physics_object1->angular_velocity % lever1);
+            CVector<3,float> closing_velocity2 = c.physics_object2->velocity + (c.physics_object2->angular_velocity % lever2);
+            
+            float closing_velocity = c.collision_normal.dotProd(closing_velocity1 - closing_velocity2);
+            
+    
+            
+            
+            //seperating velocities
+            CVector<3,float> seperating_linear_velocity1 = c.collision_normal*c.physics_object1->inv_mass;
+            CVector<3,float> seperating_angular_velocity1 = inertia_to_world1 * (lever1 % c.collision_normal);
+            CVector<3,float> seperating_velocity1 = seperating_linear_velocity1 + (seperating_angular_velocity1 % lever1);
+            
+            CVector<3,float> seperating_linear_velocity2 = c.collision_normal*c.physics_object2->inv_mass;
+            CVector<3,float> seperating_angular_velocity2 = inertia_to_world2 * (lever2 % c.collision_normal);
+            CVector<3,float> seperating_velocity2 = seperating_linear_velocity2 + (seperating_angular_velocity2 % lever2);
+            
+            float delta_seperating_velocity = c.collision_normal.dotProd(seperating_velocity1 + seperating_velocity2);
+            
+            
+            
+            
+            //velocities must fullfil seperating_velocity = -c_r * closing_velocity = frac * seperating_velocity + closing_velocity
+            float frac = ((1+c_r)*closing_velocity)/delta_seperating_velocity;
+            
+            
+            
+            
+            //apply calculated impulse to objects
+            c.physics_object1->velocity -= seperating_linear_velocity1 * frac;
+            c.physics_object1->angular_velocity -= seperating_angular_velocity1 * frac;
+            
+            c.physics_object2->velocity += seperating_linear_velocity2 * frac;
+            c.physics_object2->angular_velocity += seperating_angular_velocity2 * frac;
 #endif
 		}
 		else
 		{
-#if WORKSHEET_7
-			// Calculate some useful factors
-			float cor_factor = 1 + (c.physics_object1->restitution_coefficient + c.physics_object2->restitution_coefficient) / 2.0f;
-			float stat_fric_factor = (c.physics_object1->friction_static_coefficient + c.physics_object2->friction_static_coefficient) / 2.0f;
-			float dyn_fric_factor = (c.physics_object1->friction_dynamic_coefficient + c.physics_object2->friction_dynamic_coefficient) / 2.0f;
-			CVector<3, float> lever1 = c.collision_point1 - c.physics_object1->object->position;
-			CVector<3, float> lever2 = c.collision_point2 - c.physics_object2->object->position;
-			CMatrix3<float> lever_matrix1 = CMatrix3<float>().setupCrossProduct(lever1);
-			CMatrix3<float> lever_matrix2 = CMatrix3<float>().setupCrossProduct(lever2);
 
-			// Calculate closing velocity of the two collision points (linear and angular)
-			CVector<3, float> collision_velocity1 = c.physics_object1->velocity + (c.physics_object1->angular_velocity % lever1);
-			CVector<3, float> collision_velocity2 = c.physics_object2->velocity + (c.physics_object2->angular_velocity % lever2);
-			CVector<3, float> closing_velocity = collision_velocity2 - collision_velocity1;
-
-			float closing_velocity_normal = c.collision_normal.dotProd(closing_velocity);
-			CVector<3, float> planar_velocity = closing_velocity - c.collision_normal * closing_velocity_normal;
-
-			// Define standard basis as orthonormal basis in collision space
-			CMatrix3<float> collision_basis; // Identity matrix
-
-			// Calculate change in linear velocity if unit impulse would be applied
-			CMatrix3<float> linear_velocity_change1 = collision_basis * c.physics_object1->inv_mass;
-			CMatrix3<float> linear_velocity_change2 = collision_basis * c.physics_object2->inv_mass;
-
-			// Calculate change in rotational velocity if unit impulse would be applied
-			// ΔL = r x Δp (Δp: unit impulse)
-			CMatrix3<float> angular_impulse_change1 = lever_matrix1 * collision_basis;
-			CMatrix3<float> angular_impulse_change2 = lever_matrix2 * collision_basis;
-
-			// ΔL = I * Δω
-			CMatrix3<float> rot_velocity_change1 =
-				c.physics_object1->object->inverse_model_matrix.getTranspose() *
-				c.physics_object1->rotational_inverse_inertia *
-				c.physics_object1->object->model_matrix.getTranspose() *
-				angular_impulse_change1;
-			CMatrix3<float> rot_velocity_change2 =
-				c.physics_object2->object->inverse_model_matrix.getTranspose() *
-				c.physics_object2->rotational_inverse_inertia *
-				c.physics_object2->object->model_matrix.getTranspose() *
-				angular_impulse_change2;
-
-			// Velocity change in collision space
-			CMatrix3<float> velocity_change1 = linear_velocity_change1 + rot_velocity_change1 * lever_matrix1;
-			CMatrix3<float> velocity_change2 = linear_velocity_change2 + rot_velocity_change2 * lever_matrix2;
-
-			// Transform velocity change to world space
-			CMatrix3<float> contact_velocity_change1 = collision_basis.getInverse() * velocity_change1;
-			CMatrix3<float> contact_velocity_change2 = collision_basis.getInverse() * velocity_change2;
-
-			//float f = (contact_velocity_change1 + contact_velocity_change2).getInverse() * closing_velocity_normal * cor_factor;
-			//CVector<3, float> vec_linear_velocity_change = -c.collision_normal * f;
-			CVector<3, float> vec_velocity_change = (contact_velocity_change1 + contact_velocity_change2) * -c.collision_normal;
-
-			if (planar_velocity.getLength() <= CMath<float>::abs(closing_velocity_normal) * stat_fric_factor) {
-				closing_velocity -= planar_velocity;
-			} else {
-				closing_velocity -= planar_velocity * dyn_fric_factor;
-			}
-
-			//CVector<3, float> f = (contact_velocity_change1 + contact_velocity_change2).getInverse() * (closing_velocity * -cor_factor);
-
-			// v_s = -Cr * closing_velocity = closing_velocity + f * (contact_velocity_change1 + contact_velocity_change1)
-			CVector<3, float> f = (contact_velocity_change1 + contact_velocity_change2).getInverse() * (closing_velocity * -cor_factor);
-			//CVector<3, float> f = (contact_velocity_change1 + contact_velocity_change2).getInverse() * (vec_velocity_change * -cor_factor);
-
-			//std::cout << "impulse: " << p << std::endl;
-
-			c.physics_object1->velocity += linear_velocity_change1 * f;
-			c.physics_object2->velocity -= linear_velocity_change2 * f;
-
-			c.physics_object1->angular_velocity += rot_velocity_change1 * f;
-			c.physics_object2->angular_velocity -= rot_velocity_change2 * f;
+#if WORKSHEET_7            
+            
 #endif
 		}
 
@@ -253,6 +180,6 @@ public:
 #endif
 	}
 
-};
 
+};
 #endif

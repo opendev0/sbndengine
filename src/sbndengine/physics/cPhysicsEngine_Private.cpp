@@ -330,6 +330,7 @@ bool cPhysicsEngine_Private::simulationTimestep(double p_elapsed_time)
 	while (!list_colliding_objects.empty() && i < max_global_collision_solving_iterations) {
 		resolveInterpenetrations();
 		emptyAndGetCollisions();
+        getHardConstraintCollisions();
 		i++;
 	}
 #endif
@@ -363,7 +364,10 @@ void cPhysicsEngine_Private::integrator()
 #if WORKSHEET_1
 		//float e1 = o.velocity.getLength2() / 2 + gravitation_vector[1] * o.object->position[1];
 		//explicitEulerTimestep(o);
+        
+        
 		explicitEulerTimestep2(o);
+
 
 		//float e2 = o.velocity.getLength2() / 2 + gravitation_vector[1] * o.object->position[1];
 		//std::cout << "Energy difference: " << 1.0 / o.inv_mass * (e2 - e1) << std::endl;
@@ -376,13 +380,14 @@ void cPhysicsEngine_Private::integrator()
  * WORKSHEET 6
  */
 #if WORKSHEET_6
-		float theta = o.angular_velocity.getLength()*simulation_timestep_size;
 
-		if (theta != 0) {
-			CVector<3, float> axis = o.angular_velocity.getNormalized();
-
-			o.object->rotate(axis, -theta);
-		}
+        float theta = o.angular_velocity.getLength()*simulation_timestep_size;
+        
+        if (theta != 0) {
+            CVector<3, float> axis = o.angular_velocity.getNormalized();
+            
+            o.object->rotate(axis, -theta);
+        }
 #endif
 		o.object->updateModelMatrix();
 	}
