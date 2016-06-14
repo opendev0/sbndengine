@@ -68,6 +68,7 @@ public:
 
 
 
+
 #ifdef DEBUG
 			// Check sum of all forces = 0
 			if (c.physics_object1->inv_mass > 0 && c.physics_object2->inv_mass > 0) {

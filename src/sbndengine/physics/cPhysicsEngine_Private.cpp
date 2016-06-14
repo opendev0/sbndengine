@@ -385,6 +385,7 @@ void cPhysicsEngine_Private::integrator()
             
             o.object->rotate(axis, -theta);
         }
+
 #endif
 		o.object->updateModelMatrix();
 	}
