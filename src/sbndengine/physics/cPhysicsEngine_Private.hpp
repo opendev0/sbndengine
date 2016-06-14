@@ -60,6 +60,8 @@ class cPhysicsEngine_Private
 
 	std::list<CPhysicsCollisionData> list_colliding_objects;
 
+    public: std::list<CPhysicsCollisionData> collisions;
+
 
 	/**
 	 * list with objects which are simulated with the physics engine
@@ -110,7 +112,6 @@ public:
 	 * get a list of collisions
 	 */
 	void emptyAndGetCollisions();
-
 
 	/**
 	 * updates the acceleration data of all physical objects

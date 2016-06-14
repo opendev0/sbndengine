@@ -312,6 +312,8 @@ bool cPhysicsEngine_Private::simulationTimestep(double p_elapsed_time)
 
 #if WORKSHEET_2
 	emptyAndGetCollisions();
+
+    collisions = list_colliding_objects;
 #endif
 
 #if WORKSHEET_3
@@ -374,13 +376,13 @@ void cPhysicsEngine_Private::integrator()
  * WORKSHEET 6
  */
 #if WORKSHEET_6
-        float theta = o.angular_velocity.getLength()*simulation_timestep_size;
-        
-        if (theta != 0) {
-            CVector<3, float> axis = o.angular_velocity.getNormalized();
-            
-            o.object->rotate(axis, theta);
-        }
+		float theta = o.angular_velocity.getLength()*simulation_timestep_size;
+
+		if (theta != 0) {
+			CVector<3, float> axis = o.angular_velocity.getNormalized();
+
+			o.object->rotate(axis, -theta);
+		}
 #endif
 		o.object->updateModelMatrix();
 	}
@@ -456,11 +458,12 @@ void cPhysicsEngine_Private::explicitEulerTimestep(iPhysicsObject &o) {
 }
 
 void cPhysicsEngine_Private::explicitEulerTimestep2(iPhysicsObject &o) {
-    
-    CVector<3, float> angular_acceleration = o.object->inverse_model_matrix.getTranspose() * o.rotational_inverse_inertia * o.object->model_matrix.getTranspose() * o.torque_accumulator;
-    o.addAngularSpeed(angular_acceleration * simulation_timestep_size);
+	CVector<3, float> angular_acceleration = o.object->inverse_model_matrix.getTranspose() * o.rotational_inverse_inertia * o.object->model_matrix.getTranspose() * o.torque_accumulator;
+	o.addAngularSpeed(angular_acceleration * simulation_timestep_size);
 	o.addSpeed(o.linear_acceleration_accumulator * simulation_timestep_size);
 	o.object->translate(o.velocity * simulation_timestep_size);
+
+    //std::cout << o.object->model_matrix * o.angular_velocity << std::endl;
     
-    std::cout << "Speed: " << o.velocity << ", Angular speed: " << o.angular_velocity << std::endl;
+    //std::cout << "Speed: " << o.velocity << ", Angular speed: " << o.angular_velocity << std::endl;
 }

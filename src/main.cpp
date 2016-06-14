@@ -30,6 +30,8 @@
 #include <stdio.h>
 #include <sstream>
 
+#include "sbndengine/physics/cPhysicsCollisionData.hpp"
+
 
 
 int *global_pargc;
@@ -56,6 +58,12 @@ class cApplicationImplementation : public
 
 	// camera to see something
 	cCamera1stPerson camera;
+
+	struct
+	{
+		iRef<iObject> object;
+		iRef<iGraphicsObject> visual;
+	} collision_point[2];
 
 
 	/**
@@ -116,7 +124,7 @@ public:
 		scene_id(1),
 		gravitation_active(true),
 		mouse_absolute_motion(false),
-		output_gui_key_stroke_information(true)
+		output_gui_key_stroke_information(false)
 
 	{
 		engine.run(this);
@@ -260,6 +268,20 @@ public:
 
 		// setup mouse balls, physic spring objects for mouse interactions, etc...
 		setupSceneMouse();
+
+		iRef<iGraphicsMaterial> material = new iGraphicsMaterial;
+		material->setColor(iColorRGBA(1.0f, 0.0f, 0.0f));
+		iRef<cObjectFactorySphere> sphere_factory = new cObjectFactorySphere(0.2);
+		for (int i = 0; i < 2; ++i) {
+			collision_point[i].object = new iObject("collision point " + i);
+			collision_point[i].object->setIntersectionsComputable(false);
+			collision_point[i].object->createFromFactory(*sphere_factory);
+			collision_point[i].visual = new iGraphicsObject(collision_point[i].object, material);
+			collision_point[i].visual->unsetVisible();
+
+			engine.addObject(*collision_point[i].object);
+			engine.graphics.addObject(*collision_point[i].visual);
+		}
 
 		// update all object model matrices
 		engine.updateObjectModelMatrices();
@@ -559,10 +581,32 @@ public:
 		 */
 		engine.physics.simulationTimestep(engine.time.elapsed_seconds);
 
+		std::list<CPhysicsCollisionData> &collisions = *engine.physics.getCollisionData();
+		if (collisions.size() > 0) {
+			iRef<cObjectFactorySphere> sphere_factory = new cObjectFactorySphere(0.2);
+			for (std::list<CPhysicsCollisionData>::iterator it = collisions.begin(); it != collisions.end(); ++it) {
+				CPhysicsCollisionData c = *it;
+
+				if (c.interpenetration_depth == 0) break;
+
+				collision_point[0].object->position = c.collision_point1;
+				collision_point[0].object->updateModelMatrix();
+				collision_point[0].visual->setVisible();
+				collision_point[1].object->position = c.collision_point2;
+				collision_point[1].object->updateModelMatrix();
+				collision_point[1].visual->setVisible();
+			}
+		}
+
 		/*
 		 * GRAPHICS: draw the objects
 		 */
 		engine.graphics.drawFrame(camera);
+
+		if (collisions.size() > 0) {
+			//collision_point[0].visual->unsetVisible();
+			//collision_point[1].visual->unsetVisible();
+		}
 
 		/*
 		 * output some help information
@@ -633,7 +677,6 @@ public:
 	 */
 	void keyPressed(int key)
 	{
-
 		switch(key)
 		{
 			case 'q':	case 'Q':	engine.exit();	break;
