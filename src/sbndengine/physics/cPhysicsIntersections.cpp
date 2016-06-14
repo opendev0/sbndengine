@@ -450,11 +450,11 @@ bool CPhysicsIntersections::boxBox(iPhysicsObject &physics_object_box1, iPhysics
 		// Normals of object1's surfaces
 		Vector(modelMatrix1[0][0], modelMatrix1[1][0], modelMatrix1[2][0]),
 		Vector(modelMatrix1[0][1], modelMatrix1[1][1], modelMatrix1[2][1]),
-		Vector(-modelMatrix1[0][2], -modelMatrix1[1][2], -modelMatrix1[2][2]),
+		Vector(modelMatrix1[0][2], modelMatrix1[1][2], modelMatrix1[2][2]),
 		// Normals of object2's surfaces
 		Vector(modelMatrix2[0][0], modelMatrix2[1][0], modelMatrix2[2][0]),
 		Vector(modelMatrix2[0][1], modelMatrix2[1][1], modelMatrix2[2][1]),
-		Vector(-modelMatrix2[0][2], -modelMatrix2[1][2], -modelMatrix2[2][2])
+		Vector(modelMatrix2[0][2], modelMatrix2[1][2], modelMatrix2[2][2])
 	};
 
 	int x = 6;
@@ -482,34 +482,59 @@ bool CPhysicsIntersections::boxBox(iPhysicsObject &physics_object_box1, iPhysics
 		if (overlap < c.interpenetration_depth) {
 			c.interpenetration_depth = overlap;
 			c.collision_normal = *axis;
-			Vector sgn = (physics_object_box2.object->position - physics_object_box1.object->position);
-			if (sgn.dotProd(c.collision_normal) < 0) c.collision_normal = -c.collision_normal;
-			sgn[0] = (sgn[0] >= 0) - (sgn[0] < 0);
-			sgn[1] = (sgn[1] >= 0) - (sgn[1] < 0);
-			sgn[2] = (sgn[2] >= 0) - (sgn[2] < 0);
 
-            sgn[0] = (sgn[0] >= 0) - (sgn[0] < 0);
-            sgn[1] = (sgn[1] >= 0) - (sgn[1] < 0);
-            sgn[2] = (sgn[2] >= 0) - (sgn[2] < 0);
-            
-            
-                
+			Vector dist = (physics_object_box2.object->position - physics_object_box1.object->position);
+			if (dist.dotProd(c.collision_normal) < 0) c.collision_normal = -c.collision_normal;
+            Vector sgn = Vector();
+			sgn[0] = (dist[0] >= 0) - (dist[0] < 0);
+			sgn[1] = (dist[1] >= 0) - (dist[1] < 0);
+			sgn[2] = (dist[2] >= 0) - (dist[2] < 0);
+			
+				
 			if (axis - seperatingAxes < 3) {
 				//used principal axis of box1
-                boxHalfSize2 = boxHalfSize2 * sgn;
+                
+                sgn[0] = seperatingAxes[3].dotProd(dist);
+                sgn[1] = seperatingAxes[4].dotProd(dist);
+                sgn[2] = seperatingAxes[5].dotProd(dist);
+                
+                sgn[0] = (sgn[0] >= 0) - (sgn[0] < 0);
+                sgn[1] = (sgn[1] >= 0) - (sgn[1] < 0);
+                sgn[2] = (sgn[2] >= 0) - (sgn[2] < 0);
 
-				c.collision_point2 = physics_object_box2.object->position - (seperatingAxes[3]*boxHalfSize2[0] + seperatingAxes[4]*boxHalfSize2[1] + seperatingAxes[5]*boxHalfSize2[2]);
-				c.collision_point1 = c.collision_point2 - c.collision_normal * c.interpenetration_depth;
+				boxHalfSize2 = boxHalfSize2 * sgn;
+                
+				c.collision_point2 = physics_object_box2.object->position + seperatingAxes[3]*boxHalfSize2[0] + seperatingAxes[4]*boxHalfSize2[1] + seperatingAxes[5]*boxHalfSize2[2];
+				c.collision_point1 = c.collision_point2 + c.collision_normal * c.interpenetration_depth;
 			}
 			else if (axis - seperatingAxes < 6) {
 				//used principal axis of box2
-				boxHalfSize1 = boxHalfSize1 * sgn;
                 
-				c.collision_point1 = physics_object_box1.object->position + (seperatingAxes[0]*boxHalfSize1[0] + seperatingAxes[1]*boxHalfSize1[1] + seperatingAxes[2]*boxHalfSize1[2]);
+                sgn[0] = seperatingAxes[0].dotProd(dist);
+                sgn[1] = seperatingAxes[1].dotProd(dist);
+                sgn[2] = seperatingAxes[2].dotProd(dist);
+                
+                sgn[0] = (sgn[0] >= 0) - (sgn[0] < 0);
+                sgn[1] = (sgn[1] >= 0) - (sgn[1] < 0);
+                sgn[2] = (sgn[2] >= 0) - (sgn[2] < 0);
+                
+				boxHalfSize1 = boxHalfSize1 * sgn;
+
+				c.collision_point1 = physics_object_box1.object->position + seperatingAxes[0]*boxHalfSize1[0] + seperatingAxes[1]*boxHalfSize1[1] + seperatingAxes[2]*boxHalfSize1[2];
 				c.collision_point2 = c.collision_point1 + c.collision_normal * c.interpenetration_depth;
 			}
 			else {
 				//used axis created by cross-product
+
+                std::cout << "edge" << std::endl;
+                sgn[0] = seperatingAxes[0].dotProd(dist);
+                sgn[1] = seperatingAxes[1].dotProd(dist);
+                sgn[2] = seperatingAxes[2].dotProd(dist);
+                
+                sgn[0] = (sgn[0] >= 0) - (sgn[0] < 0);
+                sgn[1] = (sgn[1] >= 0) - (sgn[1] < 0);
+                sgn[2] = (sgn[2] >= 0) - (sgn[2] < 0);
+
 
 				Vector boxHalfSize1 = static_cast<cObjectFactoryBox *>(&physics_object_box1.object->objectFactory.getClass())->half_size;
 

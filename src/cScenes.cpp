@@ -1068,7 +1068,7 @@ void CScenes::setupScene27()
 
 
 void CScenes::setupScene28()
-{        
+{                   
 
     setupWorldBoxPlanes();
     
@@ -1099,6 +1099,7 @@ void CScenes::setupScene29()
     iRef<cObjectFactorySphere> sphere_factory = new cObjectFactorySphere(0.1);
     
     NEW_BOX(box, red, 0, 4, 0);
+
     box_factory = new cObjectFactoryBox(10, 1, 10);
     NEW_BOX(floor, green, 0, -1, 0);
     floor_physics_object->setInverseMass(0);

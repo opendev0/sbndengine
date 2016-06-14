@@ -62,6 +62,7 @@ public:
 			c.physics_object1->velocity += c.collision_normal * closing_velocity * cor_factor * m1_frac;
 			c.physics_object2->velocity -= c.collision_normal * closing_velocity * cor_factor * (1 - m1_frac);
 
+
 #ifdef DEBUG
 			// Check sum of all forces = 0
 			if (c.physics_object1->inv_mass > 0 && c.physics_object2->inv_mass > 0) {
