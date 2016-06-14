@@ -16,6 +16,7 @@
 
 #include "sbndengine/iSbndEngine.hpp"
 #include "cScenes.hpp"
+#include "cGame.hpp"
 #include <iostream>
 
 /*
@@ -38,9 +39,13 @@ char **global_argv;
 class cApplicationImplementation : public
 		iApplication
 {
+	// application in game mode
+	bool game_mode;
+	
 	// scenes
 	int scene_id;
 	CScenes *cScenes;
+	CGame *cGame;
 
 	// gravitation activated / deactivated
 	bool gravitation_active;
@@ -56,7 +61,17 @@ class cApplicationImplementation : public
 
 	// camera to see something
 	cCamera1stPerson camera;
-
+	
+	// game camera
+	cCamera3rdPerson game_camera;
+	
+	// storage for the character of the game
+	struct 
+	{
+		iRef<iObject> object;
+		iRef<iPhysicsObject> physics_object;
+		iRef<iGraphicsObject> graphics_object;
+	} character;
 
 	/**
 	 * different kinds of materials (so far only colors are supported)
@@ -65,6 +80,7 @@ class cApplicationImplementation : public
 	{
 		iRef<iGraphicsMaterial> whiteMaterial;
 		iRef<iGraphicsMaterial> blackMaterial;
+		iRef<iGraphicsMaterial> playerMaterial;
 	} materials;
 
 	/**
@@ -113,6 +129,7 @@ class cApplicationImplementation : public
 
 public:
 	cApplicationImplementation()	:
+		game_mode(false),
 		scene_id(1),
 		gravitation_active(true),
 		mouse_absolute_motion(false),
@@ -145,6 +162,13 @@ public:
 
 		materials.blackMaterial = new iGraphicsMaterial;
 		materials.blackMaterial->setColor(iColorRGBA(0.0, 0.0, 0.0));
+		
+		
+		/*
+		 * setup player material
+		 */
+		materials.playerMaterial = new iGraphicsMaterial;
+		materials.playerMaterial->setColor(iColorRGBA(0.0, 0.0, 0.0));
 	}
 
 
@@ -263,6 +287,40 @@ public:
 
 		// update all object model matrices
 		engine.updateObjectModelMatrices();
+	}
+	
+	
+	/*
+	 * sets up gravity, the character and the game scene
+	 */
+	void setupGameWorld()
+	{
+		// clear existing data
+		engine.clear();
+		
+		// enable gravity
+		enableGravitation();
+		
+		setupMaterials();
+		
+		// setup the game scene
+		cGame->setupGameScene();
+		setupCharacter();
+		
+		engine.updateObjectModelMatrices();
+	}
+	
+	void setupCharacter() 
+	{
+		iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(1, 1, 1);
+		
+		character.object = new iObject("character");
+		character.object->createFromFactory(*box_factory);
+		character.graphics_object = new iGraphicsObject(character.object, materials.playerMaterial);
+		engine.graphics.addObject(character.graphics_object);
+		engine.addObject(*character.object);
+		character.physics_object = new iPhysicsObject(*character.object);
+		engine.physics.addObject(character.physics_object);
 	}
 
 
@@ -532,27 +590,39 @@ public:
 	{
 		// ostringstream to set the window title
 		std::ostringstream title_text;
+		if (!game_mode) {
+			/*
+			 * CAMERA MOVEMENTS
+			 */
+			camera.moveRelative(playerVelocity*(float)engine.time.frame_elapsed_seconds*15.0f);
+			camera.rotate(engine.inputState.relative_mouse_y, -engine.inputState.relative_mouse_x, 0);
+			camera.frustum(-1.5f,1.5f,-1.5f*engine.window.aspect_ratio,1.5f*engine.window.aspect_ratio,1,100);
+			camera.computeMatrices();
 
-		/*
-		 * CAMERA MOVEMENTS
-		 */
-		camera.moveRelative(playerVelocity*(float)engine.time.frame_elapsed_seconds*15.0f);
-		camera.rotate(engine.inputState.relative_mouse_y, -engine.inputState.relative_mouse_x, 0);
-		camera.frustum(-1.5f,1.5f,-1.5f*engine.window.aspect_ratio,1.5f*engine.window.aspect_ratio,1,100);
-		camera.computeMatrices();
+			/*
+			 * mouse actions
+			 */
+			interactiveMouseActions(title_text);
 
-		/*
-		 * mouse actions
-		 */
-		interactiveMouseActions(title_text);
+			/*
+			 * setup window title
+			 */
+			title_text << "   Scene: '" << cScenes->scene_description << "'";
 
-		/*
-		 * setup window title
-		 */
-		title_text << "   Scene: '" << cScenes->scene_description << "'";
-
-		title_text << "   FPS: '" << engine.time.fps << "'";
-		engine.window.setTitle(title_text.str().c_str());
+			title_text << "   FPS: '" << engine.time.fps << "'";
+			engine.window.setTitle(title_text.str().c_str());
+		}
+		else {
+			/*
+			 * CAMERA MOVEMENTS
+			 */
+			game_camera.update(character.object->position);
+			game_camera.frustum(-1.5f,1.5f,-1.5f*engine.window.aspect_ratio,1.5f*engine.window.aspect_ratio,1,100);
+			game_camera.computeMatrices();
+			
+			
+			engine.window.setTitle("THIS GAME IS SO MUCH FUN!!1");
+		}
 
 		/*
 		 * PHYSICS: do one simulation step
@@ -562,31 +632,50 @@ public:
 		/*
 		 * GRAPHICS: draw the objects
 		 */
-		engine.graphics.drawFrame(camera);
+		if (!game_mode) {
+			engine.graphics.drawFrame(camera);
+		}
+		else {
+			engine.graphics.drawFrame(game_camera);
+		}
 
 		/*
 		 * output some help information
 		 */
 		if (output_gui_key_stroke_information)
 		{
-			int pos_y = 10+14;
-			engine.text.printfxy((float)10, (float)pos_y, "Press [h] to hide this information");	pos_y += 14;
-			pos_y += 14;
-			engine.text.printfxy((float)10, (float)pos_y, "[q]: quit");	pos_y += 14;
-			engine.text.printfxy((float)10, (float)pos_y, "[r]: reset application");	pos_y += 14;
-			engine.text.printfxy((float)10, (float)pos_y, "[e]: reset scene");	pos_y += 14;
-			engine.text.printfxy((float)10, (float)pos_y, "[1,2,...,0]: switch to scenes 1 to 10");	pos_y += 14;
-			engine.text.printfxy((float)10, (float)pos_y, "[F1-F12]: switch to scenes 11 to 24");	pos_y += 14;
-			pos_y += 14;
-			engine.text.printfxy((float)10, (float)pos_y, "[a,s,d,w]: move left, back, right, forward");	pos_y += 14;
-			engine.text.printfxy((float)10, (float)pos_y, "[space]: game mode on/off");	pos_y += 14;
-			engine.text.printfxy((float)10, (float)pos_y, "[g]: enable gravitation");	pos_y += 14;
-			engine.text.printfxy((float)10, (float)pos_y, "[G]: disable gravitation");	pos_y += 14;
-			pos_y += 14;
-			engine.text.printfxy((float)10, (float)pos_y, "[backspace]: activate/deactivate DEBUG mode, record each timestep");	pos_y += 14;
-			engine.text.printfxy((float)10, (float)pos_y, "    + [enter]: pause/continue simulation");	pos_y += 14;
-			engine.text.printfxy((float)10, (float)pos_y, "    + [cursor]: move your cursor over objects for debug information");	pos_y += 14;
-			engine.text.printfxy((float)10, (float)pos_y, "    + [mouse wheel up/down]: forward/backward in simulation history during debug mode");	pos_y += 14;
+			if (!game_mode) {
+				int pos_y = 10+14;
+				engine.text.printfxy((float)10, (float)pos_y, "Press [h] to hide this information");	pos_y += 14;
+				pos_y += 14;
+				engine.text.printfxy((float)10, (float)pos_y, "[q]: quit");	pos_y += 14;
+				engine.text.printfxy((float)10, (float)pos_y, "[r]: reset application");	pos_y += 14;
+				engine.text.printfxy((float)10, (float)pos_y, "[e]: reset scene");	pos_y += 14;
+				engine.text.printfxy((float)10, (float)pos_y, "[1,2,...,0]: switch to scenes 1 to 10");	pos_y += 14;
+				engine.text.printfxy((float)10, (float)pos_y, "[F1-F12]: switch to scenes 11 to 24");	pos_y += 14;
+				pos_y += 14;
+				engine.text.printfxy((float)10, (float)pos_y, "[a,s,d,w]: move left, back, right, forward");	pos_y += 14;
+				engine.text.printfxy((float)10, (float)pos_y, "[space]: game mode on/off");	pos_y += 14;
+				engine.text.printfxy((float)10, (float)pos_y, "[g]: enable gravitation");	pos_y += 14;
+				engine.text.printfxy((float)10, (float)pos_y, "[G]: disable gravitation");	pos_y += 14;
+				pos_y += 14;
+				engine.text.printfxy((float)10, (float)pos_y, "[backspace]: activate/deactivate DEBUG mode, record each timestep");	pos_y += 14;
+				engine.text.printfxy((float)10, (float)pos_y, "    + [enter]: pause/continue simulation");	pos_y += 14;
+				engine.text.printfxy((float)10, (float)pos_y, "    + [cursor]: move your cursor over objects for debug information");	pos_y += 14;
+				engine.text.printfxy((float)10, (float)pos_y, "    + [mouse wheel up/down]: forward/backward in simulation history during debug mode");	pos_y += 14;
+				pos_y += 14;
+				engine.text.printfxy((float)10, (float)pos_y, "[tab]: switch to game mode"); pos_y += 14;
+			}
+			else {
+				int pos_y = 10+14;
+				engine.text.printfxy((float)10, (float)pos_y, "Press [h] to hide this information");	pos_y += 14;
+				pos_y += 14;
+				engine.text.printfxy((float)10, (float)pos_y, "[q]: quit"); pos_y += 14;
+				engine.text.printfxy((float)10, (float)pos_y, "[<-/->]: rotate camera"); pos_y += 14;
+				pos_y += 14;
+				engine.text.printfxy((float)10, (float)pos_y, "[tab]: switch to physics mode"); pos_y += 14;
+				
+			}
 		}
 
 		/*
@@ -613,6 +702,7 @@ public:
 	void setup()
 	{
 		cScenes = new CScenes(engine);
+		cGame = new CGame(engine);
 
 		setupWorld();
 
@@ -626,6 +716,25 @@ public:
 	void shutdown()
 	{
 		delete cScenes;
+		delete cGame;
+	}
+	
+	
+	void setupGameMode() 
+	{
+		game_mode = true;
+		setupGameWorld();
+		game_camera.setup(character.object->position, CVector<3, float> (0, 2, 3));
+		game_camera.computeMatrices();
+	}
+	
+	
+	void shutdownGameMode()
+	{
+		game_mode = false;
+		scene_id = 1;
+		setupWorld();
+		resetPlayer();
 	}
 
 	/*
@@ -633,68 +742,79 @@ public:
 	 */
 	void keyPressed(int key)
 	{
+		if (!game_mode) {
+			switch(key)
+			{
+				case '\t':	setupGameMode();	break;
+				case 'q':	case 'Q':	engine.exit();	break;
 
-		switch(key)
-		{
-			case 'q':	case 'Q':	engine.exit();	break;
+				case 'w':	case 'W':	playerVelocity[2] = CMath<float>::max(playerVelocity[2]-1.0f, -1.0f);	break;
+				case 's':	case 'S':	playerVelocity[2] = CMath<float>::min(playerVelocity[2]+1.0f, +1.0f);	break;
+				case 'd':	case 'D':	playerVelocity[0] = CMath<float>::min(playerVelocity[0]+1.0f, +1.0f);	break;
+				case 'a':	case 'A':	playerVelocity[0] = CMath<float>::max(playerVelocity[0]-1.0f, -1.0f);	break;
 
-			case 'w':	case 'W':	playerVelocity[2] = CMath<float>::max(playerVelocity[2]-1.0f, -1.0f);	break;
-			case 's':	case 'S':	playerVelocity[2] = CMath<float>::min(playerVelocity[2]+1.0f, +1.0f);	break;
-			case 'd':	case 'D':	playerVelocity[0] = CMath<float>::min(playerVelocity[0]+1.0f, +1.0f);	break;
-			case 'a':	case 'A':	playerVelocity[0] = CMath<float>::max(playerVelocity[0]-1.0f, -1.0f);	break;
+				case 'h':	output_gui_key_stroke_information = !output_gui_key_stroke_information;	break;
 
-			case 'h':	output_gui_key_stroke_information = !output_gui_key_stroke_information;	break;
+				case 'r':		shutdown(); setup();		break;
+				case 'e':		setupWorld();	break;
+				case ' ':
+					mouse_absolute_motion = !mouse_absolute_motion;
+					if (mouse_absolute_motion)	engine.activateAbsoluteMouseMovements();
+					else						engine.activateRelativeMouseMovements();
+					break;
 
-			case 'r':		shutdown(); setup();		break;
-			case 'e':		setupWorld();	break;
-			case ' ':
-				mouse_absolute_motion = !mouse_absolute_motion;
-				if (mouse_absolute_motion)	engine.activateAbsoluteMouseMovements();
-				else						engine.activateRelativeMouseMovements();
-				break;
+				case 'g':		gravitation_active = true;	enableGravitation();	break;
+				case 'G':		gravitation_active = false;	disableGravitation();	break;
 
-			case 'g':		gravitation_active = true;	enableGravitation();	break;
-			case 'G':		gravitation_active = false;	disableGravitation();	break;
+				case '1':		scene_id = 1;	setupWorld();	break;
+				case '2':		scene_id = 2;	setupWorld();	break;
+				case '3':		scene_id = 3;	setupWorld();	break;
+				case '4':		scene_id = 4;	setupWorld();	break;
+				case '5':		scene_id = 5;	setupWorld();	break;
+				case '6':		scene_id = 6;	setupWorld();	break;
+				case '7':		scene_id = 7;	setupWorld();	break;
+				case '8':		scene_id = 8;	setupWorld();	break;
+				case '9':		scene_id = 9;	setupWorld();	break;
+				case '0':		scene_id = 10;	setupWorld();	break;
 
-			case '1':		scene_id = 1;	setupWorld();	break;
-			case '2':		scene_id = 2;	setupWorld();	break;
-			case '3':		scene_id = 3;	setupWorld();	break;
-			case '4':		scene_id = 4;	setupWorld();	break;
-			case '5':		scene_id = 5;	setupWorld();	break;
-			case '6':		scene_id = 6;	setupWorld();	break;
-			case '7':		scene_id = 7;	setupWorld();	break;
-			case '8':		scene_id = 8;	setupWorld();	break;
-			case '9':		scene_id = 9;	setupWorld();	break;
-			case '0':		scene_id = 10;	setupWorld();	break;
+				case SBND_EVENT_KEY_F1:		scene_id = 11;	setupWorld();	break;
+				case SBND_EVENT_KEY_F2:		scene_id = 12;	setupWorld();	break;
+				case SBND_EVENT_KEY_F3:		scene_id = 13;	setupWorld();	break;
+				case SBND_EVENT_KEY_F4:		scene_id = 14;	setupWorld();	break;
+				case SBND_EVENT_KEY_F5:		scene_id = 15;	setupWorld();	break;
+				case SBND_EVENT_KEY_F6:		scene_id = 16;	setupWorld();	break;
+				case SBND_EVENT_KEY_F7:		scene_id = 17;	setupWorld();	break;
+				case SBND_EVENT_KEY_F8:		scene_id = 18;	setupWorld();	break;
+				case SBND_EVENT_KEY_F9:		scene_id = 19;	setupWorld();	break;
+				case SBND_EVENT_KEY_F10:	scene_id = 20;	setupWorld();	break;
+				case SBND_EVENT_KEY_F11:	scene_id = 21;	setupWorld();	break;
+				case SBND_EVENT_KEY_F12:	scene_id = 22;	setupWorld();	break;
+				
+				case 'y':       scene_id = 23;    setupWorld();    break;
+				case 'x':       scene_id = 24;    setupWorld();    break;
+				case 'c':       scene_id = 25;    setupWorld();    break;
+				case 'v':       scene_id = 26;    setupWorld();    break;
+				case 'b':       scene_id = 27;    setupWorld();    break;
+				case 'n':       scene_id = 28;    setupWorld();    break;
+				case 'm':       scene_id = 29;    setupWorld();    break;
 
-			case SBND_EVENT_KEY_F1:		scene_id = 11;	setupWorld();	break;
-			case SBND_EVENT_KEY_F2:		scene_id = 12;	setupWorld();	break;
-			case SBND_EVENT_KEY_F3:		scene_id = 13;	setupWorld();	break;
-			case SBND_EVENT_KEY_F4:		scene_id = 14;	setupWorld();	break;
-			case SBND_EVENT_KEY_F5:		scene_id = 15;	setupWorld();	break;
-			case SBND_EVENT_KEY_F6:		scene_id = 16;	setupWorld();	break;
-			case SBND_EVENT_KEY_F7:		scene_id = 17;	setupWorld();	break;
-			case SBND_EVENT_KEY_F8:		scene_id = 18;	setupWorld();	break;
-			case SBND_EVENT_KEY_F9:		scene_id = 19;	setupWorld();	break;
-			case SBND_EVENT_KEY_F10:	scene_id = 20;	setupWorld();	break;
-			case SBND_EVENT_KEY_F11:	scene_id = 21;	setupWorld();	break;
-			case SBND_EVENT_KEY_F12:	scene_id = 22;	setupWorld();	break;
-            
-            case 'y':       scene_id = 23;    setupWorld();    break;
-            case 'x':       scene_id = 24;    setupWorld();    break;
-            case 'c':       scene_id = 25;    setupWorld();    break;
-            case 'v':       scene_id = 26;    setupWorld();    break;
-            case 'b':       scene_id = 27;    setupWorld();    break;
-            case 'n':       scene_id = 28;    setupWorld();    break;
-            case 'm':       scene_id = 29;    setupWorld();    break;
-
-			/*
-			 * physics engine debug stuff
-			 */
-			case SBND_EVENT_KEY_BACKSPACE:	if (engine.physics.debug.active)	engine.physics.debug.stop();	else	engine.physics.debug.start();	break;
-			case SBND_EVENT_KEY_ENTER:		if (engine.physics.debug.paused)	engine.physics.debug.play();	else	engine.physics.debug.pause();	break;
-			case '+':	engine.physics.debug.forwardFrame();	break;
-			case '-':	engine.physics.debug.backwardFrame();	break;
+				/*
+				 * physics engine debug stuff
+				 */
+				case SBND_EVENT_KEY_BACKSPACE:	if (engine.physics.debug.active)	engine.physics.debug.stop();	else	engine.physics.debug.start();	break;
+				case SBND_EVENT_KEY_ENTER:		if (engine.physics.debug.paused)	engine.physics.debug.play();	else	engine.physics.debug.pause();	break;
+				case '+':	engine.physics.debug.forwardFrame();	break;
+				case '-':	engine.physics.debug.backwardFrame();	break;
+			}
+		}
+		else {
+			switch(key)
+			{
+				case '\t':	shutdownGameMode();	break;
+				case 'q':	case 'Q':	engine.exit();	break;
+				case SBND_EVENT_KEY_LEFT:	game_camera.rotate(-(1.0/36.0f)*CMath<float>::PI());	break;
+				case SBND_EVENT_KEY_RIGHT: game_camera.rotate((1.0/36.0f)*CMath<float>::PI());	break;
+			}
 		}
 	}
 
@@ -703,12 +823,20 @@ public:
 	 */
 	void keyReleased(int key)
 	{
-		switch(key)
-		{
-			case 'w':	case 'W':	playerVelocity[2] = CMath<float>::min(playerVelocity[2]+1.0f, +1.0f);	break;
-			case 's':	case 'S':	playerVelocity[2] = CMath<float>::max(playerVelocity[2]-1.0f, -1.0f);	break;
-			case 'd':	case 'D':	playerVelocity[0] = CMath<float>::max(playerVelocity[0]-1.0f, -1.0f);	break;
-			case 'a':	case 'A':	playerVelocity[0] = CMath<float>::min(playerVelocity[0]+1.0f, +1.0f);	break;
+		if (!game_mode) {
+			switch(key)
+			{
+				case 'w':	case 'W':	playerVelocity[2] = CMath<float>::min(playerVelocity[2]+1.0f, +1.0f);	break;
+				case 's':	case 'S':	playerVelocity[2] = CMath<float>::max(playerVelocity[2]-1.0f, -1.0f);	break;
+				case 'd':	case 'D':	playerVelocity[0] = CMath<float>::max(playerVelocity[0]-1.0f, -1.0f);	break;
+				case 'a':	case 'A':	playerVelocity[0] = CMath<float>::min(playerVelocity[0]+1.0f, +1.0f);	break;
+			}
+		}
+		else {
+			switch(key)
+			{
+				
+			}
 		}
 	}
 

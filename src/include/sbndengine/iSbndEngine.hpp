@@ -31,6 +31,7 @@
 #include "camera/iCamera.hpp"
 #include "camera/cCameraLookAt.hpp"
 #include "camera/cCamera1stPerson.hpp"
+#include "camera/cCamera3rdPerson.hpp"
 #include "graphics/iDraw3D.hpp"
 #include "engine/iEngine.hpp"
 #include "engine/iObject.hpp"

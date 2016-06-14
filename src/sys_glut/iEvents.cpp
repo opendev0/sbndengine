@@ -50,6 +50,8 @@ int get_sbnd_keycode(int glut_special_key)
 	case GLUT_KEY_F10:	return SBND_EVENT_KEY_F10;
 	case GLUT_KEY_F11:	return SBND_EVENT_KEY_F11;
 	case GLUT_KEY_F12:	return SBND_EVENT_KEY_F12;
+	case GLUT_KEY_LEFT:	return SBND_EVENT_KEY_LEFT;
+	case GLUT_KEY_RIGHT: return SBND_EVENT_KEY_RIGHT;
 	}
 
 	return SBND_EVENT_KEY_UNKNOWN;

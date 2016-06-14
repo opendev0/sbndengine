@@ -487,17 +487,17 @@ bool CPhysicsIntersections::boxBox(iPhysicsObject &physics_object_box1, iPhysics
 			Vector dist = (physics_object_box2.object->position - physics_object_box1.object->position);
 			if (dist.dotProd(c.collision_normal) < 0) c.collision_normal = -c.collision_normal;
 			Vector sgn = Vector();
-			sgn[0] = seperatingAxes[3].dotProd(dist);
-			sgn[1] = seperatingAxes[4].dotProd(dist);
-			sgn[2] = seperatingAxes[5].dotProd(dist);
-				
-			sgn[0] = (sgn[0] >= 0) - (sgn[0] < 0);
-			sgn[1] = (sgn[1] >= 0) - (sgn[1] < 0);
-			sgn[2] = (sgn[2] >= 0) - (sgn[2] < 0);
 			
-				
 			if (axis - seperatingAxes < 3) {
 				//used principal axis of box1
+				sgn[0] = seperatingAxes[3].dotProd(dist);
+				sgn[1] = seperatingAxes[4].dotProd(dist);
+				sgn[2] = seperatingAxes[5].dotProd(dist);
+					
+				sgn[0] = (sgn[0] >= 0) - (sgn[0] < 0);
+				sgn[1] = (sgn[1] >= 0) - (sgn[1] < 0);
+				sgn[2] = (sgn[2] >= 0) - (sgn[2] < 0);
+			
 				boxHalfSize2 = boxHalfSize2 * sgn;
 				
 				c.collision_point2 = physics_object_box2.object->position + seperatingAxes[3]*boxHalfSize2[0] + seperatingAxes[4]*boxHalfSize2[1] + seperatingAxes[5]*boxHalfSize2[2];
@@ -505,6 +505,14 @@ bool CPhysicsIntersections::boxBox(iPhysicsObject &physics_object_box1, iPhysics
 			}
 			else if (axis - seperatingAxes < 6) {
 				//used principal axis of box2
+				sgn[0] = seperatingAxes[0].dotProd(dist);
+				sgn[1] = seperatingAxes[1].dotProd(dist);
+				sgn[2] = seperatingAxes[2].dotProd(dist);
+					
+				sgn[0] = (sgn[0] >= 0) - (sgn[0] < 0);
+				sgn[1] = (sgn[1] >= 0) - (sgn[1] < 0);
+				sgn[2] = (sgn[2] >= 0) - (sgn[2] < 0);
+				
 				boxHalfSize1 = boxHalfSize1 * sgn;
 
 				c.collision_point1 = physics_object_box1.object->position + seperatingAxes[0]*boxHalfSize1[0] + seperatingAxes[1]*boxHalfSize1[1] + seperatingAxes[2]*boxHalfSize1[2];
@@ -516,6 +524,14 @@ bool CPhysicsIntersections::boxBox(iPhysicsObject &physics_object_box1, iPhysics
 
 				//calculate which principle axis of box1 was used for creation of the cross-product, this is the direction of the edge
 				int i = (axis - seperatingAxes - 6)/3;
+				
+				sgn[0] = seperatingAxes[0].dotProd(dist);
+				sgn[1] = seperatingAxes[1].dotProd(dist);
+				sgn[2] = seperatingAxes[2].dotProd(dist);
+					
+				sgn[0] = (sgn[0] >= 0) - (sgn[0] < 0);
+				sgn[1] = (sgn[1] >= 0) - (sgn[1] < 0);
+				sgn[2] = (sgn[2] >= 0) - (sgn[2] < 0);
 
 				//calculate a point on this edge using the other two principle axis
 				Vector point1 = physics_object_box1.object->position 
@@ -528,6 +544,15 @@ bool CPhysicsIntersections::boxBox(iPhysicsObject &physics_object_box1, iPhysics
 
 				//calculate which principle axis of box2 was used for creation of the cross-product, this is the direction of the edge
 				int j = (axis - seperatingAxes)%3;
+				
+				sgn[0] = seperatingAxes[3].dotProd(dist);
+				sgn[1] = seperatingAxes[4].dotProd(dist);
+				sgn[2] = seperatingAxes[5].dotProd(dist);
+					
+				sgn[0] = (sgn[0] >= 0) - (sgn[0] < 0);
+				sgn[1] = (sgn[1] >= 0) - (sgn[1] < 0);
+				sgn[2] = (sgn[2] >= 0) - (sgn[2] < 0);
+				
 				//calculate a point on this edge using the other two principle axis
 				Vector point2 = physics_object_box2.object->position 
 					+ seperatingAxes[(j+1)%3 + 3] * boxHalfSize2[(j+1)%3] * -sgn[(j+1)%3]
