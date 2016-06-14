@@ -136,5 +136,7 @@ public:
 	 * resolve all interpenetrations without applying any impulses
 	 */
 	void detectAndResolveInterpenetrations();
+
+    std::list<CPhysicsCollisionData>* getCollisionData();
 };
 #endif
