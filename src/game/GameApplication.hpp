@@ -16,6 +16,7 @@
 
 #include "sbndengine/iSbndEngine.hpp"
 #include "../cGame.hpp"
+#include "Player.hpp"
 #include <iostream>
 
 /*
@@ -58,6 +59,8 @@ class GameApplication : public
 		iRef<iGraphicsObject> graphics_object;
 	} character;
 
+	Player *player;
+
 	/**
 	 * different kinds of materials (so far only colors are supported)
 	 */
@@ -89,8 +92,7 @@ public:
 	 */
 	void resetPlayer()
 	{		
-		game_camera.setup(character.object->position, CVector<3, float> (0, 2, 3));
-		game_camera.computeMatrices();
+		player->setPosition(CVector<3, float> (0, 2, 3));
 	}
 
 	/**
@@ -169,14 +171,8 @@ public:
 		engine.addObject(*character.object);
 		character.physics_object = new iPhysicsObject(*character.object);
 		engine.physics.addObject(character.physics_object);
-	}
 
-
-	/**
-	 * this method cares about the mouse interactivity
-	 */
-	void interactiveMouseActions(std::ostringstream &title_text)
-	{
+		player = new Player(character.physics_object, game_camera, engine);
 	}
 
 	/*
@@ -184,14 +180,7 @@ public:
 	 */
 	void drawFrame()
 	{
-		/*
-		 * CAMERA MOVEMENTS
-		 */
-		character.object->translate(playerVelocity * game_camera.view_matrix * engine.time.frame_elapsed_seconds);
-		game_camera.update(character.object->position);
-		game_camera.rotate(character.physics_object->angular_velocity[1] * engine.time.frame_elapsed_seconds);
-		game_camera.frustum(-1.5f,1.5f,-1.5f*engine.window.aspect_ratio,1.5f*engine.window.aspect_ratio,1,100);
-		game_camera.computeMatrices();
+		this->player->move();
 
 		engine.window.setTitle("THIS GAME IS SO MUCH FUN!!1");
 
@@ -211,18 +200,11 @@ public:
 		if (output_gui_key_stroke_information)
 		{
 			int pos_y = 10+14;
-			engine.text.printfxy((float)10, (float)pos_y, "Press [h] to hide this information");	pos_y += 14;
+			engine.text.printfxy((float)10, (float)pos_y, "Press [h] to hide this information"); pos_y += 14;
 			pos_y += 14;
 			engine.text.printfxy((float)10, (float)pos_y, "[q]: quit"); pos_y += 14;
 			engine.text.printfxy((float)10, (float)pos_y, "[<-/->]: rotate camera"); pos_y += 14;
 		}
-	}
-
-	/**
-	 * engine callback: init is called only once during the whole program runtime
-	 */
-	void init()
-	{
 	}
 
 	/**
@@ -235,7 +217,6 @@ public:
 		setupWorld();
 		resetPlayer();
 	}
-
 
 	/**
 	 * simply delete the allocated scenes
@@ -259,22 +240,22 @@ public:
 			// Movement control keys
 			case SBND_EVENT_KEY_UP:
 			case 'w': case 'W':
-				playerVelocity[2] = -3;
+				player->setVelocity(-3);
 				break;
 			case SBND_EVENT_KEY_DOWN:
 			case 's': case 'S':
-				playerVelocity[2] = 3;
+				player->setVelocity(3);
 				break;
 			case SBND_EVENT_KEY_LEFT:
 			case 'a': case 'A':
-				character.physics_object->angular_velocity[1] = 2;
+				player->setAngularVelocity(2);
 				break;
 			case SBND_EVENT_KEY_RIGHT:
 			case 'd': case 'D':
-				character.physics_object->angular_velocity[1] = -2;
+				player->setAngularVelocity(-2);
 				break;
 			case ' ':
-				character.physics_object->velocity[1] = 10;
+				player->jump();
 				break;
 		}
 	}
@@ -290,21 +271,14 @@ public:
 			case 'w': case 'W':
 			case SBND_EVENT_KEY_DOWN:
 			case 's': case 'S':
-				playerVelocity[2] = 0;
+				player->setVelocity(0);
 				break;
 			case SBND_EVENT_KEY_LEFT:
 			case 'a': case 'A':
 			case SBND_EVENT_KEY_RIGHT:
 			case 'd': case 'D':
-				character.physics_object->angular_velocity[1] = 0;
+				player->setAngularVelocity(0);
 				break;
 		}
-	}
-
-	/*
-	 * this method is called by the engine if mouse button 'button' was pressed
-	 */
-	void mouseButtonDown(int button)
-	{
 	}
 };
