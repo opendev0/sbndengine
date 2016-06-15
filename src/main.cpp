@@ -33,6 +33,7 @@
 
 
 
+class keyReleased;
 int *global_pargc;
 char **global_argv;
 
@@ -616,7 +617,9 @@ public:
 			/*
 			 * CAMERA MOVEMENTS
 			 */
+            //character.object->translate(character.physics_object->velocity * engine.time.elapsed_seconds);
 			game_camera.update(character.object->position);
+			game_camera.rotate(character.physics_object->angular_velocity[1] * engine.time.elapsed_seconds);
 			game_camera.frustum(-1.5f,1.5f,-1.5f*engine.window.aspect_ratio,1.5f*engine.window.aspect_ratio,1,100);
 			game_camera.computeMatrices();
 			
@@ -812,8 +815,25 @@ public:
 			{
 				case '\t':	shutdownGameMode();	break;
 				case 'q':	case 'Q':	engine.exit();	break;
-				case SBND_EVENT_KEY_LEFT:	game_camera.rotate(-(1.0/36.0f)*CMath<float>::PI());	break;
-				case SBND_EVENT_KEY_RIGHT: game_camera.rotate((1.0/36.0f)*CMath<float>::PI());	break;
+				case SBND_EVENT_KEY_UP:
+                case 'w': case 'W':
+                    character.physics_object->velocity = CVector<3, float>(0, 0, -3) * game_camera.view_matrix;
+                    break;
+				case SBND_EVENT_KEY_DOWN:
+                case 's': case 'S':
+                    character.physics_object->velocity = CVector<3, float>(0, 0, 3) * game_camera.view_matrix;
+                    break;
+				case SBND_EVENT_KEY_LEFT:
+                case 'a': case 'A':
+                    character.physics_object->angular_velocity[1] = 0.008;
+                    break;
+				case SBND_EVENT_KEY_RIGHT:
+                case 'd': case 'D':
+                    character.physics_object->angular_velocity[1] = -0.008;
+					break;
+				case ' ':
+					character.physics_object->velocity[1] = 10;
+					break;
 			}
 		}
 	}
@@ -835,7 +855,18 @@ public:
 		else {
 			switch(key)
 			{
-				
+                case SBND_EVENT_KEY_UP:
+                case 'w': case 'W':
+				case SBND_EVENT_KEY_DOWN:
+                case 's': case 'S':
+                    character.physics_object->velocity[2] = 0;
+                    break;
+				case SBND_EVENT_KEY_LEFT:
+                case 'a': case 'A':
+				case SBND_EVENT_KEY_RIGHT:
+                case 'd': case 'D':
+					character.physics_object->angular_velocity[1] = 0;
+					break;
 			}
 		}
 	}
