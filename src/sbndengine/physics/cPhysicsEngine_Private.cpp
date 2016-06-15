@@ -360,17 +360,8 @@ void cPhysicsEngine_Private::integrator()
  * WORKSHEET 1
  */
 #if WORKSHEET_1
-		//float e1 = o.velocity.getLength2() / 2 + gravitation_vector[1] * o.object->position[1];
-		//explicitEulerTimestep(o);
-        
-        
-		explicitEulerTimestep2(o);
-
-
-		//float e2 = o.velocity.getLength2() / 2 + gravitation_vector[1] * o.object->position[1];
-		//std::cout << "Energy difference: " << 1.0 / o.inv_mass * (e2 - e1) << std::endl;
-
-		// TODO Assertions for position, velocity and energy
+	o.velocity += o.linear_acceleration_accumulator * simulation_timestep_size;
+	o.object->position += (o.velocity + o.linear_acceleration_accumulator * simulation_timestep_size) * simulation_timestep_size;
 #endif
 
 
@@ -378,7 +369,10 @@ void cPhysicsEngine_Private::integrator()
  * WORKSHEET 6
  */
 #if WORKSHEET_6
-        float theta = o.angular_velocity.getLength()*simulation_timestep_size;
+		CVector<3, float> angular_acceleration = o.object->inverse_model_matrix.getTranspose() * o.rotational_inverse_inertia * o.object->model_matrix.getTranspose() * o.torque_accumulator;
+		o.angular_velocity += angular_acceleration * simulation_timestep_size;
+
+		float theta = (o.angular_velocity + angular_acceleration * simulation_timestep_size).getLength() * simulation_timestep_size;
         
         if (theta != 0) {
             CVector<3, float> axis = o.angular_velocity.getNormalized();
@@ -453,19 +447,4 @@ void cPhysicsEngine_Private::detectAndResolveInterpenetrations()
 {
 	emptyAndGetCollisions();
 	resolveInterpenetrations();
-}
-
-void cPhysicsEngine_Private::explicitEulerTimestep(iPhysicsObject &o) {
-	o.object->translate(o.velocity * simulation_timestep_size);
-	o.addSpeed(o.linear_acceleration_accumulator * simulation_timestep_size);
-}
-
-void cPhysicsEngine_Private::explicitEulerTimestep2(iPhysicsObject &o) {
-    
-    CVector<3, float> angular_acceleration = o.object->inverse_model_matrix.getTranspose() * o.rotational_inverse_inertia * o.object->model_matrix.getTranspose() * o.torque_accumulator;
-    o.addAngularSpeed(angular_acceleration * simulation_timestep_size);
-	o.addSpeed(o.linear_acceleration_accumulator * simulation_timestep_size);
-	o.object->translate(o.velocity * simulation_timestep_size);
-    
-    //std::cout << "Speed: " << o.velocity << ", Angular speed: " << o.angular_velocity << std::endl;
 }
