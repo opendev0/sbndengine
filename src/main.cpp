@@ -42,7 +42,7 @@ class cApplicationImplementation : public
 {
 	// application in game mode
 	bool game_mode;
-	
+
 	// scenes
 	int scene_id;
 	CScenes *cScenes;
@@ -62,12 +62,12 @@ class cApplicationImplementation : public
 
 	// camera to see something
 	cCamera1stPerson camera;
-	
+
 	// game camera
 	cCamera3rdPerson game_camera;
-	
+
 	// storage for the character of the game
-	struct 
+	struct
 	{
 		iRef<iObject> object;
 		iRef<iPhysicsObject> physics_object;
@@ -163,8 +163,8 @@ public:
 
 		materials.blackMaterial = new iGraphicsMaterial;
 		materials.blackMaterial->setColor(iColorRGBA(0.0, 0.0, 0.0));
-		
-		
+
+
 		/*
 		 * setup player material
 		 */
@@ -289,8 +289,8 @@ public:
 		// update all object model matrices
 		engine.updateObjectModelMatrices();
 	}
-	
-	
+
+
 	/*
 	 * sets up gravity, the character and the game scene
 	 */
@@ -298,23 +298,23 @@ public:
 	{
 		// clear existing data
 		engine.clear();
-		
+
 		// enable gravity
 		enableGravitation();
-		
+
 		setupMaterials();
-		
+
 		// setup the game scene
 		cGame->setupGameScene();
 		setupCharacter();
-		
+
 		engine.updateObjectModelMatrices();
 	}
-	
-	void setupCharacter() 
+
+	void setupCharacter()
 	{
 		iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(1, 1, 1);
-		
+
 		character.object = new iObject("character");
 		character.object->createFromFactory(*box_factory);
 		character.graphics_object = new iGraphicsObject(character.object, materials.playerMaterial);
@@ -617,13 +617,13 @@ public:
 			/*
 			 * CAMERA MOVEMENTS
 			 */
-            //character.object->translate(character.physics_object->velocity * engine.time.elapsed_seconds);
+            character.object->translate(playerVelocity * game_camera.view_matrix * engine.time.frame_elapsed_seconds);
 			game_camera.update(character.object->position);
-			game_camera.rotate(character.physics_object->angular_velocity[1] * engine.time.elapsed_seconds);
+			game_camera.rotate(character.physics_object->angular_velocity[1] * engine.time.frame_elapsed_seconds);
 			game_camera.frustum(-1.5f,1.5f,-1.5f*engine.window.aspect_ratio,1.5f*engine.window.aspect_ratio,1,100);
 			game_camera.computeMatrices();
-			
-			
+
+
 			engine.window.setTitle("THIS GAME IS SO MUCH FUN!!1");
 		}
 
@@ -677,7 +677,7 @@ public:
 				engine.text.printfxy((float)10, (float)pos_y, "[<-/->]: rotate camera"); pos_y += 14;
 				pos_y += 14;
 				engine.text.printfxy((float)10, (float)pos_y, "[tab]: switch to physics mode"); pos_y += 14;
-				
+
 			}
 		}
 
@@ -721,17 +721,17 @@ public:
 		delete cScenes;
 		delete cGame;
 	}
-	
-	
-	void setupGameMode() 
+
+
+	void setupGameMode()
 	{
 		game_mode = true;
 		setupGameWorld();
 		game_camera.setup(character.object->position, CVector<3, float> (0, 2, 3));
 		game_camera.computeMatrices();
 	}
-	
-	
+
+
 	void shutdownGameMode()
 	{
 		game_mode = false;
@@ -792,7 +792,7 @@ public:
 				case SBND_EVENT_KEY_F10:	scene_id = 20;	setupWorld();	break;
 				case SBND_EVENT_KEY_F11:	scene_id = 21;	setupWorld();	break;
 				case SBND_EVENT_KEY_F12:	scene_id = 22;	setupWorld();	break;
-				
+
 				case 'y':       scene_id = 23;    setupWorld();    break;
 				case 'x':       scene_id = 24;    setupWorld();    break;
 				case 'c':       scene_id = 25;    setupWorld();    break;
@@ -817,19 +817,19 @@ public:
 				case 'q':	case 'Q':	engine.exit();	break;
 				case SBND_EVENT_KEY_UP:
                 case 'w': case 'W':
-                    character.physics_object->velocity = CVector<3, float>(0, 0, -3) * game_camera.view_matrix;
+                    playerVelocity[2] = -3;
                     break;
 				case SBND_EVENT_KEY_DOWN:
                 case 's': case 'S':
-                    character.physics_object->velocity = CVector<3, float>(0, 0, 3) * game_camera.view_matrix;
+                    playerVelocity[2] = 3;
                     break;
 				case SBND_EVENT_KEY_LEFT:
                 case 'a': case 'A':
-                    character.physics_object->angular_velocity[1] = 0.008;
+                    character.physics_object->angular_velocity[1] = 1.5;
                     break;
 				case SBND_EVENT_KEY_RIGHT:
                 case 'd': case 'D':
-                    character.physics_object->angular_velocity[1] = -0.008;
+                    character.physics_object->angular_velocity[1] = -1.5;
 					break;
 				case ' ':
 					character.physics_object->velocity[1] = 10;
@@ -859,7 +859,7 @@ public:
                 case 'w': case 'W':
 				case SBND_EVENT_KEY_DOWN:
                 case 's': case 'S':
-                    character.physics_object->velocity[2] = 0;
+                    playerVelocity[2] = 0;
                     break;
 				case SBND_EVENT_KEY_LEFT:
                 case 'a': case 'A':
