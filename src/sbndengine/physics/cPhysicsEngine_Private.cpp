@@ -63,8 +63,6 @@
 #define SOLVE_INTERPENETRATION_MULTIPLIER	1.0f
 
 
-
-
 void cPhysicsEngine_Private::reset()
 {
 	gravitation_vector = CVector<3,float>(0, -9.81f, 0);
@@ -147,9 +145,6 @@ void cPhysicsEngine_Private::emptyAndGetCollisions()
 	list_colliding_objects.pop_front();
 }
 
-
-
-
 void cPhysicsEngine_Private::getHardConstraintCollisions()
 {
 	/**
@@ -207,11 +202,11 @@ void cPhysicsEngine_Private::resolveInterpenetrations()
 		// Check if collision was really solved
 		float quad_rad = c.physics_object1->object->objectFactory->bounding_sphere_radius + c.physics_object2->object->objectFactory->bounding_sphere_radius;
 		quad_rad *= quad_rad;
-		
+
 		if ((c.physics_object1->object->position - c.physics_object2->object->position).getLength2() < quad_rad) {
 			if (CPhysicsIntersections::multiplexer(*c.physics_object1, *c.physics_object2, c)) {
 				if (fabs(c.interpenetration_depth) > EPSILON) {
-					//std::cout << "Not resolved: " << c.physics_object1->object->identifier_string << " - " << c.physics_object2->object->identifier_string << " -> " << c.interpenetration_depth << std::endl;
+					std::cout << "Collision not resolved: " << c.physics_object1->object->identifier_string << " - " << c.physics_object2->object->identifier_string << " -> " << c.interpenetration_depth << std::endl;
 				}
 			}
 		}
@@ -244,8 +239,6 @@ void cPhysicsEngine_Private::setUpdateInterval(double p_update_time_interval, do
 	simulation_timestep_size = update_time_interval;
 }
 
-
-
 /*
  * the seconds which elapsed during the last rendered frame are now stored to 'frame_elapsed_time'!
  */
@@ -256,9 +249,6 @@ bool cPhysicsEngine_Private::updateElapsedTime(double p_elapsed_time)
 		elapsed_time = p_elapsed_time;
 		timestamp_for_next_update = elapsed_time;
 		simulation_timestep_size = update_time_interval;
-	}
-	else
-	{
 	}
 
 	elapsed_time = p_elapsed_time;
@@ -297,7 +287,6 @@ bool cPhysicsEngine_Private::simulationTimestep(double p_elapsed_time)
 	if (!updateElapsedTime(p_elapsed_time))
 		return false;
 
-
 #if WORKSHEET_1
 	updateConstantAcceleration();
 #endif
@@ -322,13 +311,15 @@ bool cPhysicsEngine_Private::simulationTimestep(double p_elapsed_time)
 	applyCollisionImpulse();
 #endif
 
-
 	int i = 1;
 #if WORKSHEET_2
+	resolveInterpenetrations();
 	while (!list_colliding_objects.empty() && i < max_global_collision_solving_iterations) {
-		resolveInterpenetrations();
 		emptyAndGetCollisions();
-        getHardConstraintCollisions();
+#if WORKSHEET_3
+		getHardConstraintCollisions();
+#endif
+		resolveInterpenetrations();
 		i++;
 	}
 #endif
@@ -356,31 +347,25 @@ void cPhysicsEngine_Private::integrator()
 
 		if (!o.isMovable())
 			continue;
-/**
- * WORKSHEET 1
- */
+
 #if WORKSHEET_1
 	o.velocity += o.linear_acceleration_accumulator * simulation_timestep_size;
 	o.object->position += (o.velocity + o.linear_acceleration_accumulator * simulation_timestep_size) * simulation_timestep_size;
 #endif
 
-
-/**
- * WORKSHEET 6
- */
 #if WORKSHEET_6
 		CVector<3, float> angular_acceleration = o.object->inverse_model_matrix.getTranspose() * o.rotational_inverse_inertia * o.object->model_matrix.getTranspose() * o.torque_accumulator;
 		o.angular_velocity += angular_acceleration * simulation_timestep_size;
 
 		float theta = (o.angular_velocity + angular_acceleration * simulation_timestep_size).getLength() * simulation_timestep_size;
-        
-        if (theta != 0) {
-            CVector<3, float> axis = o.angular_velocity.getNormalized();
-            
-            o.object->rotate(axis, -theta);
-        }
 
+		if (theta != 0) {
+			CVector<3, float> axis = o.angular_velocity.getNormalized();
+
+			o.object->rotate(axis, -theta);
+		}
 #endif
+
 		o.object->updateModelMatrix();
 	}
 }
