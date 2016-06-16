@@ -17,7 +17,7 @@ private:
 
 
 public:
-	Player(iRef<iPhysicsObject> physicsObject, cCamera3rdPerson &camera, iEngine &engine)
+	Player(const iRef<iPhysicsObject> &physicsObject, cCamera3rdPerson &camera, iEngine &engine)
 		: physicsObject(physicsObject), camera(camera), engine(engine)
 	{
 		camera.setup(getPosition(), CVector<3, float> (0, 2, 3));
