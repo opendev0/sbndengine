@@ -51,6 +51,15 @@ public:
 	{
 		this->angularVelocity = angularVelocity;
 	}
+	
+	void reset()
+	{
+		physicsObject->object->position = CVector<3, float> ();
+		physicsObject->velocity = CVector<3, float> ();
+		
+		physicsObject->object->rotation = CQuaternion<float> ();
+		physicsObject->angular_velocity = CVector<3, float> ();
+	}
 
 	void move()
 	{

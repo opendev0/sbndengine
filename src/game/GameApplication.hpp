@@ -90,7 +90,7 @@ public:
 	 */
 	void resetPlayer()
 	{		
-		player->setPosition(CVector<3, float> (0, 0, 0));
+		player->reset();
 	}
 
 	/**

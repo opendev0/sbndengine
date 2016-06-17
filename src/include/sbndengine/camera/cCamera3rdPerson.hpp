@@ -14,6 +14,11 @@ public:
 
 	cCamera3rdPerson()
 	{
+		reset();
+	}
+	
+	void reset() 
+	{
 		view_matrix.loadIdentity();
 		position = CVector<3,float>();
 	}
