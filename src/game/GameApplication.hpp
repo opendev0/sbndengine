@@ -30,6 +30,8 @@
 
 #include <stdio.h>
 #include <sstream>
+#include <vector>
+#include <algorithm>
 
 class GameApplication : public
 		iApplication
@@ -47,6 +49,8 @@ class GameApplication : public
 
 	// main engine
 	iEngine engine;
+	
+	std::vector<int> held_keys;
 
 	// storage for the character of the game
 	struct
@@ -235,6 +239,7 @@ public:
 	 */
 	void keyPressed(int key)
 	{
+		held_keys.push_back(key);
 		switch(key)
 		{
 			// General keys
@@ -270,6 +275,12 @@ public:
 	 */
 	void keyReleased(int key)
 	{
+		
+		std::vector<int>::iterator element = std::find(held_keys.begin(), held_keys.end(), key);
+		if (element != held_keys.end()) {
+			held_keys.erase(element);
+		}
+		
 		switch(key)
 		{
 			case SBND_EVENT_KEY_UP:
