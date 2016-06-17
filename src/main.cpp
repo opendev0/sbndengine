@@ -17,6 +17,7 @@
 #include "sbndengine/iSbndEngine.hpp"
 #include "cScenes.hpp"
 #include "cGame.hpp"
+#include "game/GameApplication.hpp"
 #include <iostream>
 
 /*
@@ -618,8 +619,7 @@ public:
 			 * CAMERA MOVEMENTS
 			 */
             character.object->translate(playerVelocity * game_camera.view_matrix * engine.time.frame_elapsed_seconds);
-			game_camera.update(character.object->position);
-			game_camera.rotate(character.physics_object->angular_velocity[1] * engine.time.frame_elapsed_seconds);
+			game_camera.update(character.physics_object.getClass());
 			game_camera.frustum(-1.5f,1.5f,-1.5f*engine.window.aspect_ratio,1.5f*engine.window.aspect_ratio,1,100);
 			game_camera.computeMatrices();
 
@@ -727,7 +727,7 @@ public:
 	{
 		game_mode = true;
 		setupGameWorld();
-		game_camera.setup(character.object->position, CVector<3, float> (0, 2, 3));
+		game_camera.setup(CVector<3, float> (0, 2, 3));
 		game_camera.computeMatrices();
 	}
 
@@ -890,7 +890,7 @@ int main(int argc, char **argv)
 	global_argv = argv;
 
 	{
-		cApplicationImplementation *cA = new cApplicationImplementation;
+		GameApplication *cA = new GameApplication;
 
 #ifdef DEBUG
 		if (!debug_ibase_list.empty())

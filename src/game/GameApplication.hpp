@@ -90,7 +90,7 @@ public:
 	 */
 	void resetPlayer()
 	{		
-		player->setPosition(CVector<3, float> (0, 2, 3));
+		player->setPosition(CVector<3, float> (0, 0, 0));
 	}
 
 	/**
@@ -180,8 +180,7 @@ public:
 	{
 		this->player->move();
 
-		player_camera.update(player->getPosition());
-		player_camera.rotate(player->getAngularVelocity() * engine.time.frame_elapsed_seconds);
+		player_camera.update(player->getPhysicsObject());
 		player_camera.frustum(-1.5f, 1.5f, -1.5f * engine.window.aspect_ratio, 1.5f * engine.window.aspect_ratio, 1, 100);
 		player_camera.computeMatrices();
 
@@ -220,7 +219,7 @@ public:
 		setupWorld();
 		resetPlayer();
 
-		player_camera.setup(player->getPosition(), CVector<3, float> (0, 2, 3));
+		player_camera.setup(CVector<3, float> (0, 2, 3));
 	}
 
 	/**
@@ -241,6 +240,7 @@ public:
 			// General keys
 			case 'q':	case 'Q':	engine.exit();	break;
 			case 'h':	output_gui_key_stroke_information = !output_gui_key_stroke_information;	break;
+			case 'r':	resetPlayer();	break;
 
 			// Movement control keys
 			case SBND_EVENT_KEY_UP:

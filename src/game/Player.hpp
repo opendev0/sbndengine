@@ -1,7 +1,7 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include "Direction.hpp"
+//#include "Direction.hpp"
 
 class Player
 {
@@ -20,6 +20,11 @@ public:
 	Player(const iRef<iPhysicsObject> &physicsObject, cCamera3rdPerson &camera, iEngine &engine)
 		: physicsObject(physicsObject), camera(camera), engine(engine)
 	{
+	}
+	
+	inline iRef<iPhysicsObject> getPhysicsObject() 
+	{
+		return physicsObject;
 	}
 
 	inline CVector<3, float> getPosition()
