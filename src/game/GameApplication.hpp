@@ -182,7 +182,6 @@ public:
 
 		player_camera.update(player->getPhysicsObject());
 		player_camera.frustum(-1.5f, 1.5f, -1.5f * engine.window.aspect_ratio, 1.5f * engine.window.aspect_ratio, 1, 100);
-		player_camera.computeMatrices();
 
 		engine.window.setTitle("THIS GAME IS SO MUCH FUN!!1");
 
@@ -204,6 +203,7 @@ public:
 			int pos_y = 10+14;
 			engine.text.printfxy((float)10, (float)pos_y, "Press [h] to hide this information"); pos_y += 14;
 			pos_y += 14;
+			engine.text.printfxy((float)10, (float)pos_y, "[r]: reset player position"); pos_y += 14;
 			engine.text.printfxy((float)10, (float)pos_y, "[q]: quit"); pos_y += 14;
 			engine.text.printfxy((float)10, (float)pos_y, "[<-/->]: rotate camera"); pos_y += 14;
 		}
