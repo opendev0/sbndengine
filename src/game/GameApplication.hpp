@@ -48,9 +48,6 @@ class GameApplication : public
 	// main engine
 	iEngine engine;
 
-	// game camera
-	cCamera3rdPerson game_camera;
-
 	// storage for the character of the game
 	struct
 	{
@@ -60,6 +57,7 @@ class GameApplication : public
 	} character;
 
 	Player *player;
+	cCamera3rdPerson player_camera;
 
 	/**
 	 * different kinds of materials (so far only colors are supported)
@@ -172,7 +170,7 @@ public:
 		character.physics_object = new iPhysicsObject(*character.object);
 		engine.physics.addObject(character.physics_object);
 
-		player = new Player(character.physics_object, game_camera, engine);
+		player = new Player(character.physics_object, player_camera, engine);
 	}
 
 	/*
@@ -181,6 +179,11 @@ public:
 	void drawFrame()
 	{
 		this->player->move();
+
+		player_camera.update(player->getPosition());
+		player_camera.rotate(player->getAngularVelocity() * engine.time.frame_elapsed_seconds);
+		player_camera.frustum(-1.5f, 1.5f, -1.5f * engine.window.aspect_ratio, 1.5f * engine.window.aspect_ratio, 1, 100);
+		player_camera.computeMatrices();
 
 		engine.window.setTitle("THIS GAME IS SO MUCH FUN!!1");
 
@@ -192,7 +195,7 @@ public:
 		/*
 		 * GRAPHICS: draw the objects
 		 */
-		engine.graphics.drawFrame(game_camera);
+		engine.graphics.drawFrame(player_camera);
 
 		/*
 		 * output some help information
@@ -216,6 +219,8 @@ public:
 
 		setupWorld();
 		resetPlayer();
+
+		player_camera.setup(player->getPosition(), CVector<3, float> (0, 2, 3));
 	}
 
 	/**

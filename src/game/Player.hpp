@@ -20,12 +20,16 @@ public:
 	Player(const iRef<iPhysicsObject> &physicsObject, cCamera3rdPerson &camera, iEngine &engine)
 		: physicsObject(physicsObject), camera(camera), engine(engine)
 	{
-		camera.setup(getPosition(), CVector<3, float> (0, 2, 3));
 	}
 
 	inline CVector<3, float> getPosition()
 	{
 		return physicsObject->object->position;
+	}
+
+	inline float getAngularVelocity()
+	{
+		return angularVelocity;
 	}
 
 	inline void setPosition(const CVector<3, float> &pos)
@@ -47,11 +51,6 @@ public:
 	{
 		physicsObject->object->translate(CVector<3, float>(0, 0, velocity) * camera.view_matrix * engine.time.frame_elapsed_seconds);
 		physicsObject->object->rotate(CVector<3, float>(0, 1, 0), -angularVelocity * engine.time.frame_elapsed_seconds);
-
-		camera.update(physicsObject->object->position);
-		camera.rotate(angularVelocity * engine.time.frame_elapsed_seconds);
-		camera.frustum(-1.5f, 1.5f, -1.5f * engine.window.aspect_ratio, 1.5f * engine.window.aspect_ratio, 1, 100);
-		camera.computeMatrices();
 	}
 
 	inline void jump()
