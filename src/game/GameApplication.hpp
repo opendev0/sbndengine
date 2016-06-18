@@ -184,7 +184,8 @@ public:
 	{
 		handleHeldKeys();
 		
-		player_camera.update(player->getPhysicsObject());
+		player_camera.update(player->getPosition());
+		player_camera.rotate(player->getAngularVelocity() * engine.time.frame_elapsed_seconds);
 		player_camera.frustum(-1.5f, 1.5f, -1.5f * engine.window.aspect_ratio, 1.5f * engine.window.aspect_ratio, 1, 100);
 
 		engine.window.setTitle("THIS GAME IS SO MUCH FUN!!1");
@@ -223,7 +224,7 @@ public:
 		setupWorld();
 		resetPlayer();
 
-		player_camera.setup(CVector<3, float> (0, 2, 3));
+		player_camera.setup(player->getPosition(), CVector<3, float> (0, 2, 3));
 	}
 
 	/**
@@ -248,6 +249,14 @@ public:
 			case 'h':	output_gui_key_stroke_information = !output_gui_key_stroke_information;	break;
 			case 'r':	resetPlayer();	break;
 
+			case SBND_EVENT_KEY_LEFT:
+			case 'a': case 'A':
+				player->setAngularVelocity(2);
+				break;
+			case SBND_EVENT_KEY_RIGHT:
+			case 'd': case 'D':
+				player->setAngularVelocity(-2);
+				break;
 			case ' ':
 				player->jump();
 				break;
@@ -267,7 +276,14 @@ public:
 		
 		switch(key)
 		{
-			
+			case SBND_EVENT_KEY_LEFT:
+			case 'a': case 'A':
+				player->setAngularVelocity(0);
+				break;
+			case SBND_EVENT_KEY_RIGHT:
+			case 'd': case 'D':
+				player->setAngularVelocity(0);
+				break;
 		}
 	}
 	

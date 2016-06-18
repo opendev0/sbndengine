@@ -8,6 +8,9 @@ class Player
 private:
 	iRef<iPhysicsObject> physicsObject;
 	cCamera3rdPerson &camera;
+	
+	float velocity;
+	float angularVelocity;
 
 	iEngine &engine;
 
@@ -22,6 +25,21 @@ public:
 	inline iRef<iPhysicsObject> getPhysicsObject() 
 	{
 		return physicsObject;
+	}
+	
+	inline CVector<3, float> getPosition() 
+	{
+		return physicsObject->object->position;
+	}
+	
+	inline float getAngularVelocity() 
+	{
+		return angularVelocity;
+	}
+	
+	inline void setAngularVelocity(float vel)
+	{
+		angularVelocity = vel;
 	}
 	
 	
