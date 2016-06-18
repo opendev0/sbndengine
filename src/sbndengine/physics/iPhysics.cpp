@@ -47,6 +47,11 @@ void iPhysics::addObject(const iRef<iPhysicsObject> &physicsObject)
 	privateClass->object_list.push_back(physicsObject);
 }
 
+void iPhysics::removeObject(const iRef<iPhysicsObject> &physicsObject)
+{
+	privateClass->object_list.remove(physicsObject);
+}
+
 void iPhysics::addSoftConstraint(const iRef<iPhysicsSoftConstraint> &physicsSoftConstraint)
 {
 	privateClass->soft_constraint_list.push_back(physicsSoftConstraint);

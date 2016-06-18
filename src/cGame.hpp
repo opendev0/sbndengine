@@ -1,13 +1,15 @@
 #ifndef _C_GAME_HPP__
 #define _C_GAME_HPP__
 
+#include <vector>
 #include "sbndengine/iSbndEngine.hpp"
 
 class CGame
 {
 public:
 	iEngine &engine;
-
+	std::vector<iRef<iObject>> collectables;
+	std::vector<iRef<iObject>> untouchables;
 
 	/**
 	 * different kinds of materials
@@ -37,7 +39,7 @@ public:
 
 		iRef<iGraphicsMaterial> boden_1;
 		iRef<iGraphicsMaterial> wand_18;
-		
+
 		iRef<iGraphicsMaterial> player;
 	} materials;
 

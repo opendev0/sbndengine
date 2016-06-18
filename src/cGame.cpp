@@ -62,12 +62,12 @@
 		o1##_physics_object->setDisableCollisionRotationAndFrictionFlag(true);	o2##_physics_object->setDisableCollisionRotationAndFrictionFlag(true);	\
 		engine.physics.addSoftConstraint(o1##_##o2##_soft_constraint_rope);		\
 		engine.graphics.addObjectConnector(new cGraphicsObjectConnectorCenter(o1, o2, materials.white));
-        
+
 
 #define NEW_SPRING_ANGULAR(o1, a1, o2, a2, extra_distance)                  \
-        iRef<iPhysicsSoftConstraint> o1##_##o2##_soft_constraint_spring = new cPhysicsSoftConstraintSpringAngular(o1##_physics_object, (a1), o2##_physics_object, (a2), ((o1)->position+(a1)).dist((o2)->position+(a2))+extra_distance);  \
-        engine.physics.addSoftConstraint(o1##_##o2##_soft_constraint_spring); \
-        engine.graphics.addObjectConnector(new cGraphicsObjectConnectorAngular(o1, a1, o2, a2, materials.white));
+		iRef<iPhysicsSoftConstraint> o1##_##o2##_soft_constraint_spring = new cPhysicsSoftConstraintSpringAngular(o1##_physics_object, (a1), o2##_physics_object, (a2), ((o1)->position+(a1)).dist((o2)->position+(a2))+extra_distance);  \
+		engine.physics.addSoftConstraint(o1##_##o2##_soft_constraint_spring); \
+		engine.graphics.addObjectConnector(new cGraphicsObjectConnectorAngular(o1, a1, o2, a2, materials.white));
 
 
 
@@ -229,12 +229,14 @@ void CGame::setupWorldBoxPlanes(float scale)
 
 void CGame::setupGameScene() {
 	setupWorldBoxPlanes();
-	
+
 	iRef<cObjectFactorySphere> sphere_factory = new cObjectFactorySphere(1.0);
-	
+
 	NEW_SPHERE(sphere, red, 0, 0, -3);
-	
-	sphere->setTouchable(false);
+	untouchables.push_back(sphere);
+
+	NEW_SPHERE(sphere2, green, 3, 0, -3);
+	collectables.push_back(sphere2);
 }
 
 

@@ -30,6 +30,11 @@ void iGraphics::addObject(const iRef<iGraphicsObject> &p_graphics_object)
 	objectList.push_back(p_graphics_object);
 }
 
+void iGraphics::removeObject(const iRef<iGraphicsObject> &p_graphics_object)
+{
+	objectList.remove(p_graphics_object);
+}
+
 void iGraphics::addObjectConnector(const iRef<iGraphicsObjectConnector> &p_graphics_object_connector)
 {
 	objectConnectorList.push_back(p_graphics_object_connector);

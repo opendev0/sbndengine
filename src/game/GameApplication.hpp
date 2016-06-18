@@ -19,6 +19,7 @@
 #include "Player.hpp"
 #include "../sbndengine/physics/cPhysicsCollisionData.hpp"
 #include <iostream>
+#include <algorithm>
 
 /*
 #if defined(WIN32) || defined(_WIN32)
@@ -50,11 +51,11 @@ class GameApplication : public
 
 	// main engine
 	iEngine engine;
-	
+
 	std::vector<int> held_keys;
-	
+
 	enum Engine_state {GAME_RUNNING, GAME_OVER};
-	
+
 	Engine_state state;
 
 	// storage for the character of the game
@@ -98,7 +99,7 @@ public:
 	 * reset the players state
 	 */
 	void resetPlayer()
-	{		
+	{
 		player->reset();
 	}
 
@@ -188,10 +189,10 @@ public:
 	void drawFrame()
 	{
 		switch(state)
-		{	
+		{
 			case GAME_RUNNING:
 				handleHeldKeys();
-			
+
 				player_camera.update(player->getPosition());
 				player_camera.rotate(player->getAngularVelocity() * engine.time.frame_elapsed_seconds);
 				player_camera.frustum(-1.5f, 1.5f, -1.5f * engine.window.aspect_ratio, 1.5f * engine.window.aspect_ratio, 1, 100);
@@ -223,10 +224,10 @@ public:
 					engine.text.printfxy((float)10, (float)pos_y, "[<-/->]: rotate camera"); pos_y += 14;
 				}
 				break;
-				
+
 			case GAME_OVER:
 				engine.graphics.drawFrame(player_camera);
-				
+
 				engine.text.printfxy((float)10, (float)24, "GAME OVER");
 		}
 	}
@@ -237,7 +238,7 @@ public:
 	void setup()
 	{
 		cGame = new CGame(engine);
-		
+
 		state = GAME_RUNNING;
 
 		setupWorld();
@@ -260,13 +261,13 @@ public:
 	void keyPressed(int key)
 	{
 		held_keys.push_back(key);
-		
+
 		switch(key)
 		{
 			// General keys
 			case 'q':	case 'Q':	engine.exit();	break;
 			case 'h':	output_gui_key_stroke_information = !output_gui_key_stroke_information;	break;
-			case 'r':	
+			case 'r':
 				resetPlayer();
 				state = GAME_RUNNING;
 				break;
@@ -290,12 +291,12 @@ public:
 	 */
 	void keyReleased(int key)
 	{
-		
+
 		std::vector<int>::iterator element = std::find(held_keys.begin(), held_keys.end(), key);
 		if (element != held_keys.end()) {
 			held_keys.erase(element);
 		}
-		
+
 		switch(key)
 		{
 			case SBND_EVENT_KEY_LEFT:
@@ -308,11 +309,11 @@ public:
 				break;
 		}
 	}
-	
+
 	/*
 	 * this method is called every frame
 	 */
-	void handleHeldKeys() 
+	void handleHeldKeys()
 	{
 		for (std::vector<int>::iterator key = held_keys.begin(); key != held_keys.end(); key++) {
 			switch(*key)
@@ -336,22 +337,31 @@ public:
 			}
 		}
 	}
-	
-	
+
 	/*
 	 * this method is called each frame
 	 */
-	 void handleCollisions()
-	 {
-		 std::list<CPhysicsCollisionData> collisions = engine.physics.getCollisions();
-		 
-		 for (std::list<CPhysicsCollisionData>::iterator it = collisions.begin(); it != collisions.end(); it++) {
-			 if (it->physics_object1->object->identifier_string == "character") {
-				 if (!it->physics_object2->object->touchable) state = GAME_OVER;
-			 }
-			 else if (it->physics_object2->object->identifier_string == "character") {
-				 if (!it->physics_object1->object->touchable) state = GAME_OVER;
-			 }
-		 }
-	 }
+	void handleCollisions()
+	{
+		std::list<CPhysicsCollisionData> collisions = engine.physics.getCollisions();
+
+		for (std::list<CPhysicsCollisionData>::iterator it = collisions.begin(); it != collisions.end(); it++) {
+			if (it->physics_object1->object->identifier_string == "character") {
+				handlePlayerTouch(it->physics_object2);
+			}
+			else if (it->physics_object2->object->identifier_string == "character") {
+				handlePlayerTouch(it->physics_object1);
+			}
+		}
+	}
+
+	void handlePlayerTouch(const iRef<iPhysicsObject> &physics_object)
+	{
+		if (std::find(cGame->untouchables.begin(), cGame->untouchables.end(), physics_object->object) != cGame->untouchables.end()) {
+			state = GAME_OVER;
+		}
+		else if (std::find(cGame->collectables.begin(), cGame->collectables.end(), physics_object->object) != cGame->collectables.end()) {
+			engine.physics.removeObject(physics_object);
+		}
+	}
 };

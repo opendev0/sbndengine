@@ -41,6 +41,7 @@ public:
 	void clear();
 
 	void addObject(const iRef<iGraphicsObject> &p_graphics_object);
+    void removeObject(const iRef<iGraphicsObject> &p_graphics_object);
 
 	void addObjectConnector(const iRef<iGraphicsObjectConnector> &p_graphics_object_connector);
 
