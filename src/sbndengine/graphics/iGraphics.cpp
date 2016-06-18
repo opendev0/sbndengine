@@ -30,9 +30,14 @@ void iGraphics::addObject(const iRef<iGraphicsObject> &p_graphics_object)
 	objectList.push_back(p_graphics_object);
 }
 
-void iGraphics::removeObject(const iRef<iGraphicsObject> &p_graphics_object)
+void iGraphics::removeObject(const iRef<iObject> &p_object)
 {
-	objectList.remove(p_graphics_object);
+	for (std::list<iRef<iGraphicsObject>>::iterator it = objectList.begin(); it != objectList.end(); ++it) {
+		if ((*it)->object == p_object) {
+			objectList.erase(it);
+			return;
+		}
+	}
 }
 
 void iGraphics::addObjectConnector(const iRef<iGraphicsObjectConnector> &p_graphics_object_connector)

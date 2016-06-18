@@ -346,10 +346,10 @@ public:
 		std::list<CPhysicsCollisionData> collisions = engine.physics.getCollisions();
 
 		for (std::list<CPhysicsCollisionData>::iterator it = collisions.begin(); it != collisions.end(); it++) {
-			if (it->physics_object1->object->identifier_string == "character") {
+			if (it->physics_object1->object == character.object) {
 				handlePlayerTouch(it->physics_object2);
 			}
-			else if (it->physics_object2->object->identifier_string == "character") {
+			else if (it->physics_object2->object == character.object) {
 				handlePlayerTouch(it->physics_object1);
 			}
 		}
@@ -362,6 +362,7 @@ public:
 		}
 		else if (std::find(cGame->collectables.begin(), cGame->collectables.end(), physics_object->object) != cGame->collectables.end()) {
 			engine.physics.removeObject(physics_object);
+			engine.graphics.removeObject(physics_object->object);
 		}
 	}
 };
