@@ -63,7 +63,10 @@ public:
 
 	// identifier string for convenience (e. g. to print the object's name if clicked with the mouse)
 	std::string identifier_string;
-
+	
+	// true, if the player is allowed to touch this object
+	bool touchable;
+	
 	// a pointer which can be used by the physics engine
 	void *physics_engine_ptr;
 
@@ -101,6 +104,7 @@ public:
 	void setRotation(const CQuaternion<float> &p_rotation);
 
 	void setIntersectionsComputable(bool p_computable);
+	void setTouchable(bool p_touchable);
 
 	void setOnlyVisualization();
 	void unsetOnlyVisualization();

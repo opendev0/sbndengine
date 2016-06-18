@@ -111,3 +111,8 @@ void iPhysics::detectAndResolveInterpenetrations()
 {
 	privateClass->detectAndResolveInterpenetrations();
 }
+
+std::list<CPhysicsCollisionData> iPhysics::getCollisions()
+{
+	return privateClass->collisions;
+}

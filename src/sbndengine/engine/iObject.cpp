@@ -24,6 +24,7 @@ void iObject::init()
 	physics_engine_ptr = NULL;
 	graphics_engine_ptr = NULL;
 	intersections_computable = true;
+	touchable = true;
 }
 
 
@@ -118,4 +119,9 @@ void iObject::updateModelMatrix()
 void iObject::setIntersectionsComputable(bool p_computable)
 {
 	intersections_computable = p_computable;
+}
+
+void iObject::setTouchable(bool p_touchable)
+{
+	touchable = p_touchable;
 }

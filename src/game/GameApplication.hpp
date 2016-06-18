@@ -17,6 +17,7 @@
 #include "sbndengine/iSbndEngine.hpp"
 #include "../cGame.hpp"
 #include "Player.hpp"
+#include "../sbndengine/physics/cPhysicsCollisionData.hpp"
 #include <iostream>
 
 /*
@@ -51,6 +52,10 @@ class GameApplication : public
 	iEngine engine;
 	
 	std::vector<int> held_keys;
+	
+	enum Engine_state {GAME_RUNNING, GAME_OVER};
+	
+	Engine_state state;
 
 	// storage for the character of the game
 	struct
@@ -182,36 +187,47 @@ public:
 	 */
 	void drawFrame()
 	{
-		handleHeldKeys();
-		
-		player_camera.update(player->getPosition());
-		player_camera.rotate(player->getAngularVelocity() * engine.time.frame_elapsed_seconds);
-		player_camera.frustum(-1.5f, 1.5f, -1.5f * engine.window.aspect_ratio, 1.5f * engine.window.aspect_ratio, 1, 100);
-		player_camera.computeMatrices();
+		switch(state)
+		{	
+			case GAME_RUNNING:
+				handleHeldKeys();
+			
+				player_camera.update(player->getPosition());
+				player_camera.rotate(player->getAngularVelocity() * engine.time.frame_elapsed_seconds);
+				player_camera.frustum(-1.5f, 1.5f, -1.5f * engine.window.aspect_ratio, 1.5f * engine.window.aspect_ratio, 1, 100);
+				player_camera.computeMatrices();
 
-		engine.window.setTitle("THIS GAME IS SO MUCH FUN!!1");
+				engine.window.setTitle("THIS GAME IS SO MUCH FUN!!1");
 
-		/*
-		 * PHYSICS: do one simulation step
-		 */
-		engine.physics.simulationTimestep(engine.time.elapsed_seconds);
+				/*
+				 * PHYSICS: do one simulation step
+				 */
+				engine.physics.simulationTimestep(engine.time.elapsed_seconds);
+				handleCollisions();
 
-		/*
-		 * GRAPHICS: draw the objects
-		 */
-		engine.graphics.drawFrame(player_camera);
+				/*
+				 * GRAPHICS: draw the objects
+				 */
+				engine.graphics.drawFrame(player_camera);
 
-		/*
-		 * output some help information
-		 */
-		if (output_gui_key_stroke_information)
-		{
-			int pos_y = 10+14;
-			engine.text.printfxy((float)10, (float)pos_y, "Press [h] to hide this information"); pos_y += 14;
-			pos_y += 14;
-			engine.text.printfxy((float)10, (float)pos_y, "[r]: reset player position"); pos_y += 14;
-			engine.text.printfxy((float)10, (float)pos_y, "[q]: quit"); pos_y += 14;
-			engine.text.printfxy((float)10, (float)pos_y, "[<-/->]: rotate camera"); pos_y += 14;
+				/*
+				 * output some help information
+				 */
+				if (output_gui_key_stroke_information)
+				{
+					int pos_y = 10+14;
+					engine.text.printfxy((float)10, (float)pos_y, "Press [h] to hide this information"); pos_y += 14;
+					pos_y += 14;
+					engine.text.printfxy((float)10, (float)pos_y, "[r]: reset player position"); pos_y += 14;
+					engine.text.printfxy((float)10, (float)pos_y, "[q]: quit"); pos_y += 14;
+					engine.text.printfxy((float)10, (float)pos_y, "[<-/->]: rotate camera"); pos_y += 14;
+				}
+				break;
+				
+			case GAME_OVER:
+				engine.graphics.drawFrame(player_camera);
+				
+				engine.text.printfxy((float)10, (float)24, "GAME OVER");
 		}
 	}
 
@@ -221,6 +237,8 @@ public:
 	void setup()
 	{
 		cGame = new CGame(engine);
+		
+		state = GAME_RUNNING;
 
 		setupWorld();
 		resetPlayer();
@@ -248,7 +266,10 @@ public:
 			// General keys
 			case 'q':	case 'Q':	engine.exit();	break;
 			case 'h':	output_gui_key_stroke_information = !output_gui_key_stroke_information;	break;
-			case 'r':	resetPlayer();	break;
+			case 'r':	
+				resetPlayer();
+				state = GAME_RUNNING;
+				break;
 
 			case SBND_EVENT_KEY_LEFT:
 			case 'a': case 'A':
@@ -315,4 +336,22 @@ public:
 			}
 		}
 	}
+	
+	
+	/*
+	 * this method is called each frame
+	 */
+	 void handleCollisions()
+	 {
+		 std::list<CPhysicsCollisionData> collisions = engine.physics.getCollisions();
+		 
+		 for (std::list<CPhysicsCollisionData>::iterator it = collisions.begin(); it != collisions.end(); it++) {
+			 if (it->physics_object1->object->identifier_string == "character") {
+				 if (!it->physics_object2->object->touchable) state = GAME_OVER;
+			 }
+			 else if (it->physics_object2->object->identifier_string == "character") {
+				 if (!it->physics_object1->object->touchable) state = GAME_OVER;
+			 }
+		 }
+	 }
 };

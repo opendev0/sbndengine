@@ -230,7 +230,11 @@ void CGame::setupWorldBoxPlanes(float scale)
 void CGame::setupGameScene() {
 	setupWorldBoxPlanes();
 	
+	iRef<cObjectFactorySphere> sphere_factory = new cObjectFactorySphere(1.0);
 	
+	NEW_SPHERE(sphere, red, 0, 0, -3);
+	
+	sphere->setTouchable(false);
 }
 
 

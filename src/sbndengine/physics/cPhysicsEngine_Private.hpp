@@ -87,6 +87,8 @@ class cPhysicsEngine_Private
 public:
 	/// elapsed seconds in the last frame
 	double simulation_timestep_size;
+	
+	std::list<CPhysicsCollisionData> collisions;
 
 	cPhysicsEngine_Private();
 

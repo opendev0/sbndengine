@@ -301,6 +301,8 @@ bool cPhysicsEngine_Private::simulationTimestep(double p_elapsed_time)
 
 #if WORKSHEET_2
 	emptyAndGetCollisions();
+	
+	collisions = list_colliding_objects;
 #endif
 
 #if WORKSHEET_3
