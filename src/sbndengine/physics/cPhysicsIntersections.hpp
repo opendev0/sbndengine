@@ -17,7 +17,7 @@
 #ifndef CPHYSICS_INTERSECTIONS_HPP
 #define CPHYSICS_INTERSECTIONS_HPP
 
-#include <list>
+#include <vector>
 #include "sbndengine/physics/iPhysicsObject.hpp"
 #include "cPhysicsCollisionData.hpp"
 
@@ -55,6 +55,7 @@ public:
 	static bool boxBox(iPhysicsObject &o1, iPhysicsObject &o2, CPhysicsCollisionData &physicsCollision);
 
 private:
+	static bool vertexInPlaneBounds(const iPhysicsObject &plane, CVector<3, float> &vertex);
 	static vec2d getProjection(iPhysicsObject const &boxObject, CVector<3,float> const &axis);
 };
 

@@ -229,174 +229,139 @@ bool CPhysicsIntersections::planePlane(iPhysicsObject &physics_object_plane1, iP
  *
  * compute the intersection between a plane and a box
  */
+bool CPhysicsIntersections::vertexInPlaneBounds(const iPhysicsObject &plane, Vector &vertex) {
+	cObjectFactoryPlane &planeFactory = *static_cast<cObjectFactoryPlane *>(&plane.object->objectFactory.getClass());
+
+	return (
+			(vertex[0] > -planeFactory.size_x / 2 && vertex[0] < planeFactory.size_x / 2) &&
+			(vertex[2] > -planeFactory.size_z / 2 && vertex[2] < planeFactory.size_z / 2)
+	);
+}
+
 bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhysicsObject &physics_object_box, CPhysicsCollisionData &c)
 {
 #if WORKSHEET_4
-	iRef<iObject> box = physics_object_box.object;
-	Vector boxHalfSize = static_cast<cObjectFactoryBox *>(&box->objectFactory.getClass())->half_size;
-	
-	iRef<iObject> plane = physics_object_plane.object;
-	cObjectFactoryPlane &planeFactory = *static_cast<cObjectFactoryPlane *>(&physics_object_plane.object->objectFactory.getClass());
-	
-	int sideOfPlane = 0;
-	Vector maxBelowPlane, maxAbovePlane;
-	
-	std::list<Vector> vertecesOutsidePlane;
-	
-	
-	Vector vertexList[8] = {Vector(-boxHalfSize[0], -boxHalfSize[1], -boxHalfSize[2]), Vector(-boxHalfSize[0], -boxHalfSize[1], boxHalfSize[2]), 
-							Vector(-boxHalfSize[0], boxHalfSize[1], -boxHalfSize[2]), Vector(-boxHalfSize[0], boxHalfSize[1], boxHalfSize[2]),
-							Vector(boxHalfSize[0], -boxHalfSize[1], -boxHalfSize[2]), Vector(boxHalfSize[0], -boxHalfSize[1], boxHalfSize[2]), 
-							Vector(boxHalfSize[0], boxHalfSize[1], -boxHalfSize[2]), Vector(boxHalfSize[0], boxHalfSize[1], boxHalfSize[2])};
-	
-	for (Vector* arr = vertexList; arr != vertexList + 8; arr++) {
-		Vector current = plane->inverse_model_matrix * box->model_matrix * *arr;
-		
-		//vertex is outside of plane
-		if (fabs(current[0]) > planeFactory.size_x / 2 || fabs(current[2]) > planeFactory.size_z / 2) {
-			
-			vertecesOutsidePlane.push_back(*arr);
-			if (current[1] <= 0) {
-				sideOfPlane--;
-			}
-			else {
-				sideOfPlane++;
-			}
-			continue;
-		}
-		
-		//vertex is below plane
-		if (current[1] <= 0) {
-			sideOfPlane--;
-			//vertex is the farthest below plane
-			if (current[1] < maxBelowPlane[1]) {
-				maxBelowPlane = current;
-			}
-		}
-		//vertex is above plane
-		else {
-			sideOfPlane++;
-			//vertex is the farthest above plane
-			if (current[1] > maxAbovePlane[1]) {
-				maxAbovePlane = current;
-			}
-		}
+	auto &box = physics_object_box.object;
+	auto &boxFactory = *static_cast<cObjectFactoryBox *>(&box->objectFactory.getClass());
+	auto &boxHalfSize = boxFactory.half_size;
+	auto &boxSize = boxFactory.size;
+
+	auto &plane = physics_object_plane.object;
+	auto &planeFactory = *static_cast<cObjectFactoryPlane *>(&physics_object_plane.object->objectFactory.getClass());
+	auto planeHalfSize = Vector(planeFactory.size_x, 0, planeFactory.size_z) / 2;
+
+	struct Vertex {
+		Vector boxSpace;
+		Vector planeSpace;
+	} vertices[8] = {
+		{ .boxSpace = Vector(-boxHalfSize[0], -boxHalfSize[1], -boxHalfSize[2]) },
+		{ .boxSpace = Vector(-boxHalfSize[0], -boxHalfSize[1], boxHalfSize[2]) },
+		{ .boxSpace = Vector(-boxHalfSize[0], boxHalfSize[1], -boxHalfSize[2]) },
+		{ .boxSpace = Vector(-boxHalfSize[0], boxHalfSize[1], boxHalfSize[2]) },
+		{ .boxSpace = Vector(boxHalfSize[0], -boxHalfSize[1], -boxHalfSize[2]) },
+		{ .boxSpace = Vector(boxHalfSize[0], -boxHalfSize[1], boxHalfSize[2]) },
+		{ .boxSpace = Vector(boxHalfSize[0], boxHalfSize[1], -boxHalfSize[2]) },
+		{ .boxSpace = Vector(boxHalfSize[0], boxHalfSize[1], boxHalfSize[2]) }
+	};
+	std::vector<Vertex *> verticesInPlaneBounds;
+	std::vector<Vertex *> verticesOffPlaneBounds;
+	Vector neighbours[3] = {
+		Vector(boxSize[0], 0, 0),
+		Vector(0, boxSize[1], 0),
+		Vector(0, 0, boxSize[2])
+	};
+
+	for (auto &curVertex : vertices) {
+		curVertex.planeSpace = plane->inverse_model_matrix * box->model_matrix * curVertex.boxSpace;
+
+		if (vertexInPlaneBounds(physics_object_plane, curVertex.planeSpace))
+			verticesInPlaneBounds.push_back(&curVertex);
+		else
+			verticesOffPlaneBounds.push_back(&curVertex);
 	}
 
-	//no collision when all points are on one side of plane or outside of plane
-	if (abs(sideOfPlane) == 8 || vertecesOutsidePlane.size() == 8) {
-		return false;
+	if (verticesInPlaneBounds.empty()) return false;
+
+	// Check for plane-vertex collision
+	char sideTest = 0; // bitfield: 1 -> vertex above plane; 2 -> vertex below plane
+	for (auto curVertex : verticesInPlaneBounds) {
+		sideTest |= (curVertex->planeSpace[1] >= 0) ? 1 : 2;
+	}
+	if (sideTest == 3) {
+		auto minDistanceVertex = verticesInPlaneBounds.at(0);
+		for (size_t i = 1; i < verticesInPlaneBounds.size(); ++i) {
+			if (verticesInPlaneBounds.at(i)->planeSpace[1] < minDistanceVertex->planeSpace[1]) {
+				minDistanceVertex = verticesInPlaneBounds.at(i);
+			}
+		}
+		c.physics_object1 = &physics_object_plane;
+		c.physics_object2 = &physics_object_box;
+		c.collision_point1 = plane->model_matrix * (minDistanceVertex->planeSpace * Vector(1, 0, 1));
+		c.collision_point2 = plane->model_matrix * minDistanceVertex->planeSpace;
+		c.collision_normal = c.collision_point2 - c.collision_point1;
+		c.interpenetration_depth = minDistanceVertex->planeSpace[1];
+
+		std::cout << "vertex-edge: " << minDistanceVertex->planeSpace << std::endl;
+
+		return true;
 	}
 
+	// Check for plane-vertex collision
+	sideTest = 0; // bitfield: 1 -> vertex above plane; 2 -> vertex below plane
+	for (auto &curVertex : vertices) {
+		sideTest |= (curVertex.planeSpace[1] >= 0) ? 1 : 2;
+	}
+	if (sideTest == 3) {
+		for (auto v1 : verticesInPlaneBounds) {
+			for (auto v2 : verticesOffPlaneBounds) {
+				if (v1->planeSpace[1] * v2->planeSpace[1] > 0) continue; // If both are above or below the plane -> no collision
 
-	c.physics_object1 = &physics_object_plane;
-	c.physics_object2 = &physics_object_box;
-   
- 
-	//check for edge/edge collisions
-	if (!vertecesOutsidePlane.empty()) {
-		
-		//for each vertex outside we check all edges connecting it to its neighbours
-		Vector calculateNeighbors[3] = {Vector(-1, 1, 1), Vector(1, -1, 1), Vector(1, 1, -1)};
-		
-		Vector largest = Vector();
-		Vector largestNeighbour = Vector();
-		
-		for (std::list<Vector>::iterator it = vertecesOutsidePlane.begin(); it != vertecesOutsidePlane.end(); ++it) {
-			
-			Vector current = plane->inverse_model_matrix * box->model_matrix * *it;
-			
-			if (sideOfPlane < 0) {
-				//the current vertex is above the plane
-				if (current[1] >= maxAbovePlane[1] && current[1] >= largest[1]) {
+				// TODO If v2 is no neighbour of v1 -> no edge -> no collision
+				for (auto &neighbour : neighbours) {
+					if (v1->boxSpace + neighbour == v2->boxSpace || v1->boxSpace - neighbour == v2->boxSpace) {
+						auto slope = v1->planeSpace - v2->planeSpace; // Calculate slope between the two points
+						slope /= slope[1]; // Normalize to a height of 1
+						auto intersection = v1->planeSpace - slope * v1->planeSpace[1];
 
-					largest = current;
-					
-					for (Vector* factor = calculateNeighbors; factor != calculateNeighbors + 3; factor++) {
-						
-						Vector neighbour = plane->inverse_model_matrix * box->model_matrix * (current * *factor);
-						//the current neighbour is below the plane and inside the plane
-						if (!(fabs(neighbour[0]) > planeFactory.size_x / 2 || fabs(neighbour[2]) > planeFactory.size_z / 2) && neighbour[1] < 0 && neighbour[1] < largestNeighbour[1]) {
-							largestNeighbour = neighbour;
+						if (vertexInPlaneBounds(plane, intersection)) {
+							auto boxEdge = LinePP(v1->planeSpace, v2->planeSpace);
+
+							// Calculate nearest plane-edge
+							auto planeEdge = LinePP(Vector(planeHalfSize[0], 0, -planeHalfSize[2]), Vector(planeHalfSize[0], 0, planeHalfSize[2]));
+							float nearestPlaneEdgeDist = (intersection - planeHalfSize[0]).getLength();
+
+							if ((intersection + planeHalfSize[0]).getLength() < nearestPlaneEdgeDist) {
+								planeEdge = LinePP(Vector(-planeHalfSize[0], 0, -planeHalfSize[2]), Vector(-planeHalfSize[0], 0, planeHalfSize[2]));
+								nearestPlaneEdgeDist = (intersection + planeHalfSize[0]).getLength();
+							}
+							if ((intersection - planeHalfSize[2]).getLength() < nearestPlaneEdgeDist) {
+								planeEdge = LinePP(Vector(-planeHalfSize[0], 0, planeHalfSize[2]), Vector(planeHalfSize[0], 0, planeHalfSize[2]));
+								nearestPlaneEdgeDist = (intersection - planeHalfSize[2]).getLength();
+							}
+							if ((intersection + planeHalfSize[2]).getLength() < nearestPlaneEdgeDist) {
+								planeEdge = LinePP(Vector(-planeHalfSize[0], 0, -planeHalfSize[2]), Vector(planeHalfSize[0], 0, -planeHalfSize[2]));
+								nearestPlaneEdgeDist = (intersection + planeHalfSize[2]).getLength();
+							}
+
+							c.physics_object1 = &physics_object_plane;
+							c.physics_object2 = &physics_object_box;
+							IntLinePPLinePP::closestPoints(planeEdge, boxEdge, c.collision_point1, c.collision_point2);
+							c.interpenetration_depth = -(c.collision_point2 - c.collision_point1).getLength();
+							c.collision_normal = (c.collision_point2 - c.collision_point1).getNormalized();
+
+							std::cout << c.collision_point1 << std::endl;
+							std::cout << c.collision_point2 << std::endl;
+							std::cout << c.interpenetration_depth << std::endl << std::endl;
+
+							return true;
 						}
 					}
 				}
-			}            
-			
-			else { 
-				//the current vertex is below the plane
-				if (current[1] < maxBelowPlane[1] && current[1] < largest[1]) {
-					
-					largest = current;
-					
-					for (Vector* factor = calculateNeighbors; factor != calculateNeighbors + 3; factor++) {
-						
-						Vector neighbour = plane->inverse_model_matrix * box->model_matrix * (current * *factor);
-						//the current neighbour is above the plane and inside the plane
-						if (!(fabs(neighbour[0]) > planeFactory.size_x / 2 || fabs(neighbour[2]) > planeFactory.size_z / 2) && neighbour[1] >= 0 && neighbour[1] >= largestNeighbour[1]) {
-							largestNeighbour = neighbour;
-						}
-					}
-				}
 			}
 		}
-			
+	}
 
-	
-		//calculate collision with edges parallel to z axis
-		LinePP boxEdge = LinePP(largest, largestNeighbour);
-		LinePP planeEdge = LinePP(Vector(planeFactory.size_x/2, 0, -planeFactory.size_z/2), Vector(planeFactory.size_x/2, 0, planeFactory.size_z/2));
-		Vector boxClosestVertex, planeClosestVertex;
-		
-		IntLinePPLinePP::closestPoints(boxEdge, planeEdge, boxClosestVertex, planeClosestVertex);
-		
-		
-		//check if collision occured
-		if (IntLinePPLinePP::distance(boxEdge, planeEdge) <= 0.1) {
-			c.collision_normal = plane->inverse_model_matrix.getTranspose() * (boxClosestVertex - planeClosestVertex).getNormalized();
-			c.collision_point1 = plane->model_matrix * planeClosestVertex;
-			c.collision_point2 = plane->model_matrix * boxClosestVertex;
-			c.interpenetration_depth = (c.collision_point1 - c.collision_point2).getLength();
-			return true;
-		}
-		
- 
- 
-		//calculate collisions parallel to x axis
-		planeEdge = LinePP(Vector(-planeFactory.size_x/2, 0, planeFactory.size_z/2), Vector(planeFactory.size_x/2, 0, planeFactory.size_z/2));
-		
-		IntLinePPLinePP::closestPoints(boxEdge, planeEdge, boxClosestVertex, planeClosestVertex);
-		
-		
-		//check if collision occured
-		if (IntLinePPLinePP::distance(boxEdge, planeEdge) <= 0.1) {
-			c.collision_normal = plane->inverse_model_matrix.getTranspose() * (planeClosestVertex - boxClosestVertex).getNormalized();
-			c.collision_point1 = plane->model_matrix * planeClosestVertex;
-			c.collision_point2 = plane->model_matrix * boxClosestVertex;
-			c.interpenetration_depth = (c.collision_point1 - c.collision_point2).getLength();
-			return true;
-		}
-		
-		return false;
-	}
-	
-	
-	
-	if (sideOfPlane < 0) {
-		c.collision_normal = plane->inverse_model_matrix.getTranspose() * Vector(0, -1, 0);
-		c.collision_point1 = plane->model_matrix * Vector(maxAbovePlane[0], 0, maxAbovePlane[2]);
-		c.collision_point2 = plane->model_matrix * maxAbovePlane;
-		c.interpenetration_depth = (c.collision_point2 - c.collision_point1).getLength();
-	}
-	else {
-		c.collision_normal = plane->inverse_model_matrix.getTranspose() * Vector(0, 1, 0);
-		c.collision_point1 = plane->model_matrix * Vector(maxBelowPlane[0], 0, maxBelowPlane[2]);
-		c.collision_point2 = plane->model_matrix * maxBelowPlane;
-		c.interpenetration_depth = (c.collision_point2 - c.collision_point1).getLength();
-	}
-	
-	return true;
-	
+	return false;
 #else
 	return false;
 #endif
