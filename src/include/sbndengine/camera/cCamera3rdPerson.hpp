@@ -9,68 +9,46 @@ class cCamera3rdPerson : public iCamera
 {
 	CVector<3, float> distance;
 	CVector<3, float> position;
-	float angle_x, angle_y, angle_z;
-	
+
 public:
 
-	inline void reset()
-	{
-		position.setZero();
-		view_matrix.loadIdentity();
-	}
-	
 	cCamera3rdPerson()
 	{
 		reset();
 	}
 	
-	inline void setup(CVector<3, float> position, CVector<3, float> dist) 
+	void reset() 
 	{
-		reset();
+		view_matrix.loadIdentity();
+		position = CVector<3,float>();
+	}
+	
+	inline void setup(CVector<3, float> dist) 
+	{
 		distance = dist;
-		setPosition(position);
-		computeMatrices();
-		moveRelative(distance);
 	}
 	
-	inline void update(CVector<3, float> position) {
-		reset();
-		setPosition(position);
-		computeMatrices();
-		moveRelative(distance);
-		computeMatrices();
+	inline void update(iRef<iPhysicsObject> physicsObject) {
+		
+		//only object rotation around the y axis is considered
+		CQuaternion<float> quarternion = physicsObject->object->rotation;
+		quarternion.i = 0;
+		quarternion.j = -quarternion.j;
+		quarternion.k = 0;
+		quarternion.normalize();
+		
+		view_matrix = GLSL::translate(-distance)*quarternion.getRotationMatrix()*GLSL::translate(-physicsObject->object->position);
 	}
 	
-	inline const CVector<3,float> getPosition()	const
-	{
+	const CVector<3,float> getPosition() const {
 		return position;
 	}
 	
-	inline void moveRelative(const CVector<3,float> &movement)
-	{
-		position += movement*CMatrix3<float>(view_matrix);
-	}
-	
-	inline void setPosition(const CVector<3,float> &p_position)
-	{
-		position = p_position;
-	}
-	
-	inline void rotate(float deg)
-	{
-		angle_y += deg;
-	}
-	
-	inline void computeMatrices()
+	void computeMatrices()
 	{
 		/**
 		 * rotation of camera
 		 */
-		CQuaternion<float> rotation_quaternion;
-
-		rotation_quaternion.setRotation(CVector<3,float>(0, 1, 0), angle_y);
-
-		view_matrix = CMatrix4<float>(rotation_quaternion.getRotationMatrix())*GLSL::translate(-position);
 	}
 };
 

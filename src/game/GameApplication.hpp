@@ -16,6 +16,7 @@
 
 #include "sbndengine/iSbndEngine.hpp"
 #include "../cGame.hpp"
+#include "Player.hpp"
 #include <iostream>
 
 /*
@@ -29,6 +30,8 @@
 
 #include <stdio.h>
 #include <sstream>
+#include <vector>
+#include <algorithm>
 
 class GameApplication : public
 		iApplication
@@ -46,9 +49,8 @@ class GameApplication : public
 
 	// main engine
 	iEngine engine;
-
-	// game camera
-	cCamera3rdPerson game_camera;
+	
+	std::vector<int> held_keys;
 
 	// storage for the character of the game
 	struct
@@ -57,6 +59,9 @@ class GameApplication : public
 		iRef<iPhysicsObject> physics_object;
 		iRef<iGraphicsObject> graphics_object;
 	} character;
+
+	Player *player;
+	cCamera3rdPerson player_camera;
 
 	/**
 	 * different kinds of materials (so far only colors are supported)
@@ -89,8 +94,7 @@ public:
 	 */
 	void resetPlayer()
 	{		
-		game_camera.setup(character.object->position, CVector<3, float> (0, 2, 3));
-		game_camera.computeMatrices();
+		player->reset();
 	}
 
 	/**
@@ -169,14 +173,8 @@ public:
 		engine.addObject(*character.object);
 		character.physics_object = new iPhysicsObject(*character.object);
 		engine.physics.addObject(character.physics_object);
-	}
 
-
-	/**
-	 * this method cares about the mouse interactivity
-	 */
-	void interactiveMouseActions(std::ostringstream &title_text)
-	{
+		player = new Player(character.physics_object, player_camera, engine);
 	}
 
 	/*
@@ -184,14 +182,10 @@ public:
 	 */
 	void drawFrame()
 	{
-		/*
-		 * CAMERA MOVEMENTS
-		 */
-		character.object->translate(playerVelocity * game_camera.view_matrix * engine.time.frame_elapsed_seconds);
-		game_camera.update(character.object->position);
-		game_camera.rotate(character.physics_object->angular_velocity[1] * engine.time.frame_elapsed_seconds);
-		game_camera.frustum(-1.5f,1.5f,-1.5f*engine.window.aspect_ratio,1.5f*engine.window.aspect_ratio,1,100);
-		game_camera.computeMatrices();
+		handleHeldKeys();
+		
+		player_camera.update(player->getPhysicsObject());
+		player_camera.frustum(-1.5f, 1.5f, -1.5f * engine.window.aspect_ratio, 1.5f * engine.window.aspect_ratio, 1, 100);
 
 		engine.window.setTitle("THIS GAME IS SO MUCH FUN!!1");
 
@@ -203,7 +197,7 @@ public:
 		/*
 		 * GRAPHICS: draw the objects
 		 */
-		engine.graphics.drawFrame(game_camera);
+		engine.graphics.drawFrame(player_camera);
 
 		/*
 		 * output some help information
@@ -211,18 +205,12 @@ public:
 		if (output_gui_key_stroke_information)
 		{
 			int pos_y = 10+14;
-			engine.text.printfxy((float)10, (float)pos_y, "Press [h] to hide this information");	pos_y += 14;
+			engine.text.printfxy((float)10, (float)pos_y, "Press [h] to hide this information"); pos_y += 14;
 			pos_y += 14;
+			engine.text.printfxy((float)10, (float)pos_y, "[r]: reset player position"); pos_y += 14;
 			engine.text.printfxy((float)10, (float)pos_y, "[q]: quit"); pos_y += 14;
 			engine.text.printfxy((float)10, (float)pos_y, "[<-/->]: rotate camera"); pos_y += 14;
 		}
-	}
-
-	/**
-	 * engine callback: init is called only once during the whole program runtime
-	 */
-	void init()
-	{
 	}
 
 	/**
@@ -234,8 +222,9 @@ public:
 
 		setupWorld();
 		resetPlayer();
-	}
 
+		player_camera.setup(CVector<3, float> (0, 2, 3));
+	}
 
 	/**
 	 * simply delete the allocated scenes
@@ -250,31 +239,17 @@ public:
 	 */
 	void keyPressed(int key)
 	{
+		held_keys.push_back(key);
+		
 		switch(key)
 		{
 			// General keys
 			case 'q':	case 'Q':	engine.exit();	break;
 			case 'h':	output_gui_key_stroke_information = !output_gui_key_stroke_information;	break;
+			case 'r':	resetPlayer();	break;
 
-			// Movement control keys
-			case SBND_EVENT_KEY_UP:
-			case 'w': case 'W':
-				playerVelocity[2] = -3;
-				break;
-			case SBND_EVENT_KEY_DOWN:
-			case 's': case 'S':
-				playerVelocity[2] = 3;
-				break;
-			case SBND_EVENT_KEY_LEFT:
-			case 'a': case 'A':
-				character.physics_object->angular_velocity[1] = 2;
-				break;
-			case SBND_EVENT_KEY_RIGHT:
-			case 'd': case 'D':
-				character.physics_object->angular_velocity[1] = -2;
-				break;
 			case ' ':
-				character.physics_object->velocity[1] = 10;
+				player->jump();
 				break;
 		}
 	}
@@ -284,27 +259,43 @@ public:
 	 */
 	void keyReleased(int key)
 	{
+		
+		std::vector<int>::iterator element = std::find(held_keys.begin(), held_keys.end(), key);
+		if (element != held_keys.end()) {
+			held_keys.erase(element);
+		}
+		
 		switch(key)
 		{
-			case SBND_EVENT_KEY_UP:
-			case 'w': case 'W':
-			case SBND_EVENT_KEY_DOWN:
-			case 's': case 'S':
-				playerVelocity[2] = 0;
-				break;
-			case SBND_EVENT_KEY_LEFT:
-			case 'a': case 'A':
-			case SBND_EVENT_KEY_RIGHT:
-			case 'd': case 'D':
-				character.physics_object->angular_velocity[1] = 0;
-				break;
+			
 		}
 	}
-
+	
 	/*
-	 * this method is called by the engine if mouse button 'button' was pressed
+	 * this method is called every frame
 	 */
-	void mouseButtonDown(int button)
+	void handleHeldKeys() 
 	{
+		for (std::vector<int>::iterator key = held_keys.begin(); key != held_keys.end(); key++) {
+			switch(*key)
+			{
+				case SBND_EVENT_KEY_UP:
+				case 'w': case 'W':
+					player->translate(CVector<3, float> (0, 0, -3) * player_camera.view_matrix * engine.time.frame_elapsed_seconds);
+					break;
+				case SBND_EVENT_KEY_DOWN:
+				case 's': case 'S':
+					player->translate(CVector<3, float> (0, 0, 3) * player_camera.view_matrix * engine.time.frame_elapsed_seconds);
+					break;
+				case SBND_EVENT_KEY_LEFT:
+				case 'a': case 'A':
+					player->rotate(CVector<3, float> (0, -2, 0) * engine.time.frame_elapsed_seconds);
+					break;
+				case SBND_EVENT_KEY_RIGHT:
+				case 'd': case 'D':
+					player->rotate(CVector<3, float> (0, 2, 0) * engine.time.frame_elapsed_seconds);
+					break;
+			}
+		}
 	}
 };
