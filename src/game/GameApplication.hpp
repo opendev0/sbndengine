@@ -182,8 +182,8 @@ public:
 	 */
 	void drawFrame()
 	{
-		this->player->move();
-
+		handleHeldKeys();
+		
 		player_camera.update(player->getPhysicsObject());
 		player_camera.frustum(-1.5f, 1.5f, -1.5f * engine.window.aspect_ratio, 1.5f * engine.window.aspect_ratio, 1, 100);
 
@@ -240,6 +240,7 @@ public:
 	void keyPressed(int key)
 	{
 		held_keys.push_back(key);
+		
 		switch(key)
 		{
 			// General keys
@@ -247,23 +248,6 @@ public:
 			case 'h':	output_gui_key_stroke_information = !output_gui_key_stroke_information;	break;
 			case 'r':	resetPlayer();	break;
 
-			// Movement control keys
-			case SBND_EVENT_KEY_UP:
-			case 'w': case 'W':
-				player->setVelocity(-3);
-				break;
-			case SBND_EVENT_KEY_DOWN:
-			case 's': case 'S':
-				player->setVelocity(3);
-				break;
-			case SBND_EVENT_KEY_LEFT:
-			case 'a': case 'A':
-				player->setAngularVelocity(2);
-				break;
-			case SBND_EVENT_KEY_RIGHT:
-			case 'd': case 'D':
-				player->setAngularVelocity(-2);
-				break;
 			case ' ':
 				player->jump();
 				break;
@@ -283,18 +267,35 @@ public:
 		
 		switch(key)
 		{
-			case SBND_EVENT_KEY_UP:
-			case 'w': case 'W':
-			case SBND_EVENT_KEY_DOWN:
-			case 's': case 'S':
-				player->setVelocity(0);
-				break;
-			case SBND_EVENT_KEY_LEFT:
-			case 'a': case 'A':
-			case SBND_EVENT_KEY_RIGHT:
-			case 'd': case 'D':
-				player->setAngularVelocity(0);
-				break;
+			
+		}
+	}
+	
+	/*
+	 * this method is called every frame
+	 */
+	void handleHeldKeys() 
+	{
+		for (std::vector<int>::iterator key = held_keys.begin(); key != held_keys.end(); key++) {
+			switch(*key)
+			{
+				case SBND_EVENT_KEY_UP:
+				case 'w': case 'W':
+					player->translate(CVector<3, float> (0, 0, -3) * player_camera.view_matrix * engine.time.frame_elapsed_seconds);
+					break;
+				case SBND_EVENT_KEY_DOWN:
+				case 's': case 'S':
+					player->translate(CVector<3, float> (0, 0, 3) * player_camera.view_matrix * engine.time.frame_elapsed_seconds);
+					break;
+				case SBND_EVENT_KEY_LEFT:
+				case 'a': case 'A':
+					player->rotate(CVector<3, float> (0, -2, 0) * engine.time.frame_elapsed_seconds);
+					break;
+				case SBND_EVENT_KEY_RIGHT:
+				case 'd': case 'D':
+					player->rotate(CVector<3, float> (0, 2, 0) * engine.time.frame_elapsed_seconds);
+					break;
+			}
 		}
 	}
 };

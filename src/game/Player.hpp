@@ -9,10 +9,6 @@ private:
 	iRef<iPhysicsObject> physicsObject;
 	cCamera3rdPerson &camera;
 
-	// Separate velocities to not bother with collision impulses
-	float velocity;
-	float angularVelocity;
-
 	iEngine &engine;
 
 
@@ -22,36 +18,16 @@ public:
 	{
 	}
 	
+	
 	inline iRef<iPhysicsObject> getPhysicsObject() 
 	{
 		return physicsObject;
 	}
-
-	inline CVector<3, float> getPosition()
-	{
-		return physicsObject->object->position;
-	}
-
-	inline float getAngularVelocity()
-	{
-		return angularVelocity;
-	}
-
-	inline void setPosition(const CVector<3, float> &pos)
-	{
-		physicsObject->object->position = pos;
-	}
-
-	inline void setVelocity(float velocity)
-	{
-		this->velocity = velocity;
-	}
-
-	inline void setAngularVelocity(float angularVelocity)
-	{
-		this->angularVelocity = angularVelocity;
-	}
 	
+	
+	/*
+	 * reset position, rotation and velocities of the player to zero
+	 */
 	void reset()
 	{
 		physicsObject->object->position = CVector<3, float> ();
@@ -60,17 +36,32 @@ public:
 		physicsObject->object->rotation = CQuaternion<float> ();
 		physicsObject->angular_velocity = CVector<3, float> ();
 	}
-
-	void move()
+	
+	
+	/*
+	 * translate the player by dist
+	 */
+	inline void translate(CVector<3, float> dist) 
 	{
-		physicsObject->object->translate(CVector<3, float>(0, 0, velocity) * camera.view_matrix * engine.time.frame_elapsed_seconds);
-		physicsObject->object->rotate(CVector<3, float>(0, 1, 0), -angularVelocity * engine.time.frame_elapsed_seconds);
+		physicsObject->object->translate(dist);
+	}
+	
+	/*
+	 * rotate the player by degree[0] around x-axis, degree[1] around y-axis, and degree[2] around z-axis
+	 */
+	void rotate(CVector<3, float> degree)
+	{
+		physicsObject->object->rotate(CVector<3, float> (1, 0, 0), degree[0]);
+		physicsObject->object->rotate(CVector<3, float> (0, 1, 0), degree[1]);
+		physicsObject->object->rotate(CVector<3, float> (0, 0, 1), degree[2]);
 	}
 
 	inline void jump()
 	{
 		physicsObject->velocity[1] = 7;
 	}
+
+
 
 	bool checkCollision(iRef<iPhysicsObject> object)
 	{
