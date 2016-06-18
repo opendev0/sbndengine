@@ -211,6 +211,9 @@ public:
 			engine.text.printfxy((float)10, (float)pos_y, "[q]: quit"); pos_y += 14;
 			engine.text.printfxy((float)10, (float)pos_y, "[<-/->]: rotate camera"); pos_y += 14;
 		}
+		
+		player->getPhysicsObject()->setAngularSpeed(player->getPhysicsObject()->angular_velocity*0.9);
+		player->getPhysicsObject()->setSpeed(player->getPhysicsObject()->velocity*0.9);
 	}
 
 	/**
@@ -247,6 +250,7 @@ public:
 			case 'q':	case 'Q':	engine.exit();	break;
 			case 'h':	output_gui_key_stroke_information = !output_gui_key_stroke_information;	break;
 			case 'r':	resetPlayer();	break;
+			case 'k':	player_camera.changeMode();	break;
 
 			case ' ':
 				player->jump();

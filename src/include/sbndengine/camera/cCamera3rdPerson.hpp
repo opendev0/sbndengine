@@ -9,12 +9,15 @@ class cCamera3rdPerson : public iCamera
 {
 	CVector<3, float> distance;
 	CVector<3, float> position;
+	
+	bool mode;
 
 public:
 
 	cCamera3rdPerson()
 	{
 		reset();
+		mode = true;
 	}
 	
 	void reset() 
@@ -29,19 +32,30 @@ public:
 	}
 	
 	inline void update(iRef<iPhysicsObject> physicsObject) {
+		CQuaternion<float> quarternion;
+		if (mode) {
+			//only object rotation around the y axis is considered
+			quarternion = physicsObject->object->rotation;
+			quarternion.i = 0;
+			quarternion.j = -quarternion.j;
+			quarternion.k = 0;
+			quarternion.normalize();
+		}
+		else {
+			quarternion.reset();
+		}
 		
-		//only object rotation around the y axis is considered
-		CQuaternion<float> quarternion = physicsObject->object->rotation;
-		quarternion.i = 0;
-		quarternion.j = -quarternion.j;
-		quarternion.k = 0;
-		quarternion.normalize();
+		std::cout << quarternion.getRotationMatrix() << std::endl;
 		
 		view_matrix = GLSL::translate(-distance)*quarternion.getRotationMatrix()*GLSL::translate(-physicsObject->object->position);
 	}
 	
 	const CVector<3,float> getPosition() const {
 		return position;
+	}
+	
+	inline void changeMode() {
+		mode = !mode;
 	}
 	
 	void computeMatrices()
