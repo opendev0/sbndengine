@@ -187,6 +187,7 @@ public:
 		player_camera.update(player->getPosition());
 		player_camera.rotate(player->getAngularVelocity() * engine.time.frame_elapsed_seconds);
 		player_camera.frustum(-1.5f, 1.5f, -1.5f * engine.window.aspect_ratio, 1.5f * engine.window.aspect_ratio, 1, 100);
+		player_camera.computeMatrices();
 
 		engine.window.setTitle("THIS GAME IS SO MUCH FUN!!1");
 
