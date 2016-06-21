@@ -10,6 +10,7 @@ public:
 	iEngine &engine;
 	std::vector<iRef<iObject> > collectables;
 	std::vector<iRef<iObject> > untouchables;
+	std::vector<iRef<iObject> > enemies;
 
 	/**
 	 * different kinds of materials

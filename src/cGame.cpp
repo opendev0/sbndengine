@@ -230,13 +230,17 @@ void CGame::setupWorldBoxPlanes(float scale)
 void CGame::setupGameScene() {
 	setupWorldBoxPlanes();
 
-	iRef<cObjectFactorySphere> sphere_factory = new cObjectFactorySphere(1.0);
+	iRef<cObjectFactorySphere> sphere_factory = new cObjectFactorySphere(0.5);
+	iRef<cObjectFactoryPlane> plane_factory = new cObjectFactoryPlane(0.5, 0.5);
 
 	NEW_SPHERE(sphere, red, 0, 0, -3);
 	untouchables.push_back(sphere);
 
 	NEW_SPHERE(sphere2, green, 3, 0, -3);
 	collectables.push_back(sphere2);
+	
+	NEW_SPHERE(sphere3, blue, -3, 0, -3);
+	enemies.push_back(sphere3);
 }
 
 

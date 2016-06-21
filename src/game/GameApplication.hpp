@@ -344,12 +344,12 @@ public:
 		std::list<CPhysicsCollisionData> collisions = engine.physics.getCollisions();
 
 		for (std::list<CPhysicsCollisionData>::iterator it = collisions.begin(); it != collisions.end(); it++) {
-			if (it->physics_object1->object == character.object) handlePlayerTouch(it->physics_object2);
-			else if (it->physics_object2->object == character.object) handlePlayerTouch(it->physics_object1);
+			if (it->physics_object1->object == character.object) handlePlayerTouch(it->physics_object2, *it);
+			else if (it->physics_object2->object == character.object) handlePlayerTouch(it->physics_object1, *it);
 		}
 	}
 
-	void handlePlayerTouch(const iRef<iPhysicsObject> &physics_object)
+	void handlePlayerTouch(const iRef<iPhysicsObject> &physics_object, const CPhysicsCollisionData &collision)
 	{
 		if (std::find(cGame->untouchables.begin(), cGame->untouchables.end(), physics_object->object) != cGame->untouchables.end()) {
 			state = GAME_OVER;
@@ -358,6 +358,44 @@ public:
 			engine.physics.removeObject(physics_object);
 			engine.graphics.removeObject(physics_object->object);
 			engine.removeObject(*physics_object->object);
+		}
+		else if (std::find(cGame->enemies.begin(), cGame->enemies.end(), physics_object->object) != cGame->enemies.end()) {
+			if (defeated(physics_object, collision)) {
+				engine.physics.removeObject(physics_object);
+				engine.graphics.removeObject(physics_object->object);
+				engine.removeObject(*physics_object->object);
+			}
+			else {
+				state = GAME_OVER;
+			}
+		}
+	}
+	
+	bool defeated(const iRef<iPhysicsObject> &physics_object, const CPhysicsCollisionData &collision) {
+		
+		iRef<cObjectFactoryPlane> plane_factory = new cObjectFactoryPlane();
+		
+		switch(physics_object->object->objectFactory->type)
+		{
+			case iObjectFactory::TYPE_SPHERE:
+			{
+				float sphereRadius = static_cast<cObjectFactorySphere *>(&physics_object->object->objectFactory.getClass())->getRadius();
+				plane_factory->resizePlane(sphereRadius, sphereRadius);
+				
+				CVector<3, float> highest_point = physics_object->object->position + engine.physics.getGravitation().getNormalized() * -sphereRadius;
+				iRef<iObject> plane_id = new iObject("enemy_plane");
+				plane_id->createFromFactory(*plane_factory);
+				plane_id->translate(highest_point);
+				iRef<iPhysicsObject> enemy_plane_physics_object = new iPhysicsObject(*plane_id);
+				
+				//TODO Kollisionsüberprüfung
+				return true;
+			}
+				
+			case iObjectFactory::TYPE_BOX:
+				return false;
+			default:
+				return false;
 		}
 	}
 };

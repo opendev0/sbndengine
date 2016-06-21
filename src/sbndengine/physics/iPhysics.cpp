@@ -78,6 +78,11 @@ void iPhysics::setGravitation(const CVector<3,float> &p_gravitation_vector)
 	privateClass->gravitation_vector = p_gravitation_vector;
 }
 
+const CVector<3, float> iPhysics::getGravitation() 
+{
+	return privateClass->gravitation_vector;
+}
+
 void iPhysics::setMaximumIterations(int p_max_global_iterations, int p_max_local_iterations)
 {
 	privateClass->setMaximumIterations(p_max_global_iterations, p_max_local_iterations);

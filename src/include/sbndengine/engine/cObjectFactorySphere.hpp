@@ -49,6 +49,8 @@ public:
 			int segments_horizontal = 20,
 			int segments_vertical= 10
 		);
+		
+	float getRadius();
 };
 
 #endif // __I_OBJECT_FACTORY_SPHERE_HPP__

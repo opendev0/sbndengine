@@ -92,6 +92,8 @@ public:
 	 */
 	void setGravitation(const CVector<3,float> &p_gravitation_vector);
 
+
+	const CVector<3, float> getGravitation();
 	/**
 	 * do one timestep
 	 *
