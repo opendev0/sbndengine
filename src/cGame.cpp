@@ -231,7 +231,7 @@ void CGame::setupGameScene() {
 	setupWorldBoxPlanes();
 
 	iRef<cObjectFactorySphere> sphere_factory = new cObjectFactorySphere(0.5);
-	iRef<cObjectFactoryPlane> plane_factory = new cObjectFactoryPlane(0.5, 0.5);
+	iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(1, 1, 1);
 
 	NEW_SPHERE(sphere, red, 0, 0, -3);
 	untouchables.push_back(sphere);

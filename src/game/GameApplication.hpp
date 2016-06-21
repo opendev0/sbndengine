@@ -18,6 +18,7 @@
 #include "../cGame.hpp"
 #include "Player.hpp"
 #include "../sbndengine/physics/cPhysicsCollisionData.hpp"
+#include "src/sbndengine/physics/cPhysicsIntersections.hpp"
 #include <iostream>
 #include <algorithm>
 
@@ -385,11 +386,14 @@ public:
 				CVector<3, float> highest_point = physics_object->object->position + engine.physics.getGravitation().getNormalized() * -sphereRadius;
 				iRef<iObject> plane_id = new iObject("enemy_plane");
 				plane_id->createFromFactory(*plane_factory);
-				plane_id->translate(highest_point);
+				plane_id->translate(physics_object->object->position);
 				iRef<iPhysicsObject> enemy_plane_physics_object = new iPhysicsObject(*plane_id);
 				
-				//TODO Kollisionsüberprüfung
-				return true;
+				//iPhysicsObject physics_object_temp = physics_object;
+				CPhysicsCollisionData data;
+				CPhysicsIntersections::multiplexer(player->getPhysicsObject().getClass(), physics_object.getClass(), data);
+				
+				return (data.collision_normal.dotProd(engine.physics.getGravitation() * (-1)) < 0);
 			}
 				
 			case iObjectFactory::TYPE_BOX:
