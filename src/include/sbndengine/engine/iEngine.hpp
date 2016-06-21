@@ -86,6 +86,7 @@ public:
 	 * add an object to be rendered / simulated by the engine
 	 */
 	void addObject(iObject &object);
+	void removeObject(iObject &);
 
 	/**
 	 * update all object model matrix

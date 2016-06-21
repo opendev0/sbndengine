@@ -100,6 +100,11 @@ void iEngine::addObject(iObject &object)
 	objectList.push_back(iRef<iObject>(object));
 }
 
+void iEngine::removeObject(iObject &object)
+{
+	objectList.remove(object);
+}
+
 void iEngine::updateObjectModelMatrices()
 {
 	for (std::list<iRef<iObject> >::iterator i = objectList.begin(); i != objectList.end(); i++)

@@ -272,14 +272,6 @@ public:
 				state = GAME_RUNNING;
 				break;
 
-			case SBND_EVENT_KEY_LEFT:
-			case 'a': case 'A':
-				player->setAngularVelocity(2);
-				break;
-			case SBND_EVENT_KEY_RIGHT:
-			case 'd': case 'D':
-				player->setAngularVelocity(-2);
-				break;
 			case ' ':
 				player->jump();
 				break;
@@ -297,15 +289,17 @@ public:
 			held_keys.erase(element);
 		}
 
-		switch(key)
-		{
-			case SBND_EVENT_KEY_LEFT:
+		switch (key) {
 			case 'a': case 'A':
-				player->setAngularVelocity(0);
-				break;
-			case SBND_EVENT_KEY_RIGHT:
+			case SBND_EVENT_KEY_LEFT:
 			case 'd': case 'D':
-				player->setAngularVelocity(0);
+			case SBND_EVENT_KEY_RIGHT:
+			case 'w': case 'W':
+			case SBND_EVENT_KEY_UP:
+			case 's': case 'S':
+			case SBND_EVENT_KEY_DOWN:
+				character.physics_object->velocity.setZero();
+				character.physics_object->angular_velocity.setZero();
 				break;
 		}
 	}
@@ -329,10 +323,12 @@ public:
 				case SBND_EVENT_KEY_LEFT:
 				case 'a': case 'A':
 					player->rotate(CVector<3, float> (0, -2, 0) * engine.time.frame_elapsed_seconds);
+					player_camera.rotate(2 * engine.time.frame_elapsed_seconds);
 					break;
 				case SBND_EVENT_KEY_RIGHT:
 				case 'd': case 'D':
 					player->rotate(CVector<3, float> (0, 2, 0) * engine.time.frame_elapsed_seconds);
+					player_camera.rotate(-2 * engine.time.frame_elapsed_seconds);
 					break;
 			}
 		}
@@ -346,12 +342,8 @@ public:
 		std::list<CPhysicsCollisionData> collisions = engine.physics.getCollisions();
 
 		for (std::list<CPhysicsCollisionData>::iterator it = collisions.begin(); it != collisions.end(); it++) {
-			if (it->physics_object1->object == character.object) {
-				handlePlayerTouch(it->physics_object2);
-			}
-			else if (it->physics_object2->object == character.object) {
-				handlePlayerTouch(it->physics_object1);
-			}
+			if (it->physics_object1->object == character.object) handlePlayerTouch(it->physics_object2);
+			else if (it->physics_object2->object == character.object) handlePlayerTouch(it->physics_object1);
 		}
 	}
 
@@ -363,6 +355,7 @@ public:
 		else if (std::find(cGame->collectables.begin(), cGame->collectables.end(), physics_object->object) != cGame->collectables.end()) {
 			engine.physics.removeObject(physics_object);
 			engine.graphics.removeObject(physics_object->object);
+			engine.removeObject(*physics_object->object);
 		}
 	}
 };
