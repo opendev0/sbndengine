@@ -32,7 +32,7 @@ void iGraphics::addObject(const iRef<iGraphicsObject> &p_graphics_object)
 
 void iGraphics::removeObject(const iRef<iObject> &p_object)
 {
-	for (std::list<iRef<iGraphicsObject>>::iterator it = objectList.begin(); it != objectList.end(); ++it) {
+	for (std::list<iRef<iGraphicsObject> >::iterator it = objectList.begin(); it != objectList.end(); ++it) {
 		if ((*it)->object == p_object) {
 			objectList.erase(it);
 			return;

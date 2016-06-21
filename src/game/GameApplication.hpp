@@ -269,6 +269,8 @@ public:
 			case 'h':	output_gui_key_stroke_information = !output_gui_key_stroke_information;	break;
 			case 'r':
 				resetPlayer();
+				player_camera.setup(player->getPosition(), CVector<3, float> (0, 2, 3));
+				setupWorld();
 				state = GAME_RUNNING;
 				break;
 

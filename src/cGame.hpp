@@ -8,8 +8,8 @@ class CGame
 {
 public:
 	iEngine &engine;
-	std::vector<iRef<iObject>> collectables;
-	std::vector<iRef<iObject>> untouchables;
+	std::vector<iRef<iObject> > collectables;
+	std::vector<iRef<iObject> > untouchables;
 
 	/**
 	 * different kinds of materials

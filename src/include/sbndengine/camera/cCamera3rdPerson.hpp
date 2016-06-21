@@ -27,6 +27,7 @@ public:
 	inline void setup(CVector<3, float> position, CVector<3, float> dist) 
 	{
 		reset();
+		angle_x = angle_y = angle_z = 0;
 		distance = dist;
 		setPosition(position);
 		computeMatrices();
