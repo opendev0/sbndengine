@@ -127,13 +127,6 @@ public:
 	}
 
 	/**
-	 * setup the scene with the mouse specific objects (mouse ball, object attached ball, etc.)
-	 */
-	void setupSceneMouse()
-	{
-	}
-
-	/**
 	 * enable gravitation in physics engine
 	 */
 	void enableGravitation()
@@ -179,6 +172,8 @@ public:
 		engine.graphics.addObject(character.graphics_object);
 		engine.addObject(*character.object);
 		character.physics_object = new iPhysicsObject(*character.object);
+		character.physics_object->rotational_inertia = CMatrix3<float>(CMath<float>::max());;
+		character.physics_object->rotational_inverse_inertia.setZero();
 		engine.physics.addObject(character.physics_object);
 
 		player = new Player(character.physics_object, player_camera, engine);
@@ -189,11 +184,11 @@ public:
 	 */
 	void drawFrame()
 	{
+		handleHeldKeys();
+
 		switch(state)
 		{
 			case GAME_RUNNING:
-				handleHeldKeys();
-
 				player_camera.update(player->getPosition());
 				player_camera.rotate(player->getAngularVelocity() * engine.time.frame_elapsed_seconds);
 				player_camera.frustum(-1.5f, 1.5f, -1.5f * engine.window.aspect_ratio, 1.5f * engine.window.aspect_ratio, 1, 100);
@@ -227,13 +222,10 @@ public:
 				break;
 
 			case GAME_OVER:
-				handleHeldKeys();
-				
 				player_camera.update(player->getPosition());
 				player_camera.rotate(player->getAngularVelocity() * engine.time.frame_elapsed_seconds);
 				player_camera.computeMatrices();
 				engine.graphics.drawFrame(player_camera);
-				
 
 				engine.text.printfxy((float)10, (float)24, "GAME OVER");
 		}
@@ -275,7 +267,6 @@ public:
 			case 'q':	case 'Q':	engine.exit();	break;
 			case 'h':	output_gui_key_stroke_information = !output_gui_key_stroke_information;	break;
 			case 'r':
-				resetPlayer();
 				player_camera.setup(player->getPosition(), CVector<3, float> (0, 2, 3));
 				setupWorld();
 				state = GAME_RUNNING;
@@ -344,6 +335,7 @@ public:
 							break;
 					}
 					break;
+
 				case GAME_OVER:
 					switch(*key)
 					{
@@ -375,7 +367,7 @@ public:
 		}
 	}
 
-	void handlePlayerTouch(const iRef<iPhysicsObject> &physics_object, const CPhysicsCollisionData &collision)
+	void handlePlayerTouch(iRef<iPhysicsObject> physics_object, const CPhysicsCollisionData &collision)
 	{
 		if (std::find(cGame->untouchables.begin(), cGame->untouchables.end(), physics_object->object) != cGame->untouchables.end()) {
 			state = GAME_OVER;
@@ -397,7 +389,7 @@ public:
 		}
 	}
 	
-	bool defeated(const iRef<iPhysicsObject> &physics_object) {
+	bool defeated(iRef<iPhysicsObject> physics_object) {
 		
 		iRef<cObjectFactoryPlane> plane_factory = new cObjectFactoryPlane();
 		
