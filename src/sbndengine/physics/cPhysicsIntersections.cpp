@@ -74,13 +74,14 @@ bool CPhysicsIntersections::spherePlane(iPhysicsObject &physics_object_sphere, i
 	vec4f spherePos = physics_object_plane.object->inverse_model_matrix * physics_object_sphere.object->position;
 
 	// Check if sphere is inside plane bounds
-	if (spherePos[1] > sphereRadius
-			|| fabs(spherePos[0]) - sphereRadius > planeFactory.size_x / 2 || fabs(spherePos[2]) - sphereRadius > planeFactory.size_z / 2)
+	if (fabs(spherePos[1]) > sphereRadius
+		|| fabs(spherePos[0]) - sphereRadius > planeFactory.size_x / 2 || fabs(spherePos[2]) - sphereRadius > planeFactory.size_z / 2)
 		return false;
-
+	
 	c.physics_object1 = &physics_object_plane;
 	c.physics_object2 = &physics_object_sphere;
-	c.collision_normal = physics_object_plane.object->inverse_model_matrix.getTranspose() * Vector(0, 1, 0);
+	if (spherePos[1] > 0) c.collision_normal = physics_object_plane.object->inverse_model_matrix.getTranspose() * Vector(0, 1, 0);
+	else c.collision_normal = physics_object_plane.object->inverse_model_matrix.getTranspose() * Vector(0, -1, 0);
 	c.collision_point1 = planeMatrix * Vector(spherePos[0], 0, spherePos[2]);
 	c.collision_point2 = physics_object_sphere.object->position - (c.collision_normal * sphereRadius);
 	c.interpenetration_depth = (c.collision_point2 - c.collision_point1).getLength();

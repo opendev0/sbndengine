@@ -232,6 +232,7 @@ void CGame::setupGameScene() {
 
 	iRef<cObjectFactorySphere> sphere_factory = new cObjectFactorySphere(0.5);
 	iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(1, 1, 1);
+	iRef<cObjectFactoryPlane> plane_factory = new cObjectFactoryPlane(1.471, 1.275);
 
 	NEW_SPHERE(sphere, red, 0, 0, -3);
 	untouchables.push_back(sphere);
@@ -241,6 +242,12 @@ void CGame::setupGameScene() {
 	
 	NEW_SPHERE(sphere3, blue, -3, 0, -3);
 	enemies.push_back(sphere3);
+	//sphere3_physics_object->setSpeed(CVector<3, float> (0, 0, 1));
+	
+	NEW_BOX(box, blue, -6, 0, -3);
+	box_physics_object->setInverseMass(0);
+	box->rotate(CVector<3, float> (0, 1, 1).getNormalized(), 0.4);
+	enemies.push_back(box);
 }
 
 

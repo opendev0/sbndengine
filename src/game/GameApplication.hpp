@@ -171,10 +171,10 @@ public:
 
 	void setupCharacter()
 	{
-		iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(1, 1, 1);
+		iRef<cObjectFactorySphere> sphere_factory = new cObjectFactorySphere(0.5);
 
 		character.object = new iObject("character");
-		character.object->createFromFactory(*box_factory);
+		character.object->createFromFactory(*sphere_factory);
 		character.graphics_object = new iGraphicsObject(character.object, materials.playerMaterial);
 		engine.graphics.addObject(character.graphics_object);
 		engine.addObject(*character.object);
@@ -227,7 +227,13 @@ public:
 				break;
 
 			case GAME_OVER:
+				handleHeldKeys();
+				
+				player_camera.update(player->getPosition());
+				player_camera.rotate(player->getAngularVelocity() * engine.time.frame_elapsed_seconds);
+				player_camera.computeMatrices();
 				engine.graphics.drawFrame(player_camera);
+				
 
 				engine.text.printfxy((float)10, (float)24, "GAME OVER");
 		}
@@ -313,26 +319,45 @@ public:
 	void handleHeldKeys()
 	{
 		for (std::vector<int>::iterator key = held_keys.begin(); key != held_keys.end(); key++) {
-			switch(*key)
+			switch(state)
 			{
-				case SBND_EVENT_KEY_UP:
-				case 'w': case 'W':
-					player->translate(CVector<3, float> (0, 0, -3) * player_camera.view_matrix * engine.time.frame_elapsed_seconds);
+				case GAME_RUNNING:
+					switch(*key)
+					{
+						case SBND_EVENT_KEY_UP:
+						case 'w': case 'W':
+							player->translate(CVector<3, float> (0, 0, -3) * player_camera.view_matrix * engine.time.frame_elapsed_seconds);
+							break;
+						case SBND_EVENT_KEY_DOWN:
+						case 's': case 'S':
+							player->translate(CVector<3, float> (0, 0, 3) * player_camera.view_matrix * engine.time.frame_elapsed_seconds);
+							break;
+						case SBND_EVENT_KEY_LEFT:
+						case 'a': case 'A':
+							player->rotate(CVector<3, float> (0, -2, 0) * engine.time.frame_elapsed_seconds);
+							player_camera.rotate(2 * engine.time.frame_elapsed_seconds);
+							break;
+						case SBND_EVENT_KEY_RIGHT:
+						case 'd': case 'D':
+							player->rotate(CVector<3, float> (0, 2, 0) * engine.time.frame_elapsed_seconds);
+							player_camera.rotate(-2 * engine.time.frame_elapsed_seconds);
+							break;
+					}
 					break;
-				case SBND_EVENT_KEY_DOWN:
-				case 's': case 'S':
-					player->translate(CVector<3, float> (0, 0, 3) * player_camera.view_matrix * engine.time.frame_elapsed_seconds);
-					break;
-				case SBND_EVENT_KEY_LEFT:
-				case 'a': case 'A':
-					player->rotate(CVector<3, float> (0, -2, 0) * engine.time.frame_elapsed_seconds);
-					player_camera.rotate(2 * engine.time.frame_elapsed_seconds);
-					break;
-				case SBND_EVENT_KEY_RIGHT:
-				case 'd': case 'D':
-					player->rotate(CVector<3, float> (0, 2, 0) * engine.time.frame_elapsed_seconds);
-					player_camera.rotate(-2 * engine.time.frame_elapsed_seconds);
-					break;
+				case GAME_OVER:
+					switch(*key)
+					{
+						case SBND_EVENT_KEY_LEFT:
+						case 'a': case 'A':
+							player->rotate(CVector<3, float> (0, -2, 0) * engine.time.frame_elapsed_seconds);
+							player_camera.rotate(2 * engine.time.frame_elapsed_seconds);
+							break;
+						case SBND_EVENT_KEY_RIGHT:
+						case 'd': case 'D':
+							player->rotate(CVector<3, float> (0, 2, 0) * engine.time.frame_elapsed_seconds);
+							player_camera.rotate(-2 * engine.time.frame_elapsed_seconds);
+							break; 
+					}
 			}
 		}
 	}
@@ -381,23 +406,57 @@ public:
 			case iObjectFactory::TYPE_SPHERE:
 			{
 				float sphereRadius = static_cast<cObjectFactorySphere *>(&physics_object->object->objectFactory.getClass())->getRadius();
-				plane_factory->resizePlane(sphereRadius, sphereRadius);
+				plane_factory->resizePlane(sphereRadius * 2, sphereRadius * 2);
 				
-				CVector<3, float> highest_point = physics_object->object->position + engine.physics.getGravitation().getNormalized() * -sphereRadius;
+				CVector<3, float> highest_point = physics_object->object->position + CVector<3, float> (0, sphereRadius, 0);
 				iRef<iObject> plane_id = new iObject("enemy_plane");
 				plane_id->createFromFactory(*plane_factory);
-				plane_id->translate(physics_object->object->position);
+				plane_id->translate(highest_point);
+				plane_id->updateModelMatrix();
 				iRef<iPhysicsObject> enemy_plane_physics_object = new iPhysicsObject(*plane_id);
 				
 				//iPhysicsObject physics_object_temp = physics_object;
 				CPhysicsCollisionData data;
-				CPhysicsIntersections::multiplexer(player->getPhysicsObject().getClass(), physics_object.getClass(), data);
+				CPhysicsIntersections::multiplexer(enemy_plane_physics_object.getClass(), player->getPhysicsObject().getClass(), data);
 				
-				return (data.collision_normal.dotProd(engine.physics.getGravitation() * (-1)) < 0);
+				return (data.collision_normal.dotProd(engine.physics.getGravitation() * (-1)) > 0);
 			}
 				
 			case iObjectFactory::TYPE_BOX:
-				return false;
+			{
+				CVector<3, float> boxHalfSize = static_cast<cObjectFactoryBox *>(&physics_object->object->objectFactory.getClass())->getBoxHalfSize();
+				CVector<3, float> vertexList[8] = {CVector<3, float>(-boxHalfSize[0], -boxHalfSize[1], -boxHalfSize[2]), CVector<3, float>(-boxHalfSize[0], -boxHalfSize[1], boxHalfSize[2]), 
+							CVector<3, float>(-boxHalfSize[0], boxHalfSize[1], -boxHalfSize[2]), CVector<3, float>(-boxHalfSize[0], boxHalfSize[1], boxHalfSize[2]),
+							CVector<3, float>(boxHalfSize[0], -boxHalfSize[1], -boxHalfSize[2]), CVector<3, float>(boxHalfSize[0], -boxHalfSize[1], boxHalfSize[2]), 
+							CVector<3, float>(boxHalfSize[0], boxHalfSize[1], -boxHalfSize[2]), CVector<3, float>(boxHalfSize[0], boxHalfSize[1], boxHalfSize[2])};
+							
+				float x_max, y_max, z_max;
+				x_max = y_max = z_max = -CMath<float>::inf();
+				float x_min, z_min;
+				x_min = z_min = CMath<float>::inf();
+				
+				for (int i = 0; i < 8; i++) {
+					CVector<3, float> current = physics_object->object->model_matrix * vertexList[i];
+					if (current[0] > x_max) x_max = current[0];
+					if (current[1] > y_max) y_max = current[1];
+					if (current[2] > z_max) z_max = current[2];
+					if (current[0] < x_min) x_min = current[0];
+					if (current[2] < z_min) z_min = current[2];
+				}
+				
+				plane_factory->resizePlane(x_max - x_min, z_max - z_min);
+				
+				iRef<iObject> plane_id = new iObject("enemy_plane");
+				plane_id->createFromFactory(*plane_factory);
+				plane_id->translate(physics_object->object->position[0], y_max, physics_object->object->position[2]);
+				plane_id->updateModelMatrix();
+				iRef<iPhysicsObject> enemy_plane_physics_object = new iPhysicsObject(*plane_id);
+				
+				CPhysicsCollisionData data;
+				CPhysicsIntersections::multiplexer(enemy_plane_physics_object.getClass(), player->getPhysicsObject().getClass(), data);
+				
+				return (data.collision_normal.dotProd(engine.physics.getGravitation() * (-1)) > 0);
+			}
 			default:
 				return false;
 		}

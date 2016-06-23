@@ -69,6 +69,8 @@ public:
 	void setMass(
 			float p_mass = 1.0
 		);
+		
+	CVector<3, float> getBoxHalfSize();
 };
 
 #endif // __I_OBJECT_FACTORY_BOX_HPP__
