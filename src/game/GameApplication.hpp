@@ -386,7 +386,7 @@ public:
 			engine.removeObject(*physics_object->object);
 		}
 		else if (std::find(cGame->enemies.begin(), cGame->enemies.end(), physics_object->object) != cGame->enemies.end()) {
-			if (defeated(physics_object, collision)) {
+			if (defeated(physics_object)) {
 				engine.physics.removeObject(physics_object);
 				engine.graphics.removeObject(physics_object->object);
 				engine.removeObject(*physics_object->object);
@@ -397,7 +397,7 @@ public:
 		}
 	}
 	
-	bool defeated(const iRef<iPhysicsObject> &physics_object, const CPhysicsCollisionData &collision) {
+	bool defeated(const iRef<iPhysicsObject> &physics_object) {
 		
 		iRef<cObjectFactoryPlane> plane_factory = new cObjectFactoryPlane();
 		
