@@ -154,3 +154,8 @@ void cObjectFactorySphere::resizeSphere(
 
 	setupBoundingSphereRadius();
 }
+
+float cObjectFactorySphere::getRadius() 
+{
+	return radius;
+}

@@ -127,3 +127,9 @@ void cObjectFactoryBox::setMass(
 	mass = p_mass;
 	inv_mass = 1.0f/p_mass;
 }
+
+
+CVector<3, float> cObjectFactoryBox::getBoxHalfSize()
+{
+	return half_size;
+}
