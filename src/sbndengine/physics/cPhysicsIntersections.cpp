@@ -292,8 +292,8 @@ bool CPhysicsIntersections::planeBox(iPhysicsObject &physics_object_plane, iPhys
 
 	c.physics_object1 = &physics_object_plane;
 	c.physics_object2 = &physics_object_box;
-   
- 
+
+
 	//check for edge/edge collisions
 	if (!vertecesOutsidePlane.empty()) {
 		

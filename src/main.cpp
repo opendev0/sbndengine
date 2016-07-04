@@ -890,7 +890,7 @@ int main(int argc, char **argv)
 	global_argv = argv;
 
 	{
-		GameApplication *cA = new GameApplication;
+		iApplication *cA = new GameApplication;
 
 #ifdef DEBUG
 		if (!debug_ibase_list.empty())

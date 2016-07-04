@@ -17,6 +17,7 @@
 #include "sbndengine/iSbndEngine.hpp"
 #include "../cGame.hpp"
 #include "Player.hpp"
+#include "Enemy.hpp"
 #include "../sbndengine/physics/cPhysicsCollisionData.hpp"
 #include "src/sbndengine/physics/cPhysicsIntersections.hpp"
 #include <iostream>
@@ -97,14 +98,6 @@ public:
 	}
 
 	/**
-	 * reset the players state
-	 */
-	void resetPlayer()
-	{
-		player->reset();
-	}
-
-	/**
 	 * setup materials
 	 */
 	void setupMaterials()
@@ -164,10 +157,10 @@ public:
 
 	void setupCharacter()
 	{
-		iRef<cObjectFactorySphere> sphere_factory = new cObjectFactorySphere(0.5);
+		iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(0.75, 2, 0.75);
 
 		character.object = new iObject("character");
-		character.object->createFromFactory(*sphere_factory);
+		character.object->createFromFactory(*box_factory);
 		character.graphics_object = new iGraphicsObject(character.object, materials.playerMaterial);
 		engine.graphics.addObject(character.graphics_object);
 		engine.addObject(*character.object);
@@ -194,13 +187,16 @@ public:
 				player_camera.frustum(-1.5f, 1.5f, -1.5f * engine.window.aspect_ratio, 1.5f * engine.window.aspect_ratio, 1, 100);
 				player_camera.computeMatrices();
 
+				for (auto enemy : cGame->enemies) {
+					enemy->move();
+				}
+
 				engine.window.setTitle("THIS GAME IS SO MUCH FUN!!1");
 
 				/*
 				 * PHYSICS: do one simulation step
 				 */
 				engine.physics.simulationTimestep(engine.time.elapsed_seconds);
-				handleCollisions();
 
 				/*
 				 * GRAPHICS: draw the objects
@@ -236,14 +232,16 @@ public:
 	 */
 	void setup()
 	{
+		engine.physics.registerPreCollisionCallback(std::bind(&GameApplication::handleCollisions, this, std::placeholders::_1));
 		cGame = new CGame(engine);
+		held_keys.clear();
 
 		state = GAME_RUNNING;
 
 		setupWorld();
-		resetPlayer();
+		player->reset();
 
-		player_camera.setup(player->getPosition(), CVector<3, float> (0, 2, 3));
+		player_camera.setup(player->getPosition(), CVector<3, float> (0, 2, 3.5));
 	}
 
 	/**
@@ -267,8 +265,12 @@ public:
 			case 'q':	case 'Q':	engine.exit();	break;
 			case 'h':	output_gui_key_stroke_information = !output_gui_key_stroke_information;	break;
 			case 'r':
-				player_camera.setup(player->getPosition(), CVector<3, float> (0, 2, 3));
+				player_camera.setup(player->getPosition(), CVector<3, float> (0, 2, 3.5));
 				setupWorld();
+				/*engine.clear();
+				player->reset();
+				cGame->setupGameScene();*/
+
 				state = GAME_RUNNING;
 				break;
 
@@ -348,7 +350,7 @@ public:
 						case 'd': case 'D':
 							player->rotate(CVector<3, float> (0, 2, 0) * engine.time.frame_elapsed_seconds);
 							player_camera.rotate(-2 * engine.time.frame_elapsed_seconds);
-							break; 
+							break;
 					}
 			}
 		}
@@ -357,100 +359,51 @@ public:
 	/*
 	 * this method is called each frame
 	 */
-	void handleCollisions()
+	void handleCollisions(std::list<CPhysicsCollisionData> &collisions)
 	{
-		std::list<CPhysicsCollisionData> collisions = engine.physics.getCollisions();
-
 		for (std::list<CPhysicsCollisionData>::iterator it = collisions.begin(); it != collisions.end(); it++) {
-			if (it->physics_object1->object == character.object) handlePlayerTouch(it->physics_object2, *it);
-			else if (it->physics_object2->object == character.object) handlePlayerTouch(it->physics_object1, *it);
+			bool deleteCollision;
+			if (it->physics_object1->object == character.object)
+				deleteCollision = handlePlayerTouch(it->physics_object2, *it);
+			else if (it->physics_object2->object == character.object)
+				deleteCollision = handlePlayerTouch(it->physics_object1, *it);
+
+			if (deleteCollision) {
+				collisions.erase(it);
+				it--;
+			}
 		}
 	}
 
-	void handlePlayerTouch(iRef<iPhysicsObject> physics_object, const CPhysicsCollisionData &collision)
+	bool handlePlayerTouch(const iRef<iPhysicsObject> &physics_object, CPhysicsCollisionData &collision)
 	{
 		if (std::find(cGame->untouchables.begin(), cGame->untouchables.end(), physics_object->object) != cGame->untouchables.end()) {
 			state = GAME_OVER;
+			return true;
 		}
 		else if (std::find(cGame->collectables.begin(), cGame->collectables.end(), physics_object->object) != cGame->collectables.end()) {
 			engine.physics.removeObject(physics_object);
 			engine.graphics.removeObject(physics_object->object);
 			engine.removeObject(*physics_object->object);
+			return true;
 		}
-		else if (std::find(cGame->enemies.begin(), cGame->enemies.end(), physics_object->object) != cGame->enemies.end()) {
-			if (defeated(physics_object)) {
-				engine.physics.removeObject(physics_object);
-				engine.graphics.removeObject(physics_object->object);
-				engine.removeObject(*physics_object->object);
-			}
-			else {
-				state = GAME_OVER;
-			}
-		}
-	}
-	
-	bool defeated(iRef<iPhysicsObject> physics_object) {
-		
-		iRef<cObjectFactoryPlane> plane_factory = new cObjectFactoryPlane();
-		
-		switch(physics_object->object->objectFactory->type)
-		{
-			case iObjectFactory::TYPE_SPHERE:
-			{
-				float sphereRadius = static_cast<cObjectFactorySphere *>(&physics_object->object->objectFactory.getClass())->getRadius();
-				plane_factory->resizePlane(sphereRadius * 2, sphereRadius * 2);
-				
-				CVector<3, float> highest_point = physics_object->object->position + CVector<3, float> (0, sphereRadius, 0);
-				iRef<iObject> plane_id = new iObject("enemy_plane");
-				plane_id->createFromFactory(*plane_factory);
-				plane_id->translate(highest_point);
-				plane_id->updateModelMatrix();
-				iRef<iPhysicsObject> enemy_plane_physics_object = new iPhysicsObject(*plane_id);
-				
-				//iPhysicsObject physics_object_temp = physics_object;
-				CPhysicsCollisionData data;
-				CPhysicsIntersections::multiplexer(enemy_plane_physics_object.getClass(), player->getPhysicsObject().getClass(), data);
-				
-				return (data.collision_normal.dotProd(engine.physics.getGravitation() * (-1)) > 0);
-			}
-				
-			case iObjectFactory::TYPE_BOX:
-			{
-				CVector<3, float> boxHalfSize = static_cast<cObjectFactoryBox *>(&physics_object->object->objectFactory.getClass())->getBoxHalfSize();
-				CVector<3, float> vertexList[8] = {CVector<3, float>(-boxHalfSize[0], -boxHalfSize[1], -boxHalfSize[2]), CVector<3, float>(-boxHalfSize[0], -boxHalfSize[1], boxHalfSize[2]), 
-							CVector<3, float>(-boxHalfSize[0], boxHalfSize[1], -boxHalfSize[2]), CVector<3, float>(-boxHalfSize[0], boxHalfSize[1], boxHalfSize[2]),
-							CVector<3, float>(boxHalfSize[0], -boxHalfSize[1], -boxHalfSize[2]), CVector<3, float>(boxHalfSize[0], -boxHalfSize[1], boxHalfSize[2]), 
-							CVector<3, float>(boxHalfSize[0], boxHalfSize[1], -boxHalfSize[2]), CVector<3, float>(boxHalfSize[0], boxHalfSize[1], boxHalfSize[2])};
-							
-				float x_max, y_max, z_max;
-				x_max = y_max = z_max = -CMath<float>::inf();
-				float x_min, z_min;
-				x_min = z_min = CMath<float>::inf();
-				
-				for (int i = 0; i < 8; i++) {
-					CVector<3, float> current = physics_object->object->model_matrix * vertexList[i];
-					if (current[0] > x_max) x_max = current[0];
-					if (current[1] > y_max) y_max = current[1];
-					if (current[2] > z_max) z_max = current[2];
-					if (current[0] < x_min) x_min = current[0];
-					if (current[2] < z_min) z_min = current[2];
+		else {
+			for (auto enemy : cGame->enemies) {
+				if (*enemy != physics_object) continue;
+
+				if (enemy->defeated(collision)) {
+					engine.physics.removeObject(physics_object);
+					engine.graphics.removeObject(physics_object->object);
+					engine.removeObject(*physics_object->object);
+					return true;
 				}
-				
-				plane_factory->resizePlane(x_max - x_min, z_max - z_min);
-				
-				iRef<iObject> plane_id = new iObject("enemy_plane");
-				plane_id->createFromFactory(*plane_factory);
-				plane_id->translate(physics_object->object->position[0], y_max, physics_object->object->position[2]);
-				plane_id->updateModelMatrix();
-				iRef<iPhysicsObject> enemy_plane_physics_object = new iPhysicsObject(*plane_id);
-				
-				CPhysicsCollisionData data;
-				CPhysicsIntersections::multiplexer(enemy_plane_physics_object.getClass(), player->getPhysicsObject().getClass(), data);
-				
-				return (data.collision_normal.dotProd(engine.physics.getGravitation() * (-1)) > 0);
+				else {
+					state = GAME_OVER;
+					return true;
+				}
 			}
-			default:
-				return false;
 		}
+
+		return false;
 	}
 };

@@ -47,7 +47,7 @@ public:
 		return position;
 	}
 	
-	inline void moveRelative(CVector<3, float> &movement)
+	inline void moveRelative(const CVector<3, float> &movement)
 	{
 		position += movement * CMatrix3<float>(view_matrix);
 	}

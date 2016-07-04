@@ -78,7 +78,7 @@ void iPhysics::setGravitation(const CVector<3,float> &p_gravitation_vector)
 	privateClass->gravitation_vector = p_gravitation_vector;
 }
 
-const CVector<3, float> iPhysics::getGravitation() 
+const CVector<3, float> iPhysics::getGravitation() const
 {
 	return privateClass->gravitation_vector;
 }
@@ -122,7 +122,7 @@ void iPhysics::detectAndResolveInterpenetrations()
 	privateClass->detectAndResolveInterpenetrations();
 }
 
-std::list<CPhysicsCollisionData> iPhysics::getCollisions()
+void iPhysics::registerPreCollisionCallback(std::function<void(std::list<CPhysicsCollisionData> &)> callback)
 {
-	return privateClass->collisions;
+	privateClass->preCollisionCallback = callback;
 }

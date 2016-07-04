@@ -18,6 +18,7 @@
 #define CPHYSICS_ENGINE_PRIVATE_HPP
 
 #include <list>
+#include <functional>
 #include "cPhysicsIntersections.hpp"
 #include "sbndengine/physics/iPhysicsHardConstraint.hpp"
 #include "sbndengine/physics/iPhysicsObject.hpp"
@@ -84,11 +85,11 @@ class cPhysicsEngine_Private
 	double angular_damping_threshold;
 	double angular_damping_factor;
 
+	std::function<void(std::list<CPhysicsCollisionData> &)> preCollisionCallback;
+
 public:
 	/// elapsed seconds in the last frame
 	double simulation_timestep_size;
-	
-	std::list<CPhysicsCollisionData> collisions;
 
 	cPhysicsEngine_Private();
 

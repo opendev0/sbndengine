@@ -22,6 +22,7 @@
 #include "iPhysicsSoftConstraint.hpp"
 #include "iPhysicsHardConstraint.hpp"
 #include <list>
+#include <functional>
 #include "libmath/CVector.hpp"
 #include "sbndengine/iTime.hpp"
 #include "sbndengine/physics/iPhysicsDebug.hpp"
@@ -93,7 +94,7 @@ public:
 	void setGravitation(const CVector<3,float> &p_gravitation_vector);
 
 
-	const CVector<3, float> getGravitation();
+	const CVector<3, float> getGravitation() const;
 	/**
 	 * do one timestep
 	 *
@@ -139,7 +140,6 @@ public:
 	 */
 	void detectAndResolveInterpenetrations();
 	
-	
-	std::list<CPhysicsCollisionData> getCollisions();
+	void registerPreCollisionCallback(std::function<void(std::list<CPhysicsCollisionData> &)>);
 };
 #endif

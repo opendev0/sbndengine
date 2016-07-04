@@ -241,13 +241,18 @@ void CGame::setupGameScene() {
 	collectables.push_back(sphere2);
 	
 	NEW_SPHERE(sphere3, blue, -3, 0, -3);
-	enemies.push_back(sphere3);
+	PathEnemy *boxEnemy = new PathEnemy(sphere3_physics_object, engine);
+	boxEnemy->addCheckpoint(CVector<3, float>(-3, -3, 3));
+	boxEnemy->addCheckpoint(CVector<3, float>(0, -3, -3));
+	boxEnemy->addCheckpoint(CVector<3, float>(0, -3, 0));
+	enemies.push_back(boxEnemy);
 	//sphere3_physics_object->setSpeed(CVector<3, float> (0, 0, 1));
 	
 	NEW_BOX(box, blue, -6, 0, -3);
 	box_physics_object->setInverseMass(0);
 	box->rotate(CVector<3, float> (0, 1, 1).getNormalized(), 0.4);
-	enemies.push_back(box);
+	enemies.push_back(new PathEnemy(box_physics_object, engine));
+	//enemies.push_back(box);
 }
 
 

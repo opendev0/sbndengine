@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "sbndengine/iSbndEngine.hpp"
+#include "game/PathEnemy.hpp"
 
 class CGame
 {
@@ -10,7 +11,8 @@ public:
 	iEngine &engine;
 	std::vector<iRef<iObject> > collectables;
 	std::vector<iRef<iObject> > untouchables;
-	std::vector<iRef<iObject> > enemies;
+	//std::vector<iRef<iObject> > enemies;
+	std::vector<Enemy *> enemies;
 
 	/**
 	 * different kinds of materials
