@@ -70,6 +70,8 @@ public:
 			float p_mass = 1.0
 		);
 		
+	void setInverseMass(float m);
+		
 	CVector<3, float> getBoxHalfSize();
 };
 

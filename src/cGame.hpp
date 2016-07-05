@@ -48,6 +48,8 @@ public:
 
 
 	void setupWorldBoxPlanes(float scale = 1.0);
+	
+	void fourRooms();
 
 	CGame(iEngine &io_engine);
 

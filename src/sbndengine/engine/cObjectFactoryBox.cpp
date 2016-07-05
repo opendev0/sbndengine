@@ -33,6 +33,11 @@ float cObjectFactoryBox::getInverseMass()
 	return inv_mass;
 }
 
+void cObjectFactoryBox::setInverseMass(float m)
+{
+	inv_mass = m;
+}
+
 cObjectFactoryBox::cObjectFactoryBox(
 		float p_size_x,
 		float p_size_y,

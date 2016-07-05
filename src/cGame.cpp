@@ -10,9 +10,9 @@
  * see code below how to use these macros
  */
 
-#define NEW_PLANE(plane_id, color, px, py, pz)							\
+#define NEW_PLANE(plane_id, color, px, py, pz, factory)							\
 		iRef<iObject> plane_id = new iObject(#plane_id);				\
-		plane_id->createFromFactory(*plane_factory);					\
+		plane_id->createFromFactory(*factory);					\
 		plane_id->translate(px, py, pz);														\
 		iRef<iGraphicsObject> plane_id##_graphics_object = new iGraphicsObject(plane_id, materials.color);	\
 		engine.graphics.addObject(plane_id##_graphics_object);			\
@@ -22,9 +22,9 @@
 		engine.physics.addObject(plane_id##_physics_object);
 
 
-#define NEW_SPHERE(sphere_id, color, px, py, pz)						\
+#define NEW_SPHERE(sphere_id, color, px, py, pz, factory)						\
 		iRef<iObject> sphere_id = new iObject(""#sphere_id);			\
-		sphere_id->createFromFactory(*sphere_factory);					\
+		sphere_id->createFromFactory(*factory);					\
 		sphere_id->translate(px, py, pz);								\
 		iRef<iGraphicsObject> sphere_id##_graphics_object = new iGraphicsObject(sphere_id, materials.color);	\
 		engine.graphics.addObject(sphere_id##_graphics_object);			\
@@ -33,9 +33,9 @@
 		engine.physics.addObject(sphere_id##_physics_object);
 
 
-#define NEW_BOX(box_id, color, px, py, pz)								\
+#define NEW_BOX(box_id, color, px, py, pz, factory)								\
 		iRef<iObject> box_id = new iObject(""#box_id);					\
-		box_id->createFromFactory(*box_factory);						\
+		box_id->createFromFactory(*factory);						\
 		box_id->translate(px, py, pz);									\
 		iRef<iGraphicsObject> box_id##_graphics_object = new iGraphicsObject(box_id, materials.color);	\
 		engine.graphics.addObject(box_id##_graphics_object);			\
@@ -144,15 +144,15 @@ void CGame::setupMaterials()
 	materials.pink_noise->setTexture(texture);
 
 	texture = new iTexture;
-	texture->createTextureFromFile(TEXTURE_PATH "boden_1.jpg");
+	texture->createTextureFromFile(TEXTURE_PATH "boden_12.jpg");
 	materials.boden_1 = new iGraphicsMaterial;
 	materials.boden_1->setTexture(texture);
 	texture = new iTexture;
-	texture->createTextureFromFile(TEXTURE_PATH "boden_1Normal.jpg");
+	texture->createTextureFromFile(TEXTURE_PATH "wand_18Normal.jpg");
 	materials.boden_1->setNormalTexture(texture);
 
 	texture = new iTexture;
-	texture->createTextureFromFile(TEXTURE_PATH "wand_18.jpg");
+	texture->createTextureFromFile(TEXTURE_PATH "wall.jpg");
 	materials.wand_18 = new iGraphicsMaterial;
 	materials.wand_18->setTexture(texture);
 	texture = new iTexture;
@@ -209,50 +209,194 @@ void CGame::setupWorldBoxPlanes(float scale)
 	 */
 	iRef<iPhysicsObject> new_physics_object;
 
-	iRef<cObjectFactoryPlane> plane_factory = new cObjectFactoryPlane(20.f*scale, 20.f*scale);
+	iRef<cObjectFactoryPlane> plane_factory = new cObjectFactoryPlane(25.f*scale, 25.f*scale);
 	plane_factory->setInverseMass(0);
 
-	NEW_PLANE(plane0, boden_1, 0, -3*scale, 0);
-	NEW_PLANE(plane1, wand_18, 0, 0, -10*scale);
+	NEW_PLANE(plane0, boden_1, 0, -3*scale, 0, plane_factory);
+	NEW_PLANE(plane1, wand_18, 0, 0, -10*scale, plane_factory);
 	plane1->rotate(CVector<3,float>(1, 0, 0), -CMath<float>::PI()*0.5f);
-	NEW_PLANE(plane2, wand_18, -10*scale, 0, 0);
+	NEW_PLANE(plane2, wand_18, -10*scale, 0, 0, plane_factory);
 	plane2->rotate(CVector<3,float>(0, 1, 0), -CMath<float>::PI()*0.5f);
 	plane2->rotate(CVector<3,float>(0, 0, 1), CMath<float>::PI()*0.5f);
-	NEW_PLANE(plane3, wand_18, 10*scale, 0, 0);
+	NEW_PLANE(plane3, wand_18, 10*scale, 0, 0, plane_factory);
 	plane3->rotate(CVector<3,float>(0, 1, 0), CMath<float>::PI()*0.5f);
 	plane3->rotate(CVector<3,float>(0, 0, 1), -CMath<float>::PI()*0.5f);
-	NEW_PLANE(plane4, wand_18, 0, 0, 10*scale);
+	NEW_PLANE(plane4, wand_18, 0, 0, 10*scale, plane_factory);
 	plane4->rotate(CVector<3,float>(0, 1, 0), -CMath<float>::PI());
 	plane4->rotate(CVector<3,float>(1, 0, 0), CMath<float>::PI()*0.5f);
 }
 
 
+void CGame::fourRooms()
+{
+	iRef<cObjectFactoryBox> wall_factory = new cObjectFactoryBox(0.5, 18, 20);
+	NEW_PLANE(wall1, grey_noise, 0, 0, 0, wall_factory);
+	wall1->rotate(CVector<3, float>(0, 1, 0), -CMath<float>::PI()*0.5f);
+	wall1->rotate(CVector<3, float>(0, 0, 1), CMath<float>::PI()*0.5f);
+	wall1_physics_object->setInverseMass(0);
+			
+			
+	NEW_PLANE(wall3, grey_noise, 0, 0, 0, wall_factory);
+	wall3->rotate(CVector<3, float>(0, 1, 0), CMath<float>::PI());
+	wall3->rotate(CVector<3, float>(1, 0, 0), CMath<float>::PI()*0.5f);
+	wall3_physics_object->setInverseMass(0);
+}
+
+
 void CGame::setupGameScene() {
 	setupWorldBoxPlanes();
-
-	iRef<cObjectFactorySphere> sphere_factory = new cObjectFactorySphere(0.5);
-	iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(1, 1, 1);
-	iRef<cObjectFactoryPlane> plane_factory = new cObjectFactoryPlane(1.471, 1.275);
-
-	NEW_SPHERE(sphere, red, 0, 0, -3);
-	untouchables.push_back(sphere);
-
-	NEW_SPHERE(sphere2, green, 3, 0, -3);
-	collectables.push_back(sphere2);
+	iRef<cObjectFactorySphere> coin_factory = new cObjectFactorySphere(0.1);
 	
-	NEW_SPHERE(sphere3, blue, -3, 0, -3);
-	PathEnemy *boxEnemy = new PathEnemy(sphere3_physics_object, engine);
-	boxEnemy->addCheckpoint(CVector<3, float>(-3, -3, 3));
-	boxEnemy->addCheckpoint(CVector<3, float>(0, -3, -3));
-	boxEnemy->addCheckpoint(CVector<3, float>(0, -3, 0));
-	enemies.push_back(boxEnemy);
-	//sphere3_physics_object->setSpeed(CVector<3, float> (0, 0, 1));
+	fourRooms();
 	
-	NEW_BOX(box, blue, -6, 0, -3);
-	box_physics_object->setInverseMass(0);
-	box->rotate(CVector<3, float> (0, 1, 1).getNormalized(), 0.4);
-	enemies.push_back(new PathEnemy(box_physics_object, engine));
-	//enemies.push_back(box);
+//stairs
+{
+	float stairX = 4;
+	float stairZ = -4;
+	
+	//-------------------------------------------------------------------------
+	
+	iRef<cObjectFactoryBox> stair_factory = new cObjectFactoryBox(0.5, 2, 0.5);
+	stair_factory->setInverseMass(0);
+	
+	NEW_BOX(platform1, grey_noise, stairX, -2, stairZ, stair_factory);
+	
+	NEW_BOX(platform2_1, grey_noise, stairX, -2, stairZ - 2, stair_factory);	
+	NEW_BOX(platform2_2, grey_noise, stairX, 0, stairZ - 2, stair_factory);
+	
+	NEW_BOX(platform3_1, grey_noise, stairX, -2, stairZ - 5, stair_factory);
+	NEW_BOX(platform3_2, grey_noise, stairX, 0, stairZ - 5, stair_factory);	
+	NEW_BOX(platform3_3, grey_noise, stairX, 2, stairZ - 5, stair_factory);
+	
+	//-------------------------------------------------------------------------
+	
+	//-------------------------------------------------------------------------
+	
+	NEW_SPHERE(coin1, green, stairX, -0.9, stairZ, coin_factory);
+	collectables.push_back(coin1);
+	
+	NEW_SPHERE(coin2, green, stairX, 1.1, stairZ - 2, coin_factory);
+	collectables.push_back(coin2);
+	
+	NEW_SPHERE(coin3, green, stairX, 3.1, stairZ - 5, coin_factory);
+	collectables.push_back(coin3);
+}
+
+//ramp
+{
+	float rampX = -10;
+	float rampZ = -10;
+	
+	iRef<cObjectFactoryBox> ramp_factory = new cObjectFactoryBox(5, 5, 6);
+	NEW_BOX(ramp, white_noise, rampX, -3, rampZ + 5, ramp_factory);
+	ramp_physics_object->setInverseMass(0);
+	ramp->rotate(CVector<3, float> (0, 0, 1), CMath<float>::PI()*0.25f);
+	
+	iRef<cObjectFactoryBox> ramp_side_factory = new cObjectFactoryBox(8.5, 7.5, 0.25);
+	NEW_BOX(ramp_side1, white_noise, rampX, -3, rampZ + 8, ramp_side_factory);
+	ramp_side1_physics_object->setInverseMass(0);
+	
+	NEW_BOX(ramp_side2, white_noise, rampX, -3, rampZ + 2, ramp_side_factory);
+	ramp_side2_physics_object->setInverseMass(0);
+	
+	NEW_BOX(safety_step, white_noise, rampX + 4, -6, rampZ - 2.2, ramp_side_factory);
+	safety_step->rotate(CVector<3, float> (0, 1, 0), CMath<float>::PI()*0.5f);
+	safety_step_physics_object->setInverseMass(0);
+
+
+	iRef<cObjectFactoryBox> switch_factory = new cObjectFactoryBox(0.5, 5, 8);
+	
+	NEW_BOX(coin4, green, rampX + 3, -2, rampZ + 4, switch_factory);
+	coin4->rotate(CVector<3, float>(0, 1, 0), CMath<float>::PI()*0.01f);
+	coin4_physics_object->setInverseMass(0);
+	collectables.push_back(coin4);
+	
+	
+	iRef<cObjectFactorySphere> ball_factory = new cObjectFactorySphere(0.2);
+	iRef<cObjectFactoryBox> spike_factory = new cObjectFactoryBox(0.4, 0.4, 0.4);
+	
+	iRef<iObject> balls[10];
+	iRef<iGraphicsObject> gballs[10];
+	iRef<iPhysicsObject> pballs[10];
+
+	for (int i = 5; i < 10; i++) {
+		balls[i] = new iObject("ball" + i);
+		balls[i]->createFromFactory(*ball_factory);
+		balls[i]->translate(rampX + 1, 5 + i, rampZ + i%5 + 3);
+		gballs[i] = new iGraphicsObject(balls[i], materials.red);
+		engine.graphics.addObject(gballs[i]);
+		engine.addObject(*balls[i]);
+		pballs[i] = new iPhysicsObject(*balls[i]);
+		engine.physics.addObject(pballs[i]);
+		
+		untouchables.push_back(balls[i]);
+	}
+	for (int i = 0; i < 5; i++) {
+		balls[i] = new iObject("spike" + i);
+		balls[i]->createFromFactory(*spike_factory);
+		balls[i]->translate(rampX + 1, 5 + i, rampZ + i%5 + 3);
+		gballs[i] = new iGraphicsObject(balls[i], materials.red);
+		engine.graphics.addObject(gballs[i]);
+		engine.addObject(*balls[i]);
+		pballs[i] = new iPhysicsObject(*balls[i]);
+		engine.physics.addObject(pballs[i]);
+		
+		untouchables.push_back(balls[i]);
+	}
+}
+
+//sen's fortress
+{
+	float sens_fortressX = -5;
+	float sens_fortressZ = 5;
+	
+	iRef<cObjectFactoryBox> stair_factory = new cObjectFactoryBox(0.5, 2, 0.5);
+	stair_factory->setInverseMass(0);
+	
+	iRef<cObjectFactoryBox> path_factory = new cObjectFactoryBox(0.5, 4, 2);
+	path_factory->setInverseMass(0);
+	
+	
+	NEW_BOX(front_step1, pink, sens_fortressX - 4.5, -2, sens_fortressZ - 3.75, stair_factory);
+	NEW_BOX(front_step2, pink, sens_fortressX - 4.5, -2, sens_fortressZ - 3.25, stair_factory);
+	
+	
+	NEW_BOX(path1, pink, sens_fortressX - 4.5, -1, sens_fortressZ - 2, path_factory);
+	
+	NEW_BOX(path2, pink, sens_fortressX - 3.75, -1, sens_fortressZ - 1, path_factory);
+	path2->rotate(CVector<3, float>(0, 1, 0), CMath<float>::PI()*0.5f);
+	NEW_BOX(path3, pink, sens_fortressX - 1.75, -1, sens_fortressZ - 1, path_factory);
+	path3->rotate(CVector<3, float>(0, 1, 0), CMath<float>::PI()*0.5f);
+	NEW_BOX(path4, pink, sens_fortressX + 0.25, -1, sens_fortressZ - 1, path_factory);
+	path4->rotate(CVector<3, float>(0, 1, 0), CMath<float>::PI()*0.5f);
+	NEW_BOX(path5, pink, sens_fortressX + 2.25, -1, sens_fortressZ - 1, path_factory);
+	path5->rotate(CVector<3, float>(0, 1, 0), CMath<float>::PI()*0.5f);
+	
+	NEW_BOX(path6, pink, sens_fortressX + 3, -1, sens_fortressZ, path_factory);
+	NEW_BOX(path7, pink, sens_fortressX + 3, -1, sens_fortressZ + 2, path_factory);
+	
+	
+	NEW_BOX(end_step1, pink, sens_fortressX + 3, -2, sens_fortressZ + 3, stair_factory);
+	NEW_BOX(end_step2, pink, sens_fortressX + 3, -2, sens_fortressZ + 3.5, stair_factory);
+	NEW_BOX(end_step3, pink, sens_fortressX + 3, -2, sens_fortressZ + 4, stair_factory);
+	
+	//-------------------------------------------------------------------------
+	
+	iRef<cObjectFactoryBox> lava_factory1 = new cObjectFactoryBox(7.75, 2, 5.8);
+	
+	NEW_BOX(lava1, red, sens_fortressX - 1.125, -3, sens_fortressZ + 2.175, lava_factory1);
+	lava1_physics_object->setInverseMass(0);
+	
+	iRef<cObjectFactoryBox> lava_factory2 = new cObjectFactoryBox(7.5, 2, 4);
+	
+	NEW_BOX(lava2, red, sens_fortressX - 0.5, -3, sens_fortressZ - 3, lava_factory2);
+	lava2_physics_object->setInverseMass(0);
+	
+	iRef<cObjectFactoryBox> lava_factory3 = new cObjectFactoryBox(7.5, 2, 4);
+	
+	NEW_BOX(lava3, red, sens_fortressX - 0.5, -3, sens_fortressZ - 3, lava_factory3);
+	lava3_physics_object->setInverseMass(0);
+}
 }
 
 
