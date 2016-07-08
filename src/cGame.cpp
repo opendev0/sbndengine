@@ -233,7 +233,7 @@ void CGame::fourRooms()
 }
 
 
-void CGame::setupGameScene() {
+void CGame::level1() {
 	setupWorldBoxPlanes();
 	iRef<cObjectFactorySphere> coin_factory = new cObjectFactorySphere(0.1);
 	
@@ -443,7 +443,7 @@ void CGame::setupGameScene() {
 
 }
 
-void CGame::level1() {
+void CGame::level2() {
 	const float h = CMath<float>::PI(); // (H)alf a rotation
 	const float q = h / 2; // A (q)uarter of a rotation
 	const vec3f nv; // Null vector

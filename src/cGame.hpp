@@ -62,8 +62,8 @@ public:
 
 	void setupTestLevel();
 
-	void setupGameScene();
 	void level1();
+	void level2();
 
 private:
 	iRef<iPhysicsObject> addObjectToEngine(iObjectFactory::Type type, vec3f pos, vec3f size, vec3f rotation, iRef<iGraphicsMaterial> &material, float invMass = 0);

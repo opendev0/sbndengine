@@ -41,6 +41,7 @@ class GameApplication : public
 		iApplication
 {
 	CGame *cGame;
+	size_t level = 2;
 	size_t points = 0;
 	size_t time_end;
 
@@ -156,20 +157,10 @@ public:
 		setupMaterials();
 
 		// setup the game scene
-		cGame->level1();
 		setupCharacter();
+		loadLevel(level);
 
 		engine.updateObjectModelMatrices();
-	}
-
-	void loadLevel1()
-	{
-		cGame->setupGameScene();
-	}
-
-	void loadLevel2()
-	{
-		cGame->level1();
 	}
 
 	void setupCharacter()
@@ -206,7 +197,7 @@ public:
 				player_camera.frustum(-1.5f, 1.5f, -1.5f * engine.window.aspect_ratio, 1.5f * engine.window.aspect_ratio, 1, 100);
 				player_camera.computeMatrices();
 
-				if (cGame->trigger1->inv_mass == 0 && points == 1) {
+				if (cGame->trigger1.isNotNull() && cGame->trigger1->inv_mass == 0 && points == 1) {
 					cGame->trigger1->inv_mass = 1;
 				}
 
@@ -268,6 +259,20 @@ public:
 
 		setupWorld();
 		player_camera.setup(player->getPosition(), CVector<3, float> (0, 2, 3.5));
+	}
+
+	void loadLevel(int id)
+	{
+		switch (id) {
+			case 1:
+				cGame->level1();
+				break;
+
+			case 2:
+				cGame->level2();
+				character.object->position.setZero();
+				break;
+		}
 	}
 
 	/**
