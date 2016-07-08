@@ -895,7 +895,8 @@ int main(int argc, char **argv)
 		if (!debug_ibase_list.empty())
 			std::cout << "MEMORY LEAK: iBase class missing in action" << std::endl;
 #endif
-		delete cA;
+
+	delete cA;
 	}
 	return 0;
 }

@@ -162,12 +162,23 @@ public:
 		engine.updateObjectModelMatrices();
 	}
 
+	void loadLevel1()
+	{
+		cGame->setupGameScene();
+	}
+
+	void loadLevel2()
+	{
+		cGame->level1();
+	}
+
 	void setupCharacter()
 	{
-		iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(0.75, 2, 0.75);
-
+		iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(0.375, 0.75, 0.375);
+		
 		character.object = new iObject("character");
 		character.object->createFromFactory(*box_factory);
+		character.object->translate(-5, 0, 9);
 		character.graphics_object = new iGraphicsObject(character.object, materials.playerMaterial);
 		engine.graphics.addObject(character.graphics_object);
 		engine.addObject(*character.object);
@@ -256,8 +267,6 @@ public:
 		setTimer(30);
 
 		setupWorld();
-		player->reset();
-
 		player_camera.setup(player->getPosition(), CVector<3, float> (0, 2, 3.5));
 	}
 

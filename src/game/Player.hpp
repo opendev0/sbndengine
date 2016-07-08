@@ -48,7 +48,6 @@ public:
 	 */
 	void reset()
 	{
-		physicsObject->object->position = CVector<3, float> ();
 		physicsObject->velocity = CVector<3, float> ();
 
 		physicsObject->object->rotation = CQuaternion<float> ();
