@@ -169,16 +169,16 @@ public:
 
 
 // DAMPING TEST
-#if 0
+#if 1
 		c.physics_object1->velocity -= c.physics_object1->velocity*frame_elapsed_time*0.5;
 		c.physics_object2->velocity -= c.physics_object2->velocity*frame_elapsed_time*0.5;
 		c.physics_object1->angular_velocity -= c.physics_object1->angular_velocity*frame_elapsed_time*0.5;
 		c.physics_object2->angular_velocity -= c.physics_object2->angular_velocity*frame_elapsed_time*0.5;
 #endif
 
-#if 0
-		if (c.physics_object1->velocity.getLength() < 0.5)	c.physics_object1->velocity.setZero();
-		if (c.physics_object2->velocity.getLength() < 0.5)	c.physics_object2->velocity.setZero();
+#if 1
+		if (c.physics_object1->velocity.getLength() < 0.01)	c.physics_object1->velocity.setZero();
+		if (c.physics_object2->velocity.getLength() < 0.01)	c.physics_object2->velocity.setZero();
 
 		if (c.physics_object1->angular_velocity.getLength() < 0.2)	c.physics_object1->angular_velocity.setZero();
 		if (c.physics_object2->angular_velocity.getLength() < 0.2)	c.physics_object2->angular_velocity.setZero();

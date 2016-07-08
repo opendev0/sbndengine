@@ -306,7 +306,6 @@ public:
 		setupMaterials();
 
 		// setup the game scene
-		cGame->setupGameScene();
 		setupCharacter();
 
 		engine.updateObjectModelMatrices();
@@ -890,7 +889,7 @@ int main(int argc, char **argv)
 	global_argv = argv;
 
 	{
-		iApplication *cA = new GameApplication;
+		iApplication *cA = (std::string(argv[1]) == "startgame") ? static_cast<iApplication *>(new GameApplication) : static_cast<iApplication *>(new cApplicationImplementation);
 
 #ifdef DEBUG
 		if (!debug_ibase_list.empty())

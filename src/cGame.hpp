@@ -3,7 +3,10 @@
 
 #include <vector>
 #include "sbndengine/iSbndEngine.hpp"
+#include "include/gamemath.hpp"
 #include "game/PathEnemy.hpp"
+
+typedef CVector<3, gmfloat> vec3f;
 
 class CGame
 {
@@ -11,8 +14,8 @@ public:
 	iEngine &engine;
 	std::vector<iRef<iObject> > collectables;
 	std::vector<iRef<iObject> > untouchables;
-	//std::vector<iRef<iObject> > enemies;
 	std::vector<Enemy *> enemies;
+	iRef<iPhysicsObject> trigger1;
 
 	/**
 	 * different kinds of materials
@@ -55,7 +58,17 @@ public:
 
 	void setupMaterials();
 
-	void setupGameScene();
+	void setupTestLevel();
+
+	void level1();
+
+private:
+	iRef<iPhysicsObject> addObjectToEngine(iObjectFactory::Type type, vec3f pos, vec3f size, vec3f rotation, iRef<iGraphicsMaterial> &material, float invMass = 0);
+	iRef<iPhysicsObject> addBox(const vec3f &pos, const vec3f &size, const vec3f &rotation, iRef<iGraphicsMaterial> &material, float invMass = 0);
+	iRef<iPhysicsObject> addPlane(const vec3f &pos, const vec2f &size, const vec3f &rotation, iRef<iGraphicsMaterial> &material, float invMass = 0);
+	iRef<iPhysicsObject> addSphere(const vec3f &pos, float radius, iRef<iGraphicsMaterial> &material, float invMass = 0);
+	void addRope(iRef<iPhysicsObject> o1, iRef<iPhysicsObject> o2);
+	void addSpring(iRef<iPhysicsObject> o1, iRef<iPhysicsObject> o2);
 };
 
 #endif

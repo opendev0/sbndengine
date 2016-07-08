@@ -38,7 +38,7 @@ class iObjectFactory	:
 {
 public:
 	// we use enumeration since dynamic binding takes more time
-	enum
+	enum Type
 	{
 		TYPE_SPHERE,
 		TYPE_PLANE,

@@ -41,6 +41,8 @@ class GameApplication : public
 		iApplication
 {
 	CGame *cGame;
+	size_t points = 0;
+	size_t time_end;
 
 	// gravitation activated / deactivated
 	bool gravitation_active;
@@ -56,7 +58,7 @@ class GameApplication : public
 
 	std::vector<int> held_keys;
 
-	enum Engine_state {GAME_RUNNING, GAME_OVER};
+	enum Engine_state {GAME_RUNNING, GAME_OVER, GAME_SUCCESS};
 
 	Engine_state state;
 
@@ -115,8 +117,13 @@ public:
 		/*
 		 * setup player material
 		 */
+		//iRef<iTexture> playerTexture = new iTexture;
+		//playerTexture->createTextureFromFile("src/textures/wall.jpg");
 		materials.playerMaterial = new iGraphicsMaterial;
-		materials.playerMaterial->setColor(iColorRGBA(0.0, 0.0, 0.0));
+		//materials.playerMaterial->setTexture(playerTexture);
+		//playerTexture->createTextureFromFile("src/texture/wall_18Normal.jpg");
+		//materials.playerMaterial->setNormalTexture(playerTexture);
+		materials.playerMaterial->setColor(iColorRGBA(0.5, 0.5, 0.5));
 	}
 
 	/**
@@ -149,7 +156,7 @@ public:
 		setupMaterials();
 
 		// setup the game scene
-		cGame->setupGameScene();
+		cGame->level1();
 		setupCharacter();
 
 		engine.updateObjectModelMatrices();
@@ -177,7 +184,8 @@ public:
 	 */
 	void drawFrame()
 	{
-		handleHeldKeys();
+		handleHeldKeys(); // Handles player movement
+		checkGameEnd();
 
 		switch(state)
 		{
@@ -186,6 +194,10 @@ public:
 				player_camera.rotate(player->getAngularVelocity() * engine.time.frame_elapsed_seconds);
 				player_camera.frustum(-1.5f, 1.5f, -1.5f * engine.window.aspect_ratio, 1.5f * engine.window.aspect_ratio, 1, 100);
 				player_camera.computeMatrices();
+
+				if (cGame->trigger1->inv_mass == 0 && points == 1) {
+					cGame->trigger1->inv_mass = 1;
+				}
 
 				for (auto enemy : cGame->enemies) {
 					enemy->move();
@@ -208,12 +220,8 @@ public:
 				 */
 				if (output_gui_key_stroke_information)
 				{
-					int pos_y = 10+14;
-					engine.text.printfxy((float)10, (float)pos_y, "Press [h] to hide this information"); pos_y += 14;
-					pos_y += 14;
-					engine.text.printfxy((float)10, (float)pos_y, "[r]: reset player position"); pos_y += 14;
-					engine.text.printfxy((float)10, (float)pos_y, "[q]: quit"); pos_y += 14;
-					engine.text.printfxy((float)10, (float)pos_y, "[<-/->]: rotate camera"); pos_y += 14;
+					engine.text.printfxy((float)10, (float)24, "%i Points", points);
+					engine.text.printfxy((float)10, (float)34, "%f seconds left", getTimeLeft());
 				}
 				break;
 
@@ -224,6 +232,15 @@ public:
 				engine.graphics.drawFrame(player_camera);
 
 				engine.text.printfxy((float)10, (float)24, "GAME OVER");
+				break;
+
+			case GAME_SUCCESS:
+				player_camera.update(player->getPosition());
+				player_camera.rotate(0.25 * engine.time.frame_elapsed_seconds);
+				player_camera.computeMatrices();
+				engine.graphics.drawFrame(player_camera);
+
+				engine.text.printfxy((float)10, (float)24, "YOU DID IT!");
 		}
 	}
 
@@ -234,9 +251,9 @@ public:
 	{
 		engine.physics.registerPreCollisionCallback(std::bind(&GameApplication::handleCollisions, this, std::placeholders::_1));
 		cGame = new CGame(engine);
-		held_keys.clear();
 
 		state = GAME_RUNNING;
+		setTimer(30);
 
 		setupWorld();
 		player->reset();
@@ -263,13 +280,19 @@ public:
 		{
 			// General keys
 			case 'q':	case 'Q':	engine.exit();	break;
-			case 'h':	output_gui_key_stroke_information = !output_gui_key_stroke_information;	break;
 			case 'r':
 				player_camera.setup(player->getPosition(), CVector<3, float> (0, 2, 3.5));
+
+				cGame->collectables.clear();
+				cGame->enemies.clear();
+				cGame->untouchables.clear();
+
+				held_keys.clear();
+
 				setupWorld();
-				/*engine.clear();
-				player->reset();
-				cGame->setupGameScene();*/
+
+				points = 0;
+				setTimer(30);
 
 				state = GAME_RUNNING;
 				break;
@@ -339,6 +362,7 @@ public:
 					break;
 
 				case GAME_OVER:
+				case GAME_SUCCESS:
 					switch(*key)
 					{
 						case SBND_EVENT_KEY_LEFT:
@@ -377,14 +401,17 @@ public:
 
 	bool handlePlayerTouch(const iRef<iPhysicsObject> &physics_object, CPhysicsCollisionData &collision)
 	{
+		std::vector<iRef<iObject>>::iterator it;
+
 		if (std::find(cGame->untouchables.begin(), cGame->untouchables.end(), physics_object->object) != cGame->untouchables.end()) {
 			state = GAME_OVER;
 			return true;
 		}
-		else if (std::find(cGame->collectables.begin(), cGame->collectables.end(), physics_object->object) != cGame->collectables.end()) {
+		else if ((it = std::find(cGame->collectables.begin(), cGame->collectables.end(), physics_object->object)) != cGame->collectables.end()) {
 			engine.physics.removeObject(physics_object);
 			engine.graphics.removeObject(physics_object->object);
 			engine.removeObject(*physics_object->object);
+			++points;
 			return true;
 		}
 		else {
@@ -395,6 +422,7 @@ public:
 					engine.physics.removeObject(physics_object);
 					engine.graphics.removeObject(physics_object->object);
 					engine.removeObject(*physics_object->object);
+					++points;
 					return true;
 				}
 				else {
@@ -405,5 +433,22 @@ public:
 		}
 
 		return false;
+	}
+
+	void setTimer(float seconds)
+	{
+		time_end = engine.time.elapsed_seconds + seconds;
+	}
+
+	float getTimeLeft() const
+	{
+		return (time_end - engine.time.elapsed_seconds);
+	}
+
+	void checkGameEnd()
+	{
+		if (getTimeLeft() < 0) state = GAME_OVER;
+		//else if (cGame->collectables.size() == 0) state = GAME_SUCCESS;
+		else if (cGame->collectables.size() + cGame->enemies.size() == points) state = GAME_SUCCESS;
 	}
 };

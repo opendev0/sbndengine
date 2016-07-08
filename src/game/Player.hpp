@@ -6,7 +6,7 @@ class Player
 private:
 	iRef<iPhysicsObject> physicsObject;
 	cCamera3rdPerson &camera;
-	
+
 	float velocity;
 	float angularVelocity;
 
@@ -16,31 +16,33 @@ private:
 public:
 	Player(const iRef<iPhysicsObject> &physicsObject, cCamera3rdPerson &camera, iEngine &engine)
 		: physicsObject(physicsObject), camera(camera), engine(engine)
-	{
-	}
-	
-	
-	inline iRef<iPhysicsObject> getPhysicsObject() 
+	{}
+
+	inline iRef<iPhysicsObject> getPhysicsObject()
 	{
 		return physicsObject;
 	}
-	
-	inline CVector<3, float> getPosition() 
+
+	inline CVector<3, float> getPosition()
 	{
 		return physicsObject->object->position;
 	}
-	
-	inline float getAngularVelocity() 
+
+	inline CVector<3, float> getVelocity() const
+	{
+		return physicsObject->velocity;
+	}
+
+	inline float getAngularVelocity()
 	{
 		return angularVelocity;
 	}
-	
+
 	inline void setAngularVelocity(float vel)
 	{
 		angularVelocity = vel;
 	}
-	
-	
+
 	/*
 	 * reset position, rotation and velocities of the player to zero
 	 */
@@ -48,20 +50,19 @@ public:
 	{
 		physicsObject->object->position = CVector<3, float> ();
 		physicsObject->velocity = CVector<3, float> ();
-		
+
 		physicsObject->object->rotation = CQuaternion<float> ();
 		physicsObject->angular_velocity = CVector<3, float> ();
 	}
-	
-	
+
 	/*
 	 * translate the player by dist
 	 */
-	inline void translate(CVector<3, float> dist) 
+	inline void translate(CVector<3, float> dist)
 	{
 		physicsObject->object->translate(dist);
 	}
-	
+
 	/*
 	 * rotate the player by degree[0] around x-axis, degree[1] around y-axis, and degree[2] around z-axis
 	 */
@@ -74,10 +75,8 @@ public:
 
 	inline void jump()
 	{
-		physicsObject->velocity[1] = 7;
+		physicsObject->velocity[1] = 5;
 	}
-
-
 
 	bool checkCollision(iRef<iPhysicsObject> object)
 	{

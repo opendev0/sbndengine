@@ -232,7 +232,7 @@ public:
 	/**
 	 * access element i
 	 */
-	inline T& operator[](const int i)
+	inline const T& operator[](const int i) const
 	{
 #if DEBUG
 		if (i < 0 || i >= 2)
