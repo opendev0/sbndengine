@@ -436,59 +436,59 @@ void CGame::level3() {
 	const vec3f nv; // Null vector
 
 	// Setup room borders (wall, floor, ceiling)
-	addPlane(vec3f(0, 0, 0), vec2f(30, 50), nv, materials.boden_1);
-	addPlane(vec3f(0, 12, 0), vec2f(30, 50), vec3f(h, 0, 0), materials.boden_1);
-	addPlane(vec3f(0, 9, 5), vec2f(30, 20), vec3f(q, 0, 0), materials.wand_18);
-	addPlane(vec3f(0, 9, -20), vec2f(30, 20), vec3f(-q, 0, 0), materials.wand_18);
-	addPlane(vec3f(-10, 5, 0), vec2f(50, 30), vec3f(0, q, q), materials.wand_18);
-	addPlane(vec3f(10, 5, 0), vec2f(50, 30), vec3f(0, -q, -q), materials.wand_18);
+	addPlane(vec3f(0, 0, 0), vec2f(30, 50), nv, materials.boden_1); // Floor
+	addPlane(vec3f(0, 12, 0), vec2f(30, 50), vec3f(h, 0, 0), materials.boden_1); // Ceiling
+	addPlane(vec3f(0, 9, 5), vec2f(30, 20), vec3f(q, 0, 0), materials.wand_18); // South wall
+	addPlane(vec3f(0, 9, -17), vec2f(30, 20), vec3f(-q, 0, 0), materials.wand_18); // North wall
+	addPlane(vec3f(-10, 5, 0), vec2f(50, 30), vec3f(0, q, q), materials.wand_18); // West wall
+	addPlane(vec3f(10, 5, 0), vec2f(50, 30), vec3f(0, -q, -q), materials.wand_18); // East wall
 
-	// SETUP OBSTACLES
-	// Upper floor and stairs
-	addBox(vec3f(0, 5, -10), vec3f(20, 0.2, 5), nv, materials.boden_1);
+	// UPPER FLOOR AND STAIRS
+	addBox(vec3f(0, 5, -10), vec3f(20, 0.2, 5), nv, materials.boden_1); // Pendulum floor
+
+	// Stairs to upper floor
 	addBox(vec3f(2, 1, -3), vec3f(1, 0.2, 1), nv, materials.white);
 	addBox(vec3f(3, 2, -3), vec3f(1, 0.2, 1), nv, materials.white);
 	addBox(vec3f(4, 3, -4), vec3f(1, 0.2, 1), nv, materials.white);
 	addBox(vec3f(2, 3.5, -5), vec3f(1, 0.2, 1), nv, materials.white); // Collectable
 	addBox(vec3f(2, 4.5, -2), vec3f(1, 0.2, 1), nv, materials.white);
 	addBox(vec3f(4, 4, -6), vec3f(1, 0.2, 1), nv, materials.white);
-	//addBox(vec3f(2, 4.5, -4), vec3f(1, 0.2, 1), nv, materials.white);
 
 	// Pendulum
 	{
 		auto box1 = addBox(vec3f(0, 11.5, -10), vec3f(0.01, 0.01, 0.01), nv, materials.red);
 		auto box2 = addSphere(vec3f(0, 6.1, -10), 0.8, materials.red, 1);
-		addRope(box1, box2);
+		addSpring(box1, box2);
 		auto length = (box1->object->position - box2->object->position).getLength();
 		auto direction = vec3f(0, -1, -10).getNormalized();
 		box2->object->position = box1->object->position + (direction * length);
 
 		untouchables.push_back(box2->object);
+		untouchables.push_back(addSphere(vec3f(0, 5.5, -10), 0.5, materials.red, 100)->object);
+
+		auto enemy1PObject = addSphere(vec3f(-10, 5.6, -7.5), 0.5, materials.blue);
+		auto enemy1 = new PathEnemy(enemy1PObject, engine);
+		enemy1->addCheckpoint(CVector<3, float>(-2, 5.6, -7.5));
+		enemy1->addCheckpoint(CVector<3, float>(-2, 5.6, -12.5));
+		enemies.push_back(enemy1);
 	}
 
 	// Triggered pendulum
 	{
 		auto box1 = addBox(vec3f(2, 11.5, -10), vec3f(0.01, 0.01, 0.01), nv, materials.red);
 		auto box2 = addSphere(vec3f(2, 6.1, -10), 0.8, materials.red);
-		addRope(box1, box2);
+		addSpring(box1, box2);
 		auto length = (box1->object->position - box2->object->position).getLength();
 		auto direction = vec3f(0, -1, -10).getNormalized();
 		box2->object->position = box1->object->position + (direction * length);
 
 		trigger1 = box2;
 		untouchables.push_back(box2->object);
+		untouchables.push_back(addSphere(vec3f(2, 5.5, -10), 0.5, materials.red, 10000)->object);
 	}
 
-	// Setup untouchables
-	untouchables.push_back(addSphere(vec3f(0, 5.5, -10), 0.5, materials.red, 100)->object);
-	untouchables.push_back(addSphere(vec3f(2, 5.5, -10), 0.5, materials.red, 10000)->object);
+	addBox(vec3f(-6.5, 5, 0), vec3f(7, 0.2, 10), nv, materials.boden_1); // Enemy floor
 
-	// Setup enemies
-	auto enemy1PObject = addSphere(vec3f(-10, 5.6, -7.5), 0.5, materials.blue);
-	auto enemy1 = new PathEnemy(enemy1PObject, engine);
-	enemy1->addCheckpoint(CVector<3, float>(-2, 5.6, -7.5));
-	enemy1->addCheckpoint(CVector<3, float>(-2, 5.6, -12.5));
-	enemies.push_back(enemy1);
 	auto enemy2PObject = addBox(vec3f(-6, 0.5, -3), vec3f(1, 1, 1), vec3f(0, 1, 1) * 0.4, materials.blue);
 	enemies.push_back(new PathEnemy(enemy2PObject, engine));
 
@@ -547,10 +547,10 @@ iRef<iPhysicsObject> CGame::addSphere(const vec3f &pos, float radius, iRef<iGrap
 
 void CGame::addRope(iRef<iPhysicsObject> o1, iRef<iPhysicsObject> o2)
 {
-	iRef<iPhysicsSoftConstraint> rope = new cPhysicsSoftConstraintSpring(o1, o2, o1->object->position.dist(o2->object->position), 50);
+	iRef<iPhysicsHardConstraint> rope = new cPhysicsHardConstraintRope(o1, o2, o1->object->position.dist(o2->object->position));
 	o1->setDisableCollisionRotationAndFrictionFlag(true);
 	o2->setDisableCollisionRotationAndFrictionFlag(true);
-	engine.physics.addSoftConstraint(rope);
+	engine.physics.addHardConstraint(rope);
 	engine.graphics.addObjectConnector(new cGraphicsObjectConnectorCenter(o1->object, o2->object, materials.white));
 }
 
