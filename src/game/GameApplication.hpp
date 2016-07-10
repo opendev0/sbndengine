@@ -44,6 +44,8 @@ class GameApplication : public
 	size_t level = 2;
 	size_t points = 0;
 	size_t time_end;
+	size_t time_success;
+	bool collisionSinceLastJump = true;
 
 	// gravitation activated / deactivated
 	bool gravitation_active;
@@ -187,11 +189,12 @@ public:
 	void drawFrame()
 	{
 		handleHeldKeys(); // Handles player movement
-		checkGameEnd();
 
 		switch(state)
 		{
 			case GAME_RUNNING:
+				checkGameEnd();
+
 				player_camera.update(player->getPosition());
 				player_camera.rotate(player->getAngularVelocity() * engine.time.frame_elapsed_seconds);
 				player_camera.frustum(-1.5f, 1.5f, -1.5f * engine.window.aspect_ratio, 1.5f * engine.window.aspect_ratio, 1, 100);
@@ -243,6 +246,7 @@ public:
 				engine.graphics.drawFrame(player_camera);
 
 				engine.text.printfxy((float)10, (float)24, "YOU DID IT!");
+				engine.text.printfxy((float)10, (float)34, "Time Left: %d", (time_end - time_success));
 		}
 	}
 
@@ -312,7 +316,10 @@ public:
 				break;
 
 			case ' ':
-				player->jump();
+				if (collisionSinceLastJump) {
+					player->jump();
+					collisionSinceLastJump = false;
+				}
 				break;
 		}
 	}
@@ -322,7 +329,6 @@ public:
 	 */
 	void keyReleased(int key)
 	{
-
 		std::vector<int>::iterator element = std::find(held_keys.begin(), held_keys.end(), key);
 		if (element != held_keys.end()) {
 			held_keys.erase(element);
@@ -446,6 +452,10 @@ public:
 			}
 		}
 
+		if (fabs(collision.collision_normal[1]) == 1) {
+			collisionSinceLastJump = true;
+		}
+
 		return false;
 	}
 
@@ -462,7 +472,9 @@ public:
 	void checkGameEnd()
 	{
 		if (getTimeLeft() < 0) state = GAME_OVER;
-		//else if (cGame->collectables.size() == 0) state = GAME_SUCCESS;
-		else if (cGame->collectables.size() + cGame->enemies.size() == points) state = GAME_SUCCESS;
+		else if (cGame->collectables.size() + cGame->enemies.size() == points) {
+			time_success = engine.time.elapsed_seconds;
+			state = GAME_SUCCESS;
+		}
 	}
 };
