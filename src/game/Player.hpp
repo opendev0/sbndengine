@@ -7,6 +7,7 @@ private:
 	iRef<iPhysicsObject> physicsObject;
 	cCamera3rdPerson &camera;
 
+	float jumpHeight;
 	float velocity;
 	float angularVelocity;
 
@@ -42,6 +43,11 @@ public:
 	{
 		angularVelocity = vel;
 	}
+	
+	inline void setJumpHeigth(float height) 
+	{
+		jumpHeight = height;
+	}
 
 	/*
 	 * reset position, rotation and velocities of the player to zero
@@ -74,7 +80,7 @@ public:
 
 	inline void jump()
 	{
-		physicsObject->velocity[1] = 5;
+		physicsObject->velocity[1] = jumpHeight;
 	}
 
 	bool checkCollision(iRef<iPhysicsObject> object)

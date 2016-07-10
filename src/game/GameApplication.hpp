@@ -41,7 +41,7 @@ class GameApplication : public
 		iApplication
 {
 	CGame *cGame;
-	size_t level = 2;
+	size_t level = 0;
 	size_t points = 0;
 	size_t time_end;
 	size_t time_success;
@@ -61,7 +61,7 @@ class GameApplication : public
 
 	std::vector<int> held_keys;
 
-	enum Engine_state {GAME_RUNNING, GAME_OVER, GAME_SUCCESS};
+	enum Engine_state {GAME_SETUP, GAME_RUNNING, GAME_OVER, GAME_SUCCESS};
 
 	Engine_state state;
 
@@ -130,41 +130,8 @@ public:
 	}
 
 	/**
-	 * enable gravitation in physics engine
+	 * create character object
 	 */
-	void enableGravitation()
-	{
-		engine.physics.setGravitation(CVector<3,float>(0, -9.81f, 0));
-	}
-
-	/**
-	 * disable gravitation in physics engine
-	 */
-	void disableGravitation()
-	{
-		engine.physics.setGravitation(CVector<3,float>(0, 0, 0));
-	}
-
-	/*
-	 * Sets up gravity, the character and the game scene
-	 */
-	void setupWorld()
-	{
-		// clear existing data
-		engine.clear();
-
-		// enable gravity
-		enableGravitation();
-
-		setupMaterials();
-
-		// setup the game scene
-		setupCharacter();
-		loadLevel(level);
-
-		engine.updateObjectModelMatrices();
-	}
-
 	void setupCharacter()
 	{
 		iRef<cObjectFactoryBox> box_factory = new cObjectFactoryBox(0.375, 0.75, 0.375);
@@ -192,6 +159,26 @@ public:
 
 		switch(state)
 		{
+			case GAME_SETUP:
+			
+				//reset engine
+				engine.clear();
+				cGame->collectables.clear();
+				cGame->enemies.clear();
+				cGame->untouchables.clear();
+				held_keys.clear();
+				points = 0;
+				
+				setupCharacter();
+				player_camera.setup(player->getPosition(), CVector<3, float> (0, 2, 3.5));
+				
+				//load level
+				loadLevel(level);
+				
+				engine.updateObjectModelMatrices();
+				state = GAME_RUNNING;
+				break;
+				
 			case GAME_RUNNING:
 				checkGameEnd();
 
@@ -247,6 +234,7 @@ public:
 
 				engine.text.printfxy((float)10, (float)24, "YOU DID IT!");
 				engine.text.printfxy((float)10, (float)34, "Time Left: %d", (time_end - time_success));
+				engine.text.printfxy((float)10, (float)54, "Press enter to start the next level.");
 		}
 	}
 
@@ -257,24 +245,49 @@ public:
 	{
 		engine.physics.registerPreCollisionCallback(std::bind(&GameApplication::handleCollisions, this, std::placeholders::_1));
 		cGame = new CGame(engine);
+		
+		setupMaterials();
 
-		state = GAME_RUNNING;
-		setTimer(30);
-
-		setupWorld();
-		player_camera.setup(player->getPosition(), CVector<3, float> (0, 2, 3.5));
+		state = GAME_SETUP;
 	}
 
 	void loadLevel(int id)
 	{
 		switch (id) {
+			case 0:
+				cGame->level0();
+				
+				player->setJumpHeigth(7);
+				character.object->position.setZero();
+				
+				setTimer(20);
+				break;
+				
 			case 1:
 				cGame->level1();
+				
+				player->setJumpHeigth(7);
+				character.object->position.setZero();
+				
+				setTimer(20);
 				break;
 
 			case 2:
 				cGame->level2();
+				
+				player->setJumpHeigth(7);
+				character.object->position = CVector<3, float> (1, 0, 5);
+				
+				setTimer(20);
+				break;
+			
+			case 3:
+				cGame->level3();
+				
 				character.object->position.setZero();
+				player->setJumpHeigth(5);
+				
+				setTimer(30);
 				break;
 		}
 	}
@@ -298,21 +311,10 @@ public:
 		{
 			// General keys
 			case 'q':	case 'Q':	engine.exit();	break;
+			case 'R':
+				level = 0;
 			case 'r':
-				player_camera.setup(player->getPosition(), CVector<3, float> (0, 2, 3.5));
-
-				cGame->collectables.clear();
-				cGame->enemies.clear();
-				cGame->untouchables.clear();
-
-				held_keys.clear();
-
-				setupWorld();
-
-				points = 0;
-				setTimer(30);
-
-				state = GAME_RUNNING;
+				state = GAME_SETUP;
 				break;
 
 			case ' ':
@@ -321,6 +323,12 @@ public:
 					collisionSinceLastJump = false;
 				}
 				break;
+				
+			case 13:
+				if (state = GAME_SUCCESS) {
+					level = (level + 1) % 4;
+					state = GAME_SETUP;
+				}
 		}
 	}
 
@@ -357,6 +365,7 @@ public:
 		for (std::vector<int>::iterator key = held_keys.begin(); key != held_keys.end(); key++) {
 			switch(state)
 			{
+				case GAME_SETUP: break;
 				case GAME_RUNNING:
 					switch(*key)
 					{

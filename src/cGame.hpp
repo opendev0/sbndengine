@@ -51,8 +51,6 @@ public:
 
 
 	void setupWorldBoxPlanes(float scale = 1.0);
-	
-	void fourRooms();
 
 	CGame(iEngine &io_engine);
 
@@ -62,8 +60,10 @@ public:
 
 	void setupTestLevel();
 
+	void level0();
 	void level1();
 	void level2();
+	void level3();
 
 private:
 	iRef<iPhysicsObject> addObjectToEngine(iObjectFactory::Type type, vec3f pos, vec3f size, vec3f rotation, iRef<iGraphicsMaterial> &material, float invMass = 0);

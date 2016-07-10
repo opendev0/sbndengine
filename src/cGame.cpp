@@ -217,30 +217,11 @@ void CGame::setupWorldBoxPlanes(float scale)
 	plane4->rotate(CVector<3,float>(1, 0, 0), CMath<float>::PI()*0.5f);
 }
 
-void CGame::fourRooms()
-{
-	iRef<cObjectFactoryBox> wall_factory = new cObjectFactoryBox(0.5, 18, 20);
-	NEW_PLANE(wall1, grey_noise, 0, 0, 0, wall_factory);
-	wall1->rotate(CVector<3, float>(0, 1, 0), -CMath<float>::PI()*0.5f);
-	wall1->rotate(CVector<3, float>(0, 0, 1), CMath<float>::PI()*0.5f);
-	wall1_physics_object->setInverseMass(0);
-			
-			
-	NEW_PLANE(wall3, grey_noise, 0, 0, 0, wall_factory);
-	wall3->rotate(CVector<3, float>(0, 1, 0), CMath<float>::PI());
-	wall3->rotate(CVector<3, float>(1, 0, 0), CMath<float>::PI()*0.5f);
-	wall3_physics_object->setInverseMass(0);
-}
-
-
-void CGame::level1() {
+void CGame::level0() {
 	setupWorldBoxPlanes();
 	iRef<cObjectFactorySphere> coin_factory = new cObjectFactorySphere(0.1);
 	
-	fourRooms();
-	
-//stairs
-{
+	//stairs
 	float stairX = 4;
 	float stairZ = -4;
 	
@@ -272,8 +253,11 @@ void CGame::level1() {
 	collectables.push_back(coin3);
 }
 
-//ramp
-{
+void CGame::level1() {
+	setupWorldBoxPlanes();
+	iRef<cObjectFactorySphere> coin_factory = new cObjectFactorySphere(0.1);
+	
+	//ramp
 	float rampX = -10;
 	float rampZ = -10;
 	
@@ -334,8 +318,12 @@ void CGame::level1() {
 	}
 }
 
-//sen's fortress
-{
+void CGame::level2() {
+	
+	setupWorldBoxPlanes();
+	iRef<cObjectFactorySphere> coin_factory = new cObjectFactorySphere(0.1);
+	
+	//sen's fortress
 	float sens_fortressX = -5;
 	float sens_fortressZ = 5;
 	
@@ -441,9 +429,7 @@ void CGame::level1() {
 	collectables.push_back(coin5);
 }
 
-}
-
-void CGame::level2() {
+void CGame::level3() {
 	const float h = CMath<float>::PI(); // (H)alf a rotation
 	const float q = h / 2; // A (q)uarter of a rotation
 	const vec3f nv; // Null vector
