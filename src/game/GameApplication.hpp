@@ -41,7 +41,7 @@ class GameApplication : public
 		iApplication
 {
 	CGame *cGame;
-	size_t level = 2;
+	size_t level = 0;
 	size_t points = 0;
 	size_t time_end;
 	size_t time_success;
@@ -214,7 +214,8 @@ public:
 				 */
 				if (output_gui_key_stroke_information)
 				{
-					engine.text.printfxy((float)10, (float)24, "%i Points", points);
+					if (points == 1) engine.text.printfxy((float)10, (float)24, "%i Point", points);
+					else engine.text.printfxy((float)10, (float)24, "%i Points", points);
 					engine.text.printfxy((float)10, (float)34, "%f seconds left", getTimeLeft());
 				}
 				break;
@@ -269,9 +270,9 @@ public:
 				cGame->level1();
 				
 				player->setJumpHeigth(7);
-				character.object->position.setZero();
+				character.object->position = CVector<3, float> (0, 0, 4.5);
 				
-				setTimer(20);
+				setTimer(40);
 				break;
 
 			case 2:

@@ -218,7 +218,7 @@ void CGame::setupWorldBoxPlanes(float scale)
 }
 
 void CGame::level0() {
-	setupWorldBoxPlanes();
+	setupWorldBoxPlanes(1);
 	iRef<cObjectFactorySphere> coin_factory = new cObjectFactorySphere(0.2);
 	
 	//stairs
@@ -254,68 +254,67 @@ void CGame::level0() {
 }
 
 void CGame::level1() {
-	setupWorldBoxPlanes();
+	//-------------------------------------------------------------------------
+	iRef<iPhysicsObject> new_physics_object;
+
+	iRef<cObjectFactoryPlane> plane_factory = new cObjectFactoryPlane(25.f*0.5, 25.f*0.5);
+	plane_factory->setInverseMass(0);
+
+	NEW_PLANE(plane0, boden_1, 0, -3*0.5, 0, plane_factory);
+	plane0_physics_object->setCoefficientOfRestitution(1);
+	NEW_PLANE(plane1, wand_18, 0, 0, -10*0.5, plane_factory);
+	plane1->rotate(CVector<3,float>(1, 0, 0), -CMath<float>::PI()*0.5f);
+	plane1_physics_object->setCoefficientOfRestitution(1);
+	NEW_PLANE(plane2, wand_18, -10*0.5, 0, 0, plane_factory);
+	plane2->rotate(CVector<3,float>(0, 1, 0), -CMath<float>::PI()*0.5f);
+	plane2->rotate(CVector<3,float>(0, 0, 1), CMath<float>::PI()*0.5f);
+	plane2_physics_object->setCoefficientOfRestitution(1);
+	NEW_PLANE(plane3, wand_18, 10*0.5, 0, 0, plane_factory);
+	plane3->rotate(CVector<3,float>(0, 1, 0), CMath<float>::PI()*0.5f);
+	plane3->rotate(CVector<3,float>(0, 0, 1), -CMath<float>::PI()*0.5f);
+	plane3_physics_object->setCoefficientOfRestitution(1);
+	NEW_PLANE(plane4, wand_18, 0, 0, 10*0.5, plane_factory);
+	plane4_physics_object->setCoefficientOfRestitution(1);
+
+	plane4->rotate(CVector<3,float>(0, 1, 0), -CMath<float>::PI());
+	plane4->rotate(CVector<3,float>(1, 0, 0), CMath<float>::PI()*0.5f);
 	iRef<cObjectFactorySphere> coin_factory = new cObjectFactorySphere(0.1);
 	
-	//ramp
-	float rampX = -10;
-	float rampZ = -10;
+	//-------------------------------------------------------------------------
 	
-	iRef<cObjectFactoryBox> ramp_factory = new cObjectFactoryBox(5, 5, 6);
-	NEW_BOX(ramp, white_noise, rampX, -3, rampZ + 5, ramp_factory);
-	ramp_physics_object->setInverseMass(0);
-	ramp->rotate(CVector<3, float> (0, 0, 1), CMath<float>::PI()*0.25f);
-	
-	iRef<cObjectFactoryBox> ramp_side_factory = new cObjectFactoryBox(8.5, 7.5, 0.25);
-	NEW_BOX(ramp_side1, white_noise, rampX, -3, rampZ + 8, ramp_side_factory);
-	ramp_side1_physics_object->setInverseMass(0);
-	
-	NEW_BOX(ramp_side2, white_noise, rampX, -3, rampZ + 2, ramp_side_factory);
-	ramp_side2_physics_object->setInverseMass(0);
-	
-	NEW_BOX(safety_step, white_noise, rampX + 4, -6, rampZ - 2.2, ramp_side_factory);
-	safety_step->rotate(CVector<3, float> (0, 1, 0), CMath<float>::PI()*0.5f);
-	safety_step_physics_object->setInverseMass(0);
-
-	iRef<cObjectFactoryBox> switch_factory = new cObjectFactoryBox(0.5, 5, 8);
-	
-	NEW_BOX(coin4, green, rampX + 3, -2, rampZ + 4, switch_factory);
-	coin4->rotate(CVector<3, float>(0, 1, 0), CMath<float>::PI()*0.01f);
-	coin4_physics_object->setInverseMass(0);
-	collectables.push_back(coin4);
+	auto ramp_left = addBox(vec3f(-5, -1, 0), vec3f(3, 3, 10), vec3f(0, 0, 0.25*CMath<float>::PI()), materials.white);
+	ramp_left->setCoefficientOfRestitution(1);
 	
 	
-	iRef<cObjectFactorySphere> ball_factory = new cObjectFactorySphere(0.2);
-	iRef<cObjectFactoryBox> spike_factory = new cObjectFactoryBox(0.4, 0.4, 0.4);
+	//-------------------------------------------------------------------------
 	
-	iRef<iObject> balls[10];
-	iRef<iGraphicsObject> gballs[10];
-	iRef<iPhysicsObject> pballs[10];
-
-	for (int i = 5; i < 10; i++) {
-		balls[i] = new iObject("ball" + i);
-		balls[i]->createFromFactory(*ball_factory);
-		balls[i]->translate(rampX + 1, 5 + i, rampZ + i%5 + 3);
-		gballs[i] = new iGraphicsObject(balls[i], materials.red);
-		engine.graphics.addObject(gballs[i]);
-		engine.addObject(*balls[i]);
-		pballs[i] = new iPhysicsObject(*balls[i]);
-		engine.physics.addObject(pballs[i]);
-		
-		untouchables.push_back(balls[i]);
-	}
-	for (int i = 0; i < 5; i++) {
-		balls[i] = new iObject("spike" + i);
-		balls[i]->createFromFactory(*spike_factory);
-		balls[i]->translate(rampX + 1, 5 + i, rampZ + i%5 + 3);
-		gballs[i] = new iGraphicsObject(balls[i], materials.red);
-		engine.graphics.addObject(gballs[i]);
-		engine.addObject(*balls[i]);
-		pballs[i] = new iPhysicsObject(*balls[i]);
-		engine.physics.addObject(pballs[i]);
-		
-		untouchables.push_back(balls[i]);
-	}
+	auto coin1 = addSphere(vec3f(-4.5, 13, -4.5), 0.3f, materials.green, 1);
+	coin1->setCoefficientOfRestitution(1);
+	collectables.push_back(coin1->object);
+	
+	auto coin2 = addSphere(vec3f(-4.5, 11, -3), 0.3f, materials.green, 1);
+	coin2->setCoefficientOfRestitution(1);
+	collectables.push_back(coin2->object);
+	
+	auto coin3 = addSphere(vec3f(-4.5, 9, -1.5), 0.3f, materials.green, 1);
+	coin3->setCoefficientOfRestitution(1);
+	collectables.push_back(coin3->object);
+	
+	auto coin4 = addSphere(vec3f(-4.5, 7, 0), 0.3f, materials.green, 1);
+	coin4->setCoefficientOfRestitution(1);
+	collectables.push_back(coin4->object);
+	
+	auto coin5 = addSphere(vec3f(-4.5, 5, 1.5), 0.3f, materials.green, 1);
+	coin5->setCoefficientOfRestitution(1);
+	collectables.push_back(coin5->object);
+	
+	auto coin6 = addSphere(vec3f(-4.5, 3, 3), 0.3f, materials.green, 1);
+	coin6->setCoefficientOfRestitution(1);
+	collectables.push_back(coin6->object);
+	
+	auto coin7 = addSphere(vec3f(-4.5, 1, 4.5), 0.3f, materials.green, 1);
+	coin7->setCoefficientOfRestitution(1);
+	collectables.push_back(coin7->object);
 }
 
 void CGame::level2() {
