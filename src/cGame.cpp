@@ -219,15 +219,15 @@ void CGame::setupWorldBoxPlanes(float scale)
 
 void CGame::level0() {
 	setupWorldBoxPlanes();
-	iRef<cObjectFactorySphere> coin_factory = new cObjectFactorySphere(0.1);
+	iRef<cObjectFactorySphere> coin_factory = new cObjectFactorySphere(0.2);
 	
 	//stairs
-	float stairX = 4;
-	float stairZ = -4;
+	float stairX = 0;
+	float stairZ = -1.5;
 	
 	//-------------------------------------------------------------------------
 	
-	iRef<cObjectFactoryBox> stair_factory = new cObjectFactoryBox(0.5, 2, 0.5);
+	iRef<cObjectFactoryBox> stair_factory = new cObjectFactoryBox(0.75, 2, 0.75);
 	stair_factory->setInverseMass(0);
 	
 	NEW_BOX(platform1, grey_noise, stairX, -2, stairZ, stair_factory);
@@ -320,12 +320,9 @@ void CGame::level1() {
 
 void CGame::level2() {
 	
-	setupWorldBoxPlanes();
-	iRef<cObjectFactorySphere> coin_factory = new cObjectFactorySphere(0.1);
-	
-	//sen's fortress
-	float sens_fortressX = -5;
-	float sens_fortressZ = 5;
+	setupWorldBoxPlanes(0.5);
+	iRef<cObjectFactorySphere> coin_factory = new cObjectFactorySphere(0.3);
+
 	
 	iRef<cObjectFactoryBox> stair_factory = new cObjectFactoryBox(0.5, 2, 1);
 	stair_factory->setInverseMass(0);
@@ -334,50 +331,52 @@ void CGame::level2() {
 	path_factory->setInverseMass(0);
 	
 	
-	NEW_BOX(front_step1, pink, sens_fortressX - 4.5, -2, sens_fortressZ - 3.5, stair_factory);
+	NEW_BOX(front_step1, pink, -4.5, -2, -3.5, stair_factory);
+	NEW_BOX(front_step2, pink, -4.5, -2, -4, stair_factory);
+	NEW_BOX(front_step3, pink, -4.5, -2, -4.5, stair_factory);
 	
 	
-	NEW_BOX(path1, pink, sens_fortressX - 4.5, -1, sens_fortressZ - 2, path_factory);
+	NEW_BOX(path1, pink, -4.5, -1, -2, path_factory);
 	
-	NEW_BOX(path2, pink, sens_fortressX - 3.75, -1, sens_fortressZ - 1, path_factory);
+	NEW_BOX(path2, pink, -3.75, -1, -1, path_factory);
 	path2->rotate(CVector<3, float>(0, 1, 0), CMath<float>::PI()*0.5f);
-	NEW_BOX(path3, pink, sens_fortressX - 1.75, -1, sens_fortressZ - 1, path_factory);
+	NEW_BOX(path3, pink, -1.75, -1, -1, path_factory);
 	path3->rotate(CVector<3, float>(0, 1, 0), CMath<float>::PI()*0.5f);
-	NEW_BOX(path4, pink, sens_fortressX + 0.25, -1, sens_fortressZ - 1, path_factory);
+	NEW_BOX(path4, pink, 0.25, -1, -1, path_factory);
 	path4->rotate(CVector<3, float>(0, 1, 0), CMath<float>::PI()*0.5f);
-	NEW_BOX(path5, pink, sens_fortressX + 2.25, -1, sens_fortressZ - 1, path_factory);
+	NEW_BOX(path5, pink, 2.25, -1, -1, path_factory);
 	path5->rotate(CVector<3, float>(0, 1, 0), CMath<float>::PI()*0.5f);
 	
-	NEW_BOX(path6, pink, sens_fortressX + 3, -1, sens_fortressZ, path_factory);
-	NEW_BOX(path7, pink, sens_fortressX + 3, -1, sens_fortressZ + 2, path_factory);
+	NEW_BOX(path6, pink, 3, -1, 0, path_factory);
+	NEW_BOX(path7, pink, 3, -1, 2, path_factory);
 	
 	
-	NEW_BOX(end_step1, pink, sens_fortressX + 3, -2, sens_fortressZ + 3, stair_factory);
-	NEW_BOX(end_step2, pink, sens_fortressX + 3, -2, sens_fortressZ + 4, stair_factory);
-	NEW_BOX(end_step3, pink, sens_fortressX + 3, -2, sens_fortressZ + 5, stair_factory);
+	NEW_BOX(end_step1, pink, 3, -2, 3, stair_factory);
+	NEW_BOX(end_step2, pink, 3, -2, 4, stair_factory);
+	NEW_BOX(end_step3, pink, 3, -2, 5, stair_factory);
 	
-	NEW_BOX(end_step4, pink, sens_fortressX + 3.5, -2, sens_fortressZ + 3, stair_factory);
+	NEW_BOX(end_step4, pink, 3.5, -2, 3, stair_factory);
 	end_step4->rotate(CVector<3, float>(0, 1, 0), CMath<float>::PI()*0.5f);
-	NEW_BOX(end_step5, pink, sens_fortressX + 4.5, -2, sens_fortressZ + 3, stair_factory);
+	NEW_BOX(end_step5, pink, 4.5, -2, 3, stair_factory);
 	end_step5->rotate(CVector<3, float>(0, 1, 0), CMath<float>::PI()*0.5f);
 	
 	//-------------------------------------------------------------------------
 	
 	iRef<cObjectFactoryBox> lava_factory1 = new cObjectFactoryBox(7.75, 2, 5.8);
 	
-	NEW_BOX(lava1, red, sens_fortressX - 1.125, -3, sens_fortressZ + 2.175, lava_factory1);
+	NEW_BOX(lava1, red, -1.125, -2.2, 2.175, lava_factory1);
 	lava1_physics_object->setInverseMass(0);
 	untouchables.push_back(lava1);
 	
 	iRef<cObjectFactoryBox> lava_factory2 = new cObjectFactoryBox(7.5, 2, 4);
 	
-	NEW_BOX(lava2, red, sens_fortressX - 0.5, -3, sens_fortressZ - 3, lava_factory2);
+	NEW_BOX(lava2, red, -0.5, -2.2, -3, lava_factory2);
 	lava2_physics_object->setInverseMass(0);
 	untouchables.push_back(lava2);
 	
 	iRef<cObjectFactoryBox> lava_factory3 = new cObjectFactoryBox(8, 2, 2);
 	
-	NEW_BOX(lava3, red, sens_fortressX + 4, -3, sens_fortressZ - 1, lava_factory3);
+	NEW_BOX(lava3, red, 4, -2.2, -1, lava_factory3);
 	lava3->rotate(CVector<3, float> (0, 1, 0), CMath<float>::PI()*0.5f);
 	lava3_physics_object->setInverseMass(0);
 	untouchables.push_back(lava3);
@@ -389,44 +388,46 @@ void CGame::level2() {
 	float pendulum1X = -2;
 	float pendulum1Z = -1;
 	
-	NEW_SPHERE(pendulum1, red, sens_fortressX + pendulum1X, 2.5, sens_fortressZ + pendulum1Z - 3, pendulum_factory);
+	NEW_SPHERE(pendulum1, red, pendulum1X, 2.5, pendulum1Z - 3, pendulum_factory);
 	
-	NEW_BOX(pendulum_connector1, white_noise, sens_fortressX + pendulum1X, 7, sens_fortressZ + pendulum1Z, pendulum_connector_factory);
+	NEW_BOX(pendulum_connector1, white_noise, pendulum1X, 7, pendulum1Z, pendulum_connector_factory);
 	pendulum_connector1_physics_object->setInverseMass(0);
 	
-	NEW_ROPE(pendulum1, pendulum_connector1);
+	NEW_SPRING(pendulum1, pendulum_connector1);
 	untouchables.push_back(pendulum1);
 	
 	
 	float pendulum2X = 0;
 	float pendulum2Z = -1;
 	
-	NEW_SPHERE(pendulum2, red, sens_fortressX + pendulum2X, 2.5, sens_fortressZ + pendulum2Z + 3, pendulum_factory);
+	NEW_SPHERE(pendulum2, red, pendulum2X, 2.5, pendulum2Z + 3, pendulum_factory);
 	
-	NEW_BOX(pendulum_connector2, white_noise, sens_fortressX + pendulum2X, 7, sens_fortressZ + pendulum2Z, pendulum_connector_factory);
+	NEW_BOX(pendulum_connector2, white_noise, pendulum2X, 7, pendulum2Z, pendulum_connector_factory);
 	pendulum_connector2_physics_object->setInverseMass(0);
 	
-	NEW_ROPE(pendulum2, pendulum_connector2);
+	NEW_SPRING(pendulum2, pendulum_connector2);
 	untouchables.push_back(pendulum2);
 	
 	
 	float pendulum3X = 2;
 	float pendulum3Z = -1;
 	
-	NEW_SPHERE(pendulum3, red, sens_fortressX + pendulum3X, 2.5, sens_fortressZ + pendulum3Z - 3, pendulum_factory);
+	NEW_SPHERE(pendulum3, red, pendulum3X, 2.5, pendulum3Z - 3, pendulum_factory);
 	
-	NEW_BOX(pendulum_connector3, white_noise, sens_fortressX + pendulum3X, 7, sens_fortressZ + pendulum3Z, pendulum_connector_factory);
+	NEW_BOX(pendulum_connector3, white_noise, pendulum3X, 7, pendulum3Z, pendulum_connector_factory);
 	pendulum_connector3_physics_object->setInverseMass(0);
 	
-	NEW_ROPE(pendulum3, pendulum_connector3);
+	NEW_SPRING(pendulum3, pendulum_connector3);
 	untouchables.push_back(pendulum3);
 	
 	//-------------------------------------------------------------------------
 	
-	NEW_SPHERE(coin4, green, sens_fortressX - 1, 2.5, sens_fortressZ - 1, coin_factory);
+	NEW_SPHERE(coin4, green, -1, 2.5, -1, coin_factory);
 	collectables.push_back(coin4);
-	NEW_SPHERE(coin5, green, sens_fortressX + 1, 2.5, sens_fortressZ - 1, coin_factory);
+	NEW_SPHERE(coin5, green, 1, 2.5, -1, coin_factory);
 	collectables.push_back(coin5);
+	NEW_SPHERE(coin6, green, -4.5, 0.5, -4.5, coin_factory);
+	collectables.push_back(coin6);
 }
 
 void CGame::level3() {

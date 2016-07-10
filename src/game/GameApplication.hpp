@@ -41,7 +41,7 @@ class GameApplication : public
 		iApplication
 {
 	CGame *cGame;
-	size_t level = 0;
+	size_t level = 2;
 	size_t points = 0;
 	size_t time_end;
 	size_t time_success;
@@ -157,6 +157,7 @@ public:
 	{
 		handleHeldKeys(); // Handles player movement
 
+		std::ostringstream titel;
 		switch(state)
 		{
 			case GAME_SETUP:
@@ -194,8 +195,9 @@ public:
 				for (auto enemy : cGame->enemies) {
 					enemy->move();
 				}
-
-				engine.window.setTitle("THIS GAME IS SO MUCH FUN!!1");
+				
+				titel << "  Level  " << level+1;
+				engine.window.setTitle(titel.str().c_str());
 
 				/*
 				 * PHYSICS: do one simulation step
@@ -276,7 +278,7 @@ public:
 				cGame->level2();
 				
 				player->setJumpHeigth(7);
-				character.object->position = CVector<3, float> (1, 0, 5);
+				character.object->position = CVector<3, float> (4.5, 0, 4.5);
 				
 				setTimer(20);
 				break;
@@ -325,7 +327,7 @@ public:
 				break;
 				
 			case 13:
-				if (state = GAME_SUCCESS) {
+				if (state == GAME_SUCCESS) {
 					level = (level + 1) % 4;
 					state = GAME_SETUP;
 				}

@@ -57,6 +57,8 @@ public:
 			float p_equilibrium_length = 3,
 			float p_coefficient_of_restitution = 0.7
 		);
+		
+	void setCoefficientOfRestitution(float c_r);
 
 	virtual ~cPhysicsHardConstraintRopeAngular();
 

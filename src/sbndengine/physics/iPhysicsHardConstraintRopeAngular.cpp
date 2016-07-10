@@ -60,6 +60,11 @@ cPhysicsHardConstraintRopeAngular::cPhysicsHardConstraintRopeAngular(
 {
 }
 
+void cPhysicsHardConstraintRopeAngular::setCoefficientOfRestitution(float c_r)
+{
+	coefficient_of_restitution = c_r;
+}
+
 bool cPhysicsHardConstraintRopeAngular::updateHardConstraintsCollisions(class CPhysicsCollisionData &c)
 {
 #if WORKSHEET_3

@@ -79,6 +79,11 @@ bool cPhysicsHardConstraintRope::updateHardConstraintsCollisions(class CPhysicsC
 #endif
 }
 
+void cPhysicsHardConstraintRope::setCoefficientOfRestitution(float c_r) 
+{
+	coefficient_of_restitution = c_r;
+}
+
 cPhysicsHardConstraintRope::~cPhysicsHardConstraintRope()
 {
 }

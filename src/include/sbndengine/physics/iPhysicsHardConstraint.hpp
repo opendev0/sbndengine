@@ -33,6 +33,8 @@ class iPhysicsHardConstraint	: public iBase
 {
 public:
 	virtual bool updateHardConstraintsCollisions(class CPhysicsCollisionData &c) = 0;
+	
+	virtual void setCoefficientOfRestitution(float c_r) = 0;
 };
 
 #endif
