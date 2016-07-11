@@ -13,6 +13,8 @@ public:
 		physicsObject->inv_mass = 0;
 	}
 
+	virtual ~Enemy() {}
+
 	inline CVector<3, float> getPosition() const
 	{
 		return physicsObject->object->position;

@@ -161,12 +161,8 @@ public:
 		switch(state)
 		{
 			case GAME_SETUP:
-			
 				//reset engine
 				engine.clear();
-				cGame->collectables.clear();
-				cGame->enemies.clear();
-				cGame->untouchables.clear();
 				held_keys.clear();
 				points = 0;
 				
@@ -195,7 +191,7 @@ public:
 				for (auto enemy : cGame->enemies) {
 					enemy->move();
 				}
-				
+
 				titel << "  Level  " << level+1;
 				engine.window.setTitle(titel.str().c_str());
 
@@ -256,6 +252,8 @@ public:
 
 	void loadLevel(int id)
 	{
+		cGame->reset();
+
 		switch (id) {
 			case 0:
 				cGame->level0();
@@ -290,7 +288,7 @@ public:
 				character.object->position.setZero();
 				player->setJumpHeigth(5);
 				
-				setTimer(30);
+				setTimer(50);
 				break;
 		}
 	}

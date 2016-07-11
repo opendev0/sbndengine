@@ -58,7 +58,7 @@ public:
 
 	void setupMaterials();
 
-	void setupTestLevel();
+	void reset();
 
 	void level0();
 	void level1();

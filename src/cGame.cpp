@@ -451,7 +451,7 @@ void CGame::level3() {
 	addBox(vec3f(4, 3, -4), vec3f(1, 0.2, 1), nv, materials.white);
 	addBox(vec3f(2, 3.5, -5), vec3f(1, 0.2, 1), nv, materials.white); // Collectable
 	addBox(vec3f(2, 4.5, -2), vec3f(1, 0.2, 1), nv, materials.white);
-	addBox(vec3f(4, 4, -6), vec3f(1, 0.2, 1), nv, materials.white);
+	addBox(vec3f(4, 4.5, -6), vec3f(1, 0.2, 1), nv, materials.white);
 
 	// Pendulum
 	{
@@ -465,7 +465,7 @@ void CGame::level3() {
 		untouchables.push_back(box2->object);
 		untouchables.push_back(addSphere(vec3f(0, 5.5, -10), 0.5, materials.red, 100)->object);
 
-		auto enemy1PObject = addSphere(vec3f(-10, 5.6, -7.5), 0.5, materials.blue);
+		auto enemy1PObject = addSphere(vec3f(-10, 5.6, -7.5), 0.3, materials.blue);
 		auto enemy1 = new PathEnemy(enemy1PObject, engine);
 		enemy1->addCheckpoint(CVector<3, float>(-2, 5.6, -7.5));
 		enemy1->addCheckpoint(CVector<3, float>(-2, 5.6, -12.5));
@@ -488,12 +488,37 @@ void CGame::level3() {
 
 	addBox(vec3f(-6.5, 5, 0), vec3f(7, 0.2, 10), nv, materials.boden_1); // Enemy floor
 
-	auto enemy2PObject = addBox(vec3f(-6, 0.5, -3), vec3f(1, 1, 1), vec3f(0, 1, 1) * 0.4, materials.blue);
-	enemies.push_back(new PathEnemy(enemy2PObject, engine));
+	auto enemy1PObject = addSphere(vec3f(-6.5, 5.4, 0), 0.3, materials.blue);
+	auto enemy1 = new PathEnemy(enemy1PObject, engine);
+	enemy1->addCheckpoint(vec3f(-9.7, 5.4, -4.7));
+	enemy1->addCheckpoint(vec3f(-3.2, 5.4, -4.7));
+	enemies.push_back(enemy1);
+
+	auto enemy2PObject = addSphere(vec3f(-3.2, 5.4, 0.35), 0.3, materials.blue);
+	auto enemy2 = new PathEnemy(enemy2PObject, engine);
+	enemy2->addCheckpoint(vec3f(-3.2, 5.4, -4));
+	enemy2->addCheckpoint(vec3f(-3.2, 5.4, 4.7));
+	enemies.push_back(enemy2);
+
+	auto enemy3PObject = addSphere(vec3f(-3.5, 5.4, 0), 0.3, materials.blue);
+	auto enemy3 = new PathEnemy(enemy3PObject, engine);
+	enemy3->addCheckpoint(vec3f(-8.7, 5.4, -3));
+	enemy3->addCheckpoint(vec3f(-8.7, 5.4, 3.7));
+	enemy3->addCheckpoint(vec3f(-4.2, 5.4, 3.7));
+	enemy3->addCheckpoint(vec3f(-4.2, 5.4, -3));
+	enemies.push_back(enemy3);
 
 	// Setup collectables
 	collectables.push_back(addSphere(vec3f(-5, 5.3, -10), 0.2, materials.green, 1)->object);
 	collectables.push_back(addSphere(vec3f(2, 3.8, -5), 0.2, materials.green, 1)->object);
+}
+
+void CGame::reset()
+{
+	collectables.clear();
+	untouchables.clear();
+	enemies.clear();
+	trigger1.release();
 }
 
 iRef<iPhysicsObject> CGame::addObjectToEngine(iObjectFactory::Type type, vec3f pos, vec3f size, vec3f rotation, iRef<iGraphicsMaterial> &material, float invMass)
@@ -570,5 +595,7 @@ CGame::CGame(iEngine &p_engine)	:
 
 CGame::~CGame()
 {
-
+	for (auto enemy : enemies) {
+		delete enemy;
+	}
 }
