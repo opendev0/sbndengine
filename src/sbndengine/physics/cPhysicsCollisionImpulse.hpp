@@ -118,7 +118,7 @@ public:
                                                 * c.physics_object2->rotational_inverse_inertia                         //I^(-1)
                                                 * c.physics_object2->object->model_matrix.getTranspose3x3();           //M^( T)
                                                 
-            float c_r = (c.physics_object1->restitution_coefficient + c.physics_object2->restitution_coefficient)/2.0;
+            float c_r = CMath<float>::min(c.physics_object1->restitution_coefficient, c.physics_object2->restitution_coefficient);
             
             
             

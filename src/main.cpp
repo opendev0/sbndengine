@@ -769,10 +769,10 @@ public:
 				case 'G':		gravitation_active = false;	disableGravitation();	break;
 
 				case '1':		scene_id = 1;	setupWorld();	break;
-				case '2':		scene_id = 2;	setupWorld();	break;
-				case '3':		scene_id = 3;	setupWorld();	break;
+				//case '2':		scene_id = 2;	setupWorld();	break;
+				//case '3':		scene_id = 3;	setupWorld();	break;
 				case '4':		scene_id = 4;	setupWorld();	break;
-				case '5':		scene_id = 5;	setupWorld();	break;
+				//case '5':		scene_id = 5;	setupWorld();	break;
 				case '6':		scene_id = 6;	setupWorld();	break;
 				case '7':		scene_id = 7;	setupWorld();	break;
 				case '8':		scene_id = 8;	setupWorld();	break;
@@ -793,7 +793,7 @@ public:
 				case SBND_EVENT_KEY_F12:	scene_id = 22;	setupWorld();	break;
 
 				case 'y':       scene_id = 23;    setupWorld();    break;
-				case 'x':       scene_id = 24;    setupWorld();    break;
+				//case 'x':       scene_id = 24;    setupWorld();    break;
 				case 'c':       scene_id = 25;    setupWorld();    break;
 				case 'v':       scene_id = 26;    setupWorld();    break;
 				case 'b':       scene_id = 27;    setupWorld();    break;

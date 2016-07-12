@@ -518,7 +518,6 @@ void CGame::reset()
 	collectables.clear();
 	untouchables.clear();
 	enemies.clear();
-	trigger1.release();
 }
 
 iRef<iPhysicsObject> CGame::addObjectToEngine(iObjectFactory::Type type, vec3f pos, vec3f size, vec3f rotation, iRef<iGraphicsMaterial> &material, float invMass)

@@ -45,7 +45,7 @@ class GameApplication : public
 	size_t points = 0;
 	size_t time_end;
 	size_t time_success;
-	bool collisionSinceLastJump = true;
+	bool collisionSinceLastJump = false;
 
 	// gravitation activated / deactivated
 	bool gravitation_active;
@@ -145,6 +145,7 @@ public:
 		character.physics_object = new iPhysicsObject(*character.object);
 		character.physics_object->rotational_inertia = CMatrix3<float>(CMath<float>::max());;
 		character.physics_object->rotational_inverse_inertia.setZero();
+		character.physics_object->restitution_coefficient = 0;
 		engine.physics.addObject(character.physics_object);
 
 		player = new Player(character.physics_object, player_camera, engine);
